@@ -128,6 +128,37 @@ public class ScanOptionsTests
         Assert.False(defaultOptions.FollowSymlinks, "FollowSymlinks should default to false for safety");
         Assert.True(followSymlinksOptions.FollowSymlinks);
     }
+
+    /// <summary>
+    /// Tests that FoldersOnly mode affects scan results appropriately.
+    /// </summary>
+    [Fact]
+    public async Task FileSystemScanner_FoldersOnly_ShouldSkipFileTracking()
+    {
+        // Arrange
+        var scanner = new FileSystemScanner();
+        var tempDir = Path.GetTempPath();
+        
+        // Test with normal scanning (should include files)
+        var normalOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = false };
+        var normalResults = await scanner.ScanAsync(normalOptions, null, CancellationToken.None);
+        
+        // Test with FoldersOnly scanning (should skip files but still calculate folder sizes)
+        var foldersOnlyOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = true };
+        var foldersOnlyResults = await scanner.ScanAsync(foldersOnlyOptions, null, CancellationToken.None);
+        
+        // Assert
+        // Folders should be found in both cases (as long as temp directory has subfolders)
+        Assert.True(foldersOnlyResults.TopFolders != null);
+        
+        // FoldersOnly should result in no files being tracked
+        Assert.Empty(foldersOnlyResults.TopFiles);
+        
+        // Normal scan may have files (depends on temp directory contents)
+        // Both should complete successfully
+        Assert.True(normalResults.IsCompleted || normalResults.WasCancelled);
+        Assert.True(foldersOnlyResults.IsCompleted || foldersOnlyResults.WasCancelled);
+    }
 }
 
 /// <summary>
