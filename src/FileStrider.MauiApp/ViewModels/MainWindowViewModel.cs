@@ -127,6 +127,7 @@ public partial class MainWindowViewModel : ObservableObject
         IsScanning = true;
         CanScan = false;
         CanCancel = true;
+        CancelScanCommand.NotifyCanExecuteChanged();
 
         _cancellationTokenSource = new CancellationTokenSource();
 
@@ -180,6 +181,7 @@ public partial class MainWindowViewModel : ObservableObject
             IsScanning = false;
             CanScan = true;
             CanCancel = false;
+            CancelScanCommand.NotifyCanExecuteChanged();
             CurrentPath = "";
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;

@@ -39,7 +39,7 @@ public class FileSystemScanner : IFileSystemScanner
             // Start producer task (directory enumeration)
             var producerTask = Task.Run(async () =>
             {
-                await ProduceFileSystemEntriesAsync(options, writer, scanProgress, progress, cancellationToken);
+                await ProduceFileSystemEntriesAsync(options, writer, scanProgress, progress, startTime, cancellationToken);
             }, cancellationToken);
 
             // Start consumer tasks (file processing)
@@ -88,7 +88,7 @@ public class FileSystemScanner : IFileSystemScanner
     /// Producer task that recursively enumerates all files and directories in the specified path
     /// and writes them to a channel for processing by consumer tasks.
     /// </summary>
-    private async Task ProduceFileSystemEntriesAsync(ScanOptions options, ChannelWriter<FileSystemEntry> writer, ScanProgress progress, IProgress<ScanProgress>? progressReporter, CancellationToken cancellationToken)
+    private async Task ProduceFileSystemEntriesAsync(ScanOptions options, ChannelWriter<FileSystemEntry> writer, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, CancellationToken cancellationToken)
     {
         try
         {
@@ -112,6 +112,7 @@ public class FileSystemScanner : IFileSystemScanner
                 // Throttle progress updates
                 if (progress.FilesScanned % 100 == 0)
                 {
+                    progress.Elapsed = DateTime.UtcNow - startTime;
                     progressReporter?.Report(progress);
                 }
             }

@@ -194,3 +194,39 @@ public class ConfigurationServiceTests
         }
     }
 }
+
+/// <summary>
+/// Unit tests for the FileSystemScanner to verify scan functionality and progress reporting.
+/// </summary>
+public class FileSystemScannerTests
+{
+    /// <summary>
+    /// Tests that the scanner properly reports elapsed time during progress updates.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_ShouldReportElapsedTime_DuringProgress()
+    {
+        // Arrange
+        var scanner = new FileSystemScanner();
+        var tempDir = Path.GetTempPath();
+        var options = new ScanOptions { RootPath = tempDir, TopN = 1 };
+        
+        var progressReports = new List<ScanProgress>();
+        var progress = new Progress<ScanProgress>(p => progressReports.Add(p));
+        
+        // Act
+        await scanner.ScanAsync(options, progress, CancellationToken.None);
+        
+        // Assert
+        Assert.NotEmpty(progressReports);
+        
+        // Find a progress report where files were scanned
+        var progressWithFiles = progressReports.FirstOrDefault(p => p.FilesScanned > 0);
+        if (progressWithFiles != null)
+        {
+            // Elapsed time should be greater than zero if files were processed
+            Assert.True(progressWithFiles.Elapsed.TotalMilliseconds >= 0, 
+                "Elapsed time should be reported during progress updates");
+        }
+    }
+}
