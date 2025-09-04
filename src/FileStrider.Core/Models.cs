@@ -90,6 +90,11 @@ public record ScanOptions
     public bool FollowSymlinks { get; init; } = false;
     
     /// <summary>
+    /// Gets a value indicating whether to scan only folders and skip individual files for faster scanning.
+    /// </summary>
+    public bool FoldersOnly { get; init; } = false;
+    
+    /// <summary>
     /// Gets the maximum depth to recurse into subdirectories. Null means unlimited depth.
     /// </summary>
     public int? MaxDepth { get; init; }

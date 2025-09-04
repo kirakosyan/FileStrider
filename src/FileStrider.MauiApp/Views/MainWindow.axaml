@@ -91,6 +91,11 @@
                               Content="Include Hidden" 
                               Margin="0,0,20,0"/>
                     
+                    <CheckBox IsChecked="{Binding FoldersOnly}" 
+                              Content="Folders Only" 
+                              ToolTip.Tip="Skip individual files for faster scanning"
+                              Margin="0,0,20,0"/>
+                    
                     <TextBlock Text="Min Size (bytes):" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <NumericUpDown Value="{Binding MinFileSize}" 
                                    Minimum="0" 

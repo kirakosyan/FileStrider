@@ -73,6 +73,7 @@ public class ScanOptionsTests
         Assert.Equal(20, options.TopN);
         Assert.False(options.IncludeHidden);
         Assert.False(options.FollowSymlinks);
+        Assert.False(options.FoldersOnly);
         Assert.Equal(0, options.MinFileSize);
         Assert.True(options.ConcurrencyLimit > 0);
         Assert.Contains("node_modules", options.ExcludeDirectories);
@@ -89,12 +90,74 @@ public class ScanOptionsTests
         var options = new ScanOptions();
         
         // Act
-        var modified = options with { TopN = 50, IncludeHidden = true };
+        var modified = options with { TopN = 50, IncludeHidden = true, FoldersOnly = true };
         
         // Assert
         Assert.Equal(50, modified.TopN);
         Assert.True(modified.IncludeHidden);
+        Assert.True(modified.FoldersOnly);
         Assert.Equal(options.RootPath, modified.RootPath); // Other properties unchanged
+    }
+
+    /// <summary>
+    /// Tests that the FoldersOnly option works correctly in ScanOptions.
+    /// </summary>
+    [Fact]
+    public void ScanOptions_FoldersOnly_ShouldBeConfigurable()
+    {
+        // Arrange & Act
+        var defaultOptions = new ScanOptions();
+        var foldersOnlyOptions = new ScanOptions { FoldersOnly = true };
+        
+        // Assert
+        Assert.False(defaultOptions.FoldersOnly);
+        Assert.True(foldersOnlyOptions.FoldersOnly);
+    }
+
+    /// <summary>
+    /// Tests that FollowSymlinks option is properly configured in ScanOptions.
+    /// </summary>
+    [Fact]
+    public void ScanOptions_FollowSymlinks_ShouldDefaultToFalse()
+    {
+        // Arrange & Act
+        var defaultOptions = new ScanOptions();
+        var followSymlinksOptions = new ScanOptions { FollowSymlinks = true };
+        
+        // Assert
+        Assert.False(defaultOptions.FollowSymlinks, "FollowSymlinks should default to false for safety");
+        Assert.True(followSymlinksOptions.FollowSymlinks);
+    }
+
+    /// <summary>
+    /// Tests that FoldersOnly mode affects scan results appropriately.
+    /// </summary>
+    [Fact]
+    public async Task FileSystemScanner_FoldersOnly_ShouldSkipFileTracking()
+    {
+        // Arrange
+        var scanner = new FileSystemScanner();
+        var tempDir = Path.GetTempPath();
+        
+        // Test with normal scanning (should include files)
+        var normalOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = false };
+        var normalResults = await scanner.ScanAsync(normalOptions, null, CancellationToken.None);
+        
+        // Test with FoldersOnly scanning (should skip files but still calculate folder sizes)
+        var foldersOnlyOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = true };
+        var foldersOnlyResults = await scanner.ScanAsync(foldersOnlyOptions, null, CancellationToken.None);
+        
+        // Assert
+        // Folders should be found in both cases (as long as temp directory has subfolders)
+        Assert.True(foldersOnlyResults.TopFolders != null);
+        
+        // FoldersOnly should result in no files being tracked
+        Assert.Empty(foldersOnlyResults.TopFiles);
+        
+        // Normal scan may have files (depends on temp directory contents)
+        // Both should complete successfully
+        Assert.True(normalResults.IsCompleted || normalResults.WasCancelled);
+        Assert.True(foldersOnlyResults.IsCompleted || foldersOnlyResults.WasCancelled);
     }
 }
 
