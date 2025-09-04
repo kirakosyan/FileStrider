@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using FileStrider.Core.Contracts;
+using Avalonia.Platform.Storage;
 
 namespace FileStrider.Platform.Services;
 
@@ -158,5 +159,44 @@ public class ConsoleFolderPicker : IFolderPicker
         
         Console.WriteLine($"Directory '{input}' does not exist.");
         return Task.FromResult<string?>(null);
+    }
+}
+
+/// <summary>
+/// Avalonia-based folder picker implementation using the platform's native folder picker dialog.
+/// </summary>
+public class AvaloniaFolderPicker : IFolderPicker
+{
+    /// <summary>
+    /// Opens the platform's native folder picker dialog to select a folder for scanning.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous folder selection operation, returning the selected folder path or null if cancelled.</returns>
+    public async Task<string?> PickFolderAsync()
+    {
+        try
+        {
+            var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                ? desktop.MainWindow
+                : null;
+
+            if (topLevel?.StorageProvider is { } storageProvider)
+            {
+                var folders = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                {
+                    Title = "Select Folder to Scan",
+                    AllowMultiple = false
+                });
+
+                return folders.FirstOrDefault()?.Path.LocalPath;
+            }
+
+            // Fallback to current directory if no dialog available
+            return Directory.GetCurrentDirectory();
+        }
+        catch (Exception)
+        {
+            // Fallback to current directory on error
+            return Directory.GetCurrentDirectory();
+        }
     }
 }
