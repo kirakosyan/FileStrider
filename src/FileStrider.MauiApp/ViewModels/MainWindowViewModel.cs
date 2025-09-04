@@ -48,6 +48,9 @@ public partial class MainWindowViewModel : ObservableObject
     private long minFileSize = 0;
 
     [ObservableProperty]
+    private bool foldersOnly = false;
+
+    [ObservableProperty]
     private bool hasResults = false;
 
     public ObservableCollection<FileItem> TopFiles { get; } = new();
@@ -121,7 +124,8 @@ public partial class MainWindowViewModel : ObservableObject
             RootPath = SelectedPath,
             TopN = TopN,
             IncludeHidden = IncludeHidden,
-            MinFileSize = MinFileSize
+            MinFileSize = MinFileSize,
+            FoldersOnly = FoldersOnly
         };
 
         IsScanning = true;

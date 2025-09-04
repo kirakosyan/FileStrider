@@ -48,7 +48,7 @@ public class FileSystemScanner : IFileSystemScanner
             {
                 consumerTasks.Add(Task.Run(async () =>
                 {
-                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, startTime, cancellationToken);
+                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, startTime, options, cancellationToken);
                 }, cancellationToken));
             }
 
@@ -128,25 +128,29 @@ public class FileSystemScanner : IFileSystemScanner
     /// Consumer task that processes file system entries from the channel, tracking top files
     /// and accumulating folder size information for later analysis.
     /// </summary>
-    private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, CancellationToken cancellationToken)
+    private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, ScanOptions scanOptions, CancellationToken cancellationToken)
     {
         await foreach (var entry in reader.ReadAllAsync(cancellationToken))
         {
             if (!entry.IsDirectory)
             {
-                // Track top files
-                var fileItem = new FileItem
+                // Only process files if not in FoldersOnly mode
+                if (!scanOptions.FoldersOnly)
                 {
-                    Name = entry.Name,
-                    FullPath = entry.FullPath,
-                    Size = entry.Size,
-                    Type = Path.GetExtension(entry.Name),
-                    LastModified = entry.LastModified
-                };
+                    // Track top files
+                    var fileItem = new FileItem
+                    {
+                        Name = entry.Name,
+                        FullPath = entry.FullPath,
+                        Size = entry.Size,
+                        Type = Path.GetExtension(entry.Name),
+                        LastModified = entry.LastModified
+                    };
 
-                filesTracker.Add(fileItem);
+                    filesTracker.Add(fileItem);
+                }
 
-                // Update folder sizes for all parent directories
+                // Update folder sizes for all parent directories (always needed for folder calculations)
                 var directoryPath = Path.GetDirectoryName(entry.FullPath);
                 while (!string.IsNullOrEmpty(directoryPath))
                 {

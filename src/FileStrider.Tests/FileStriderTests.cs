@@ -73,6 +73,7 @@ public class ScanOptionsTests
         Assert.Equal(20, options.TopN);
         Assert.False(options.IncludeHidden);
         Assert.False(options.FollowSymlinks);
+        Assert.False(options.FoldersOnly);
         Assert.Equal(0, options.MinFileSize);
         Assert.True(options.ConcurrencyLimit > 0);
         Assert.Contains("node_modules", options.ExcludeDirectories);
@@ -89,12 +90,43 @@ public class ScanOptionsTests
         var options = new ScanOptions();
         
         // Act
-        var modified = options with { TopN = 50, IncludeHidden = true };
+        var modified = options with { TopN = 50, IncludeHidden = true, FoldersOnly = true };
         
         // Assert
         Assert.Equal(50, modified.TopN);
         Assert.True(modified.IncludeHidden);
+        Assert.True(modified.FoldersOnly);
         Assert.Equal(options.RootPath, modified.RootPath); // Other properties unchanged
+    }
+
+    /// <summary>
+    /// Tests that the FoldersOnly option works correctly in ScanOptions.
+    /// </summary>
+    [Fact]
+    public void ScanOptions_FoldersOnly_ShouldBeConfigurable()
+    {
+        // Arrange & Act
+        var defaultOptions = new ScanOptions();
+        var foldersOnlyOptions = new ScanOptions { FoldersOnly = true };
+        
+        // Assert
+        Assert.False(defaultOptions.FoldersOnly);
+        Assert.True(foldersOnlyOptions.FoldersOnly);
+    }
+
+    /// <summary>
+    /// Tests that FollowSymlinks option is properly configured in ScanOptions.
+    /// </summary>
+    [Fact]
+    public void ScanOptions_FollowSymlinks_ShouldDefaultToFalse()
+    {
+        // Arrange & Act
+        var defaultOptions = new ScanOptions();
+        var followSymlinksOptions = new ScanOptions { FollowSymlinks = true };
+        
+        // Assert
+        Assert.False(defaultOptions.FollowSymlinks, "FollowSymlinks should default to false for safety");
+        Assert.True(followSymlinksOptions.FollowSymlinks);
     }
 }
 
