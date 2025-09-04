@@ -4,8 +4,18 @@ using FileStrider.Core.Models;
 
 namespace FileStrider.Infrastructure.Export;
 
+/// <summary>
+/// Service for exporting file system scan results to various file formats including CSV and JSON.
+/// </summary>
 public class ExportService : IExportService
 {
+    /// <summary>
+    /// Exports the scan results to a CSV (Comma Separated Values) file with separate sections for files and folders.
+    /// Includes proper CSV escaping for fields containing special characters.
+    /// </summary>
+    /// <param name="results">The scan results to export.</param>
+    /// <param name="filePath">The file path where the CSV file should be saved.</param>
+    /// <returns>A task that represents the asynchronous export operation.</returns>
     public async Task ExportToCsvAsync(ScanResults results, string filePath)
     {
         using var writer = new StreamWriter(filePath);
@@ -33,6 +43,13 @@ public class ExportService : IExportService
         }
     }
 
+    /// <summary>
+    /// Exports the scan results to a structured JSON file with comprehensive metadata and formatted data.
+    /// Uses camelCase naming and includes both raw byte values and human-readable MB values.
+    /// </summary>
+    /// <param name="results">The scan results to export.</param>
+    /// <param name="filePath">The file path where the JSON file should be saved.</param>
+    /// <returns>A task that represents the asynchronous export operation.</returns>
     public async Task ExportToJsonAsync(ScanResults results, string filePath)
     {
         var exportData = new
@@ -78,6 +95,11 @@ public class ExportService : IExportService
         await File.WriteAllTextAsync(filePath, json);
     }
 
+    /// <summary>
+    /// Escapes a CSV field according to RFC 4180 standards by wrapping in quotes and escaping internal quotes.
+    /// </summary>
+    /// <param name="field">The field value to escape.</param>
+    /// <returns>The properly escaped CSV field value.</returns>
     private static string EscapeCsvField(string field)
     {
         if (string.IsNullOrEmpty(field))

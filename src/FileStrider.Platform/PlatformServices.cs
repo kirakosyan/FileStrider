@@ -4,8 +4,18 @@ using FileStrider.Core.Contracts;
 
 namespace FileStrider.Platform.Services;
 
+/// <summary>
+/// Cross-platform shell service that provides integration with the operating system's file manager and clipboard.
+/// </summary>
 public class ShellService : IShellService
 {
+    /// <summary>
+    /// Opens the file or folder location in the platform's default file manager (Explorer, Finder, etc.).
+    /// On Windows, uses Explorer with /select to highlight the specific file.
+    /// </summary>
+    /// <param name="filePath">The path of the file or folder to open in the file manager.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the operation fails.</exception>
     public async Task OpenFileLocationAsync(string filePath)
     {
         try
@@ -50,6 +60,13 @@ public class ShellService : IShellService
         await Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Copies the specified text to the system clipboard using platform-specific commands.
+    /// Uses clip.exe on Windows, pbcopy on macOS, and xclip on Linux.
+    /// </summary>
+    /// <param name="text">The text to copy to the clipboard.</param>
+    /// <returns>A task that represents the asynchronous clipboard operation.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the clipboard operation fails.</exception>
     public async Task CopyToClipboardAsync(string text)
     {
         try
@@ -114,8 +131,16 @@ public class ShellService : IShellService
     }
 }
 
+/// <summary>
+/// Console-based folder picker implementation that prompts the user via command line input.
+/// </summary>
 public class ConsoleFolderPicker : IFolderPicker
 {
+    /// <summary>
+    /// Prompts the user via console input to select a folder for scanning.
+    /// Returns the current directory if no input is provided.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous folder selection operation, returning the selected folder path or null if invalid.</returns>
     public Task<string?> PickFolderAsync()
     {
         Console.Write("Enter folder path to scan (or press Enter for current directory): ");

@@ -5,8 +5,14 @@ using FileStrider.Infrastructure.Configuration;
 
 namespace FileStrider.Tests;
 
+/// <summary>
+/// Unit tests for the TopItemsTracker class to verify correct top-N item tracking behavior.
+/// </summary>
 public class TopItemsTrackerTests
 {
+    /// <summary>
+    /// Tests that the TopItemsTracker correctly maintains the top N items in the correct order.
+    /// </summary>
     [Fact]
     public void TopItemsTracker_ShouldTrackTopItems()
     {
@@ -28,6 +34,9 @@ public class TopItemsTrackerTests
         Assert.Equal(5, top[2]);
     }
 
+    /// <summary>
+    /// Tests that the TopItemsTracker correctly handles cases where fewer items are added than the maximum capacity.
+    /// </summary>
     [Fact]
     public void TopItemsTracker_ShouldHandleFewerItemsThanCapacity()
     {
@@ -46,8 +55,14 @@ public class TopItemsTrackerTests
     }
 }
 
+/// <summary>
+/// Unit tests for the ScanOptions record to verify default values and record functionality.
+/// </summary>
 public class ScanOptionsTests
 {
+    /// <summary>
+    /// Tests that ScanOptions has the correct default values for all properties.
+    /// </summary>
     [Fact]
     public void ScanOptions_ShouldHaveCorrectDefaults()
     {
@@ -64,6 +79,9 @@ public class ScanOptionsTests
         Assert.Contains(".git", options.ExcludeDirectories);
     }
 
+    /// <summary>
+    /// Tests that the ScanOptions record supports the "with" syntax for creating modified copies.
+    /// </summary>
     [Fact]
     public void ScanOptions_WithSyntax_ShouldWork()
     {
@@ -80,8 +98,14 @@ public class ScanOptionsTests
     }
 }
 
+/// <summary>
+/// Unit tests for the ExportService to verify CSV and JSON export functionality.
+/// </summary>
 public class ExportServiceTests
 {
+    /// <summary>
+    /// Tests that CSV export creates a valid file with the expected content structure.
+    /// </summary>
     [Fact]
     public async Task ExportToCsv_ShouldCreateValidCsvContent()
     {
@@ -120,8 +144,14 @@ public class ExportServiceTests
     }
 }
 
+/// <summary>
+/// Unit tests for the ConfigurationService to verify configuration loading and saving functionality.
+/// </summary>
 public class ConfigurationServiceTests
 {
+    /// <summary>
+    /// Tests that LoadDefaultOptions returns sensible defaults when no configuration file exists.
+    /// </summary>
     [Fact]
     public async Task LoadDefaultOptions_ShouldReturnDefaults_WhenNoConfigFile()
     {
@@ -137,6 +167,9 @@ public class ConfigurationServiceTests
         Assert.False(options.IncludeHidden);
     }
 
+    /// <summary>
+    /// Tests that configuration options can be saved and loaded successfully, demonstrating persistence.
+    /// </summary>
     [Fact]
     public async Task SaveAndLoadOptions_ShouldPersist()
     {

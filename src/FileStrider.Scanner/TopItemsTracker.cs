@@ -2,6 +2,11 @@ using FileStrider.Core.Contracts;
 
 namespace FileStrider.Scanner;
 
+/// <summary>
+/// Thread-safe implementation of a top-N items tracker that efficiently maintains 
+/// the best N items according to a specified comparison function.
+/// </summary>
+/// <typeparam name="T">The type of items to track.</typeparam>
 public class TopItemsTracker<T> : ITopItemsTracker<T>
 {
     private readonly int _maxItems;
@@ -9,12 +14,22 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
     private readonly List<T> _items = new();
     private readonly object _lock = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TopItemsTracker{T}"/> class.
+    /// </summary>
+    /// <param name="maxItems">The maximum number of items to track.</param>
+    /// <param name="comparison">The comparison function to determine which items are "best".</param>
     public TopItemsTracker(int maxItems, Comparison<T> comparison)
     {
         _maxItems = maxItems;
         _comparer = Comparer<T>.Create(comparison);
     }
 
+    /// <summary>
+    /// Adds an item to the tracker. If the item should be in the top N, it will be stored and maintained in sorted order.
+    /// This method is thread-safe and can be called concurrently from multiple threads.
+    /// </summary>
+    /// <param name="item">The item to add to the tracker.</param>
     public void Add(T item)
     {
         lock (_lock)
@@ -44,6 +59,11 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
         }
     }
 
+    /// <summary>
+    /// Gets the current top items in order (best to worst according to the comparison function).
+    /// This method is thread-safe.
+    /// </summary>
+    /// <returns>A read-only list of the top items currently being tracked.</returns>
     public IReadOnlyList<T> GetTop()
     {
         lock (_lock)
@@ -60,6 +80,10 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
         }
     }
 
+    /// <summary>
+    /// Clears all tracked items from the tracker.
+    /// This method is thread-safe.
+    /// </summary>
     public void Clear()
     {
         lock (_lock)

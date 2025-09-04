@@ -5,8 +5,20 @@ using FileStrider.Core.Models;
 
 namespace FileStrider.Scanner;
 
+/// <summary>
+/// High-performance, concurrent file system scanner that uses a producer-consumer pattern 
+/// to efficiently discover and analyze files and folders for size analysis.
+/// </summary>
 public class FileSystemScanner : IFileSystemScanner
 {
+    /// <summary>
+    /// Scans the file system starting from the specified root path and returns the largest files and folders.
+    /// Uses a producer-consumer pattern with bounded channels for memory-efficient, concurrent processing.
+    /// </summary>
+    /// <param name="options">The configuration options for the scan operation.</param>
+    /// <param name="progress">Optional progress reporter to receive real-time updates during the scan.</param>
+    /// <param name="cancellationToken">Token to request cancellation of the scan operation.</param>
+    /// <returns>A task that represents the asynchronous scan operation, containing the scan results.</returns>
     public async Task<ScanResults> ScanAsync(ScanOptions options, IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         var results = new ScanResults();
@@ -72,6 +84,10 @@ public class FileSystemScanner : IFileSystemScanner
         return results;
     }
 
+    /// <summary>
+    /// Producer task that recursively enumerates all files and directories in the specified path
+    /// and writes them to a channel for processing by consumer tasks.
+    /// </summary>
     private async Task ProduceFileSystemEntriesAsync(ScanOptions options, ChannelWriter<FileSystemEntry> writer, ScanProgress progress, IProgress<ScanProgress>? progressReporter, CancellationToken cancellationToken)
     {
         try
@@ -106,6 +122,10 @@ public class FileSystemScanner : IFileSystemScanner
         }
     }
 
+    /// <summary>
+    /// Consumer task that processes file system entries from the channel, tracking top files
+    /// and accumulating folder size information for later analysis.
+    /// </summary>
     private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, CancellationToken cancellationToken)
     {
         await foreach (var entry in reader.ReadAllAsync(cancellationToken))
@@ -137,6 +157,10 @@ public class FileSystemScanner : IFileSystemScanner
         }
     }
 
+    /// <summary>
+    /// Asynchronously enumerates all file system entries in the specified directory tree,
+    /// respecting the scan options for exclusions, depth limits, and other filters.
+    /// </summary>
     private async IAsyncEnumerable<FileSystemEntry> EnumerateFileSystemEntriesAsync(string rootPath, EnumerationOptions options, ScanOptions scanOptions, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stack = new Stack<(string path, int depth)>();
@@ -216,6 +240,9 @@ public class FileSystemScanner : IFileSystemScanner
         }
     }
 
+    /// <summary>
+    /// Determines whether a directory should be skipped based on the exclusion rules.
+    /// </summary>
     private bool ShouldSkipDirectory(string path, HashSet<string> excludeDirectories, HashSet<string> excludePatterns)
     {
         var dirName = Path.GetFileName(path);
@@ -223,6 +250,9 @@ public class FileSystemScanner : IFileSystemScanner
                excludePatterns.Any(pattern => System.Text.RegularExpressions.Regex.IsMatch(dirName, pattern));
     }
 
+    /// <summary>
+    /// Computes the top largest folders from the accumulated folder size data.
+    /// </summary>
     private List<FolderItem> ComputeTopFolders(ConcurrentDictionary<string, long> folderSizes, ScanOptions options, DateTime startTime)
     {
         var folderItems = new List<FolderItem>();
@@ -255,11 +285,33 @@ public class FileSystemScanner : IFileSystemScanner
     }
 }
 
+/// <summary>
+/// Internal data structure used to represent a file or directory entry during the scanning process.
+/// </summary>
 internal class FileSystemEntry
 {
+    /// <summary>
+    /// Gets the name of the file or directory.
+    /// </summary>
     public string Name { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Gets the full path to the file or directory.
+    /// </summary>
     public string FullPath { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Gets the size of the file in bytes (0 for directories).
+    /// </summary>
     public long Size { get; init; }
+    
+    /// <summary>
+    /// Gets a value indicating whether this entry represents a directory.
+    /// </summary>
     public bool IsDirectory { get; init; }
+    
+    /// <summary>
+    /// Gets the date and time when the entry was last modified.
+    /// </summary>
     public DateTime LastModified { get; init; }
 }
