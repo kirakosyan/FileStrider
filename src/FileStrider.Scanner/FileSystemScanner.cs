@@ -27,7 +27,7 @@ public class FileSystemScanner : IFileSystemScanner
 
         var filesTracker = new TopItemsTracker<FileItem>(options.TopN, (a, b) => b.Size.CompareTo(a.Size));
         var foldersTracker = new TopItemsTracker<FolderItem>(options.TopN, (a, b) => b.RecursiveSize.CompareTo(a.RecursiveSize));
-        var folderSizes = new ConcurrentDictionary<string, long>();
+        var folderSizes = new ConcurrentDictionary<string, long>(System.StringComparer.OrdinalIgnoreCase);
 
         try
         {
@@ -95,8 +95,12 @@ public class FileSystemScanner : IFileSystemScanner
             var enumerationOptions = new EnumerationOptions
             {
                 IgnoreInaccessible = true,
-                RecurseSubdirectories = true,
-                AttributesToSkip = options.IncludeHidden ? FileAttributes.None : FileAttributes.Hidden | FileAttributes.System
+                // We manage recursion manually using a stack, avoid double traversal.
+                RecurseSubdirectories = false,
+                // Also skip cloud placeholder files (e.g., OneDrive files that are not available locally)
+                AttributesToSkip = options.IncludeHidden
+                    ? FileAttributes.Offline
+                    : FileAttributes.Hidden | FileAttributes.System | FileAttributes.Offline
             };
 
             await foreach (var entry in EnumerateFileSystemEntriesAsync(options.RootPath, enumerationOptions, options, cancellationToken))
@@ -130,6 +134,9 @@ public class FileSystemScanner : IFileSystemScanner
     /// </summary>
     private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, ScanOptions scanOptions, CancellationToken cancellationToken)
     {
+        // Normalize the root path once for comparisons and as a boundary for aggregation
+        var rootFullPathTrimmed = Path.GetFullPath(scanOptions.RootPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
         await foreach (var entry in reader.ReadAllAsync(cancellationToken))
         {
             if (!entry.IsDirectory)
@@ -150,11 +157,23 @@ public class FileSystemScanner : IFileSystemScanner
                     filesTracker.Add(fileItem);
                 }
 
-                // Update folder sizes for all parent directories (always needed for folder calculations)
+                // Update folder sizes for parent directories up to the scan root only
                 var directoryPath = Path.GetDirectoryName(entry.FullPath);
                 while (!string.IsNullOrEmpty(directoryPath))
                 {
-                    folderSizes.AddOrUpdate(directoryPath, entry.Size, (key, value) => value + entry.Size);
+                    var dirFullTrimmed = Path.GetFullPath(directoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                    // Stop if we climbed above the root
+                    if (!dirFullTrimmed.StartsWith(rootFullPathTrimmed, StringComparison.OrdinalIgnoreCase))
+                        break;
+
+                    // Use normalized full path as the key to prevent duplicates
+                    folderSizes.AddOrUpdate(dirFullTrimmed, entry.Size, (key, value) => value + entry.Size);
+
+                    // If we've reached the root directory, stop climbing further
+                    if (string.Equals(dirFullTrimmed, rootFullPathTrimmed, StringComparison.OrdinalIgnoreCase))
+                        break;
+
                     directoryPath = Path.GetDirectoryName(directoryPath);
                 }
 
@@ -206,12 +225,17 @@ public class FileSystemScanner : IFileSystemScanner
                 try
                 {
                     var info = new FileInfo(entryPath);
-                    var isDirectory = (info.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+                    var attributes = info.Attributes;
+                    var isDirectory = (attributes & FileAttributes.Directory) == FileAttributes.Directory;
+
+                    // Skip cloud placeholder files or directories (e.g., OneDrive items not available offline)
+                    if ((attributes & FileAttributes.Offline) == FileAttributes.Offline)
+                        continue;
 
                     if (!isDirectory && info.Length < scanOptions.MinFileSize)
                         continue;
 
-                    if (!scanOptions.FollowSymlinks && (info.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                    if (!scanOptions.FollowSymlinks && (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
                         continue;
 
                     entry = new FileSystemEntry
