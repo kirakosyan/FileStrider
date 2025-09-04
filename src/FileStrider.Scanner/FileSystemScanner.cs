@@ -48,7 +48,7 @@ public class FileSystemScanner : IFileSystemScanner
             {
                 consumerTasks.Add(Task.Run(async () =>
                 {
-                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, cancellationToken);
+                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, startTime, cancellationToken);
                 }, cancellationToken));
             }
 
@@ -112,7 +112,8 @@ public class FileSystemScanner : IFileSystemScanner
                 // Throttle progress updates
                 if (progress.FilesScanned % 100 == 0)
                 {
-                    progress.Elapsed = DateTime.UtcNow - startTime;
+                    var elapsed = DateTime.UtcNow - startTime;
+                    progress.Elapsed = elapsed;
                     progressReporter?.Report(progress);
                 }
             }
@@ -127,7 +128,7 @@ public class FileSystemScanner : IFileSystemScanner
     /// Consumer task that processes file system entries from the channel, tracking top files
     /// and accumulating folder size information for later analysis.
     /// </summary>
-    private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, CancellationToken cancellationToken)
+    private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, CancellationToken cancellationToken)
     {
         await foreach (var entry in reader.ReadAllAsync(cancellationToken))
         {
