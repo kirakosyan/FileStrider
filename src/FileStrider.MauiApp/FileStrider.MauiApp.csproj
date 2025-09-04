@@ -21,6 +21,11 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
   </ItemGroup>
 
+  <!-- Ensure everything under Assets/ is embedded as Avalonia resources -->
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\FileStrider.Core\FileStrider.Core.csproj" />
     <ProjectReference Include="..\FileStrider.Scanner\FileStrider.Scanner.csproj" />
