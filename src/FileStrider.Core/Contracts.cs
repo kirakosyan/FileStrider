@@ -1,4 +1,5 @@
 using FileStrider.Core.Models;
+using System.ComponentModel;
 
 namespace FileStrider.Core.Contracts;
 
@@ -112,4 +113,33 @@ public interface ITopItemsTracker<T>
     /// Clears all tracked items from the tracker.
     /// </summary>
     void Clear();
+}
+
+/// <summary>
+/// Service for managing application localization and language switching.
+/// </summary>
+public interface ILocalizationService : INotifyPropertyChanged
+{
+    /// <summary>
+    /// Gets the current language culture code (e.g., "en", "es", "fr").
+    /// </summary>
+    string CurrentLanguage { get; }
+    
+    /// <summary>
+    /// Gets the available languages.
+    /// </summary>
+    IReadOnlyList<LanguageInfo> AvailableLanguages { get; }
+    
+    /// <summary>
+    /// Changes the current language.
+    /// </summary>
+    /// <param name="languageCode">The language culture code to switch to.</param>
+    void ChangeLanguage(string languageCode);
+    
+    /// <summary>
+    /// Gets a localized string for the specified key.
+    /// </summary>
+    /// <param name="key">The resource key.</param>
+    /// <returns>The localized string.</returns>
+    string GetString(string key);
 }

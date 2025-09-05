@@ -10,6 +10,7 @@ using FileStrider.Scanner;
 using FileStrider.Platform.Services;
 using FileStrider.Infrastructure.Export;
 using FileStrider.Infrastructure.Configuration;
+using FileStrider.Infrastructure.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -55,6 +56,7 @@ public partial class App : Application
                 services.AddSingleton<IExportService, ExportService>();
                 services.AddSingleton<IConfigurationService, ConfigurationService>();
                 services.AddSingleton<IShellService, ShellService>();
+                services.AddSingleton<ILocalizationService, LocalizationService>();
 
                 // Register view models
                 services.AddTransient<MainWindowViewModel>();

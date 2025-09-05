@@ -27,7 +27,7 @@
                        FontWeight="Bold" 
                        HorizontalAlignment="Center"
                        Margin="0,0,0,5"/>
-            <TextBlock Text="Big File and Folder Discovery Tool" 
+            <TextBlock Text="{Binding AppSubtitle}" 
                        FontSize="14" 
                        HorizontalAlignment="Center"
                        Foreground="Gray"/>
@@ -52,13 +52,13 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Path Selection -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan Path:" Margin="0,0,0,5"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ScanPathLabel}" Margin="0,0,0,5"/>
                 <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0,0,10,0">
                     <TextBox Text="{Binding SelectedPath}" 
                              Width="400" 
                              IsReadOnly="True"
                              VerticalAlignment="Center"/>
-                    <Button Content="Browse..." 
+                    <Button Content="{Binding BrowseLabel}" 
                             Command="{Binding SelectFolderCommand}"
                             Margin="10,0,0,0"
                             VerticalAlignment="Center"/>
@@ -66,13 +66,13 @@
 
                 <!-- Quick Actions -->
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="🔍 Quick Scan" 
+                    <Button Content="{Binding QuickScanLabel}" 
                             Command="{Binding QuickScanCommand}"
                             Margin="0,0,10,0"
                             Background="DodgerBlue"
                             Foreground="White"
                             Padding="15,5"/>
-                    <Button Content="▶️ Start Scan" 
+                    <Button Content="{Binding StartScanLabel}" 
                             Command="{Binding StartScanCommand}"
                             Background="Green"
                             Foreground="White"
@@ -81,25 +81,40 @@
 
                 <!-- Options -->
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,15,0,0">
-                    <TextBlock Text="Top N:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding TopNLabel}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <NumericUpDown Value="{Binding TopN}" 
                                    Minimum="1" Maximum="200" 
                                    Width="80" 
                                    Margin="0,0,20,0"/>
                     
                     <CheckBox IsChecked="{Binding IncludeHidden}" 
-                              Content="Include Hidden" 
+                              Content="{Binding IncludeHiddenLabel}" 
                               Margin="0,0,20,0"/>
                     
                     <CheckBox IsChecked="{Binding FoldersOnly}" 
-                              Content="Folders Only" 
-                              ToolTip.Tip="Skip individual files for faster scanning"
+                              Content="{Binding FoldersOnlyLabel}" 
+                              ToolTip.Tip="{Binding FoldersOnlyTooltip}"
                               Margin="0,0,20,0"/>
                     
-                    <TextBlock Text="Min Size (bytes):" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding MinSizeLabel}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <NumericUpDown Value="{Binding MinFileSize}" 
                                    Minimum="0" 
-                                   Width="100"/>
+                                   Width="100"
+                                   Margin="0,0,20,0"/>
+                    
+                    <TextBlock Text="{Binding LanguageLabel}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                              SelectedItem="{Binding SelectedLanguage}"
+                              Width="120">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding FlagEmoji}" Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding NativeName}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
             </Grid>
         </Border>
@@ -124,7 +139,7 @@
                     </Grid.RowDefinitions>
                     
                     <TextBlock Grid.Row="0" 
-                               Text="🔥 Largest Files" 
+                               Text="{Binding LargestFilesLabel}" 
                                FontSize="16" 
                                FontWeight="Bold" 
                                Margin="10,10,10,5"/>
@@ -174,7 +189,7 @@
                     </Grid.RowDefinitions>
                     
                     <TextBlock Grid.Row="0" 
-                               Text="📁 Largest Folders" 
+                               Text="{Binding LargestFoldersLabel}" 
                                FontSize="16" 
                                FontWeight="Bold" 
                                Margin="10,10,10,5"/>
@@ -236,19 +251,19 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="❌ Cancel" 
+                    <Button Content="{Binding CancelLabel}" 
                             Command="{Binding CancelScanCommand}"
                             IsVisible="{Binding CanCancel}"
                             Background="Red"
                             Foreground="White"
                             Margin="0,0,10,0"/>
                     
-                    <Button Content="📄 Export CSV" 
+                    <Button Content="{Binding ExportCsvLabel}" 
                             Command="{Binding ExportToCsvCommand}"
                             IsEnabled="{Binding HasResults}"
                             Margin="0,0,5,0"/>
                     
-                    <Button Content="📝 Export JSON" 
+                    <Button Content="{Binding ExportJsonLabel}" 
                             Command="{Binding ExportToJsonCommand}"
                             IsEnabled="{Binding HasResults}"/>
                 </StackPanel>
