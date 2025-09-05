@@ -2,6 +2,7 @@ using FileStrider.Core.Models;
 using FileStrider.Scanner;
 using FileStrider.Infrastructure.Export;
 using FileStrider.Infrastructure.Configuration;
+using FileStrider.Infrastructure.Localization;
 
 namespace FileStrider.Tests;
 
@@ -312,5 +313,89 @@ public class MainWindowViewModelTests
         // For now, we'll just check that the scanner timer fix works (already tested above)
         // The cancel button fix requires UI testing which we'll do manually
         Assert.True(true, "Cancel button fix verified through manual testing");
+    }
+}
+
+/// <summary>
+/// Unit tests for the LocalizationService to verify language switching and string retrieval.
+/// </summary>
+public class LocalizationServiceTests
+{
+    /// <summary>
+    /// Tests that the localization service initializes with English as default language.
+    /// </summary>
+    [Fact]
+    public void LocalizationService_ShouldInitializeWithEnglish()
+    {
+        // Arrange & Act
+        var localizationService = new LocalizationService();
+        
+        // Assert
+        Assert.Equal("en", localizationService.CurrentLanguage);
+        Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "en");
+        Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "es");
+        Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "fr");
+    }
+
+    /// <summary>
+    /// Tests that language switching works correctly and triggers property change notifications.
+    /// </summary>
+    [Fact]
+    public void LocalizationService_ShouldSwitchLanguages()
+    {
+        // Arrange
+        var localizationService = new LocalizationService();
+        bool propertyChangedFired = false;
+        localizationService.PropertyChanged += (s, e) => propertyChangedFired = true;
+        
+        // Act
+        localizationService.ChangeLanguage("es");
+        
+        // Assert
+        Assert.Equal("es", localizationService.CurrentLanguage);
+        Assert.True(propertyChangedFired);
+    }
+
+    /// <summary>
+    /// Tests that localized strings are retrieved correctly.
+    /// </summary>
+    [Fact]
+    public void LocalizationService_ShouldRetrieveLocalizedStrings()
+    {
+        // Arrange
+        var localizationService = new LocalizationService();
+        
+        // Act & Assert
+        var englishString = localizationService.GetString("AppTitle");
+        Assert.Contains("FileStrider", englishString);
+        
+        // Switch to Spanish and test
+        localizationService.ChangeLanguage("es");
+        var spanishString = localizationService.GetString("AppTitle");
+        Assert.Contains("FileStrider", spanishString);
+        Assert.Contains("Herramienta", spanishString);
+        
+        // Switch to French and test
+        localizationService.ChangeLanguage("fr");
+        var frenchString = localizationService.GetString("AppTitle");
+        Assert.Contains("FileStrider", frenchString);
+        Assert.Contains("Outil", frenchString);
+    }
+
+    /// <summary>
+    /// Tests that invalid language codes are ignored.
+    /// </summary>
+    [Fact]
+    public void LocalizationService_ShouldIgnoreInvalidLanguages()
+    {
+        // Arrange
+        var localizationService = new LocalizationService();
+        var originalLanguage = localizationService.CurrentLanguage;
+        
+        // Act
+        localizationService.ChangeLanguage("invalid");
+        
+        // Assert
+        Assert.Equal(originalLanguage, localizationService.CurrentLanguage);
     }
 }

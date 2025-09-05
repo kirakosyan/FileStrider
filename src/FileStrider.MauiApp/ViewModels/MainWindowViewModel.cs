@@ -87,8 +87,35 @@ public partial class MainWindowViewModel : ObservableObject
         {
             ScanStats = _localizationService.GetString("ReadyToScan");
         }
+        
+        // Notify about all localized properties
         OnPropertyChanged(nameof(AvailableLanguages));
         OnPropertyChanged(nameof(SelectedLanguage));
+        OnPropertyChanged(nameof(AppSubtitle));
+        OnPropertyChanged(nameof(ScanPathLabel));
+        OnPropertyChanged(nameof(BrowseLabel));
+        OnPropertyChanged(nameof(QuickScanLabel));
+        OnPropertyChanged(nameof(StartScanLabel));
+        OnPropertyChanged(nameof(TopNLabel));
+        OnPropertyChanged(nameof(IncludeHiddenLabel));
+        OnPropertyChanged(nameof(FoldersOnlyLabel));
+        OnPropertyChanged(nameof(FoldersOnlyTooltip));
+        OnPropertyChanged(nameof(MinSizeLabel));
+        OnPropertyChanged(nameof(LargestFilesLabel));
+        OnPropertyChanged(nameof(LargestFoldersLabel));
+        OnPropertyChanged(nameof(CancelLabel));
+        OnPropertyChanged(nameof(ExportCsvLabel));
+        OnPropertyChanged(nameof(ExportJsonLabel));
+        OnPropertyChanged(nameof(LanguageLabel));
+        OnPropertyChanged(nameof(SizeLabel));
+        OnPropertyChanged(nameof(ModifiedLabel));
+        OnPropertyChanged(nameof(ItemsLabel));
+        OnPropertyChanged(nameof(BytesLabel));
+        OnPropertyChanged(nameof(FileSizeFormat));
+        OnPropertyChanged(nameof(FileModifiedFormat));
+        OnPropertyChanged(nameof(FolderSizeFormat));
+        OnPropertyChanged(nameof(FolderItemsFormat));
+        OnPropertyChanged(nameof(FolderModifiedFormat));
     }
 
     // Localization Properties
@@ -121,6 +148,13 @@ public partial class MainWindowViewModel : ObservableObject
     public string ModifiedLabel => _localizationService.GetString("Modified");
     public string ItemsLabel => _localizationService.GetString("Items");
     public string BytesLabel => _localizationService.GetString("Bytes");
+    
+    // Format strings for templates
+    public string FileSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
+    public string FileModifiedFormat => $"{ModifiedLabel} {{0:yyyy-MM-dd HH:mm}}";
+    public string FolderSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
+    public string FolderItemsFormat => $"{ItemsLabel} {{0:N0}}";
+    public string FolderModifiedFormat => $"{ModifiedLabel} {{0:yyyy-MM-dd HH:mm}}";
 
     private async void LoadDefaultSettings()
     {
