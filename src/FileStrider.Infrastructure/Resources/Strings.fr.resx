@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Application Title -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>FileStrider - Outil de Découverte de Fichiers et Dossiers</value>
+  </data>
+  <data name="AppSubtitle" xml:space="preserve">
+    <value>Outil de Découverte de Gros Fichiers et Dossiers</value>
+  </data>
+  
+  <!-- UI Labels -->
+  <data name="ScanPath" xml:space="preserve">
+    <value>Chemin de Scan :</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>Parcourir...</value>
+  </data>
+  <data name="QuickScan" xml:space="preserve">
+    <value>🔍 Scan Rapide</value>
+  </data>
+  <data name="StartScan" xml:space="preserve">
+    <value>▶️ Démarrer Scan</value>
+  </data>
+  <data name="TopN" xml:space="preserve">
+    <value>Top N :</value>
+  </data>
+  <data name="IncludeHidden" xml:space="preserve">
+    <value>Inclure Cachés</value>
+  </data>
+  <data name="FoldersOnly" xml:space="preserve">
+    <value>Dossiers Seulement</value>
+  </data>
+  <data name="FoldersOnlyTooltip" xml:space="preserve">
+    <value>Ignorer les fichiers individuels pour un scan plus rapide</value>
+  </data>
+  <data name="MinSize" xml:space="preserve">
+    <value>Taille Min (octets) :</value>
+  </data>
+  <data name="LargestFiles" xml:space="preserve">
+    <value>🔥 Plus Gros Fichiers</value>
+  </data>
+  <data name="LargestFolders" xml:space="preserve">
+    <value>📁 Plus Gros Dossiers</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>❌ Annuler</value>
+  </data>
+  <data name="ExportCsv" xml:space="preserve">
+    <value>📄 Exporter CSV</value>
+  </data>
+  <data name="ExportJson" xml:space="preserve">
+    <value>📝 Exporter JSON</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Langue :</value>
+  </data>
+  
+  <!-- Status Messages -->
+  <data name="ReadyToScan" xml:space="preserve">
+    <value>Prêt à scanner...</value>
+  </data>
+  <data name="Scanning" xml:space="preserve">
+    <value>Scan en cours...</value>
+  </data>
+  
+  <!-- File Details -->
+  <data name="Size" xml:space="preserve">
+    <value>Taille :</value>
+  </data>
+  <data name="Modified" xml:space="preserve">
+    <value>Modifié :</value>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>Éléments :</value>
+  </data>
+  <data name="Bytes" xml:space="preserve">
+    <value>octets</value>
+  </data>
+  
+  <!-- Dialog Messages -->
+  <data name="Error" xml:space="preserve">
+    <value>Erreur</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Succès</value>
+  </data>
+  <data name="NoResults" xml:space="preserve">
+    <value>Aucun Résultat</value>
+  </data>
+  <data name="NoResultsMessage" xml:space="preserve">
+    <value>Aucun résultat de scan à exporter</value>
+  </data>
+  <data name="ExportSuccessMessage" xml:space="preserve">
+    <value>Résultats exportés vers : {0}</value>
+  </data>
+  <data name="ExportFailedMessage" xml:space="preserve">
+    <value>Échec de l'exportation : {0}</value>
+  </data>
+  <data name="FailedToOpenLocation" xml:space="preserve">
+    <value>Échec de l'ouverture de l'emplacement : {0}</value>
+  </data>
+  <data name="SelectFolderToScan" xml:space="preserve">
+    <value>Sélectionner le Dossier à Scanner</value>
+  </data>
+</root>

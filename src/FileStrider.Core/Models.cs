@@ -191,3 +191,13 @@ public class ScanResults
     /// </summary>
     public string? ErrorMessage { get; set; }
 }
+
+/// <summary>
+/// Information about an available language.
+/// </summary>
+public record LanguageInfo(
+    string Code,
+    string Name,
+    string NativeName,
+    string FlagEmoji
+);

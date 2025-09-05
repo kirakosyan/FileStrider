@@ -15,10 +15,11 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IExportService _exportService;
     private readonly IShellService _shellService;
     private readonly IConfigurationService _configurationService;
+    private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _cancellationTokenSource;
 
     [ObservableProperty]
-    private string title = "FileStrider - File & Folder Discovery Tool";
+    private string title = "";
 
     [ObservableProperty]
     private bool isScanning = false;
@@ -33,7 +34,7 @@ public partial class MainWindowViewModel : ObservableObject
     private string currentPath = "";
 
     [ObservableProperty]
-    private string scanStats = "Ready to scan...";
+    private string scanStats = "";
 
     [ObservableProperty]
     private string selectedPath = "";
@@ -61,17 +62,99 @@ public partial class MainWindowViewModel : ObservableObject
         IFolderPicker folderPicker,
         IExportService exportService,
         IShellService shellService,
-        IConfigurationService configurationService)
+        IConfigurationService configurationService,
+        ILocalizationService localizationService)
     {
         _scanner = scanner;
         _folderPicker = folderPicker;
         _exportService = exportService;
         _shellService = shellService;
         _configurationService = configurationService;
+        _localizationService = localizationService;
+        
+        // Subscribe to localization changes
+        _localizationService.PropertyChanged += (s, e) => UpdateLocalizedProperties();
         
         SelectedPath = Directory.GetCurrentDirectory();
         LoadDefaultSettings();
+        UpdateLocalizedProperties();
     }
+
+    private void UpdateLocalizedProperties()
+    {
+        Title = _localizationService.GetString("AppTitle");
+        if (ScanStats == "Ready to scan..." || ScanStats == _localizationService.GetString("ReadyToScan"))
+        {
+            ScanStats = _localizationService.GetString("ReadyToScan");
+        }
+        
+        // Notify about all localized properties
+        OnPropertyChanged(nameof(AvailableLanguages));
+        OnPropertyChanged(nameof(SelectedLanguage));
+        OnPropertyChanged(nameof(AppSubtitle));
+        OnPropertyChanged(nameof(ScanPathLabel));
+        OnPropertyChanged(nameof(BrowseLabel));
+        OnPropertyChanged(nameof(QuickScanLabel));
+        OnPropertyChanged(nameof(StartScanLabel));
+        OnPropertyChanged(nameof(TopNLabel));
+        OnPropertyChanged(nameof(IncludeHiddenLabel));
+        OnPropertyChanged(nameof(FoldersOnlyLabel));
+        OnPropertyChanged(nameof(FoldersOnlyTooltip));
+        OnPropertyChanged(nameof(MinSizeLabel));
+        OnPropertyChanged(nameof(LargestFilesLabel));
+        OnPropertyChanged(nameof(LargestFoldersLabel));
+        OnPropertyChanged(nameof(CancelLabel));
+        OnPropertyChanged(nameof(ExportCsvLabel));
+        OnPropertyChanged(nameof(ExportJsonLabel));
+        OnPropertyChanged(nameof(LanguageLabel));
+        OnPropertyChanged(nameof(SizeLabel));
+        OnPropertyChanged(nameof(ModifiedLabel));
+        OnPropertyChanged(nameof(ItemsLabel));
+        OnPropertyChanged(nameof(BytesLabel));
+        OnPropertyChanged(nameof(FileSizeFormat));
+        OnPropertyChanged(nameof(FileModifiedFormat));
+        OnPropertyChanged(nameof(FolderSizeFormat));
+        OnPropertyChanged(nameof(FolderItemsFormat));
+        OnPropertyChanged(nameof(FolderModifiedFormat));
+    }
+
+    // Localization Properties
+    public IReadOnlyList<LanguageInfo> AvailableLanguages => _localizationService.AvailableLanguages;
+    
+    public LanguageInfo SelectedLanguage
+    {
+        get => _localizationService.AvailableLanguages.First(l => l.Code == _localizationService.CurrentLanguage);
+        set => _localizationService.ChangeLanguage(value.Code);
+    }
+
+    // Localized UI Strings
+    public string AppSubtitle => _localizationService.GetString("AppSubtitle");
+    public string ScanPathLabel => _localizationService.GetString("ScanPath");
+    public string BrowseLabel => _localizationService.GetString("Browse");
+    public string QuickScanLabel => _localizationService.GetString("QuickScan");
+    public string StartScanLabel => _localizationService.GetString("StartScan");
+    public string TopNLabel => _localizationService.GetString("TopN");
+    public string IncludeHiddenLabel => _localizationService.GetString("IncludeHidden");
+    public string FoldersOnlyLabel => _localizationService.GetString("FoldersOnly");
+    public string FoldersOnlyTooltip => _localizationService.GetString("FoldersOnlyTooltip");
+    public string MinSizeLabel => _localizationService.GetString("MinSize");
+    public string LargestFilesLabel => _localizationService.GetString("LargestFiles");
+    public string LargestFoldersLabel => _localizationService.GetString("LargestFolders");
+    public string CancelLabel => _localizationService.GetString("Cancel");
+    public string ExportCsvLabel => _localizationService.GetString("ExportCsv");
+    public string ExportJsonLabel => _localizationService.GetString("ExportJson");
+    public string LanguageLabel => _localizationService.GetString("Language");
+    public string SizeLabel => _localizationService.GetString("Size");
+    public string ModifiedLabel => _localizationService.GetString("Modified");
+    public string ItemsLabel => _localizationService.GetString("Items");
+    public string BytesLabel => _localizationService.GetString("Bytes");
+    
+    // Format strings for templates
+    public string FileSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
+    public string FileModifiedFormat => $"{ModifiedLabel} {{0:yyyy-MM-dd HH:mm}}";
+    public string FolderSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
+    public string FolderItemsFormat => $"{ItemsLabel} {{0:N0}}";
+    public string FolderModifiedFormat => $"{ModifiedLabel} {{0:yyyy-MM-dd HH:mm}}";
 
     private async void LoadDefaultSettings()
     {
@@ -214,7 +297,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (!HasResults)
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("No Results", "No scan results to export");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("NoResults"), _localizationService.GetString("NoResultsMessage"));
             await box.ShowAsync();
             return;
         }
@@ -237,12 +320,12 @@ public partial class MainWindowViewModel : ObservableObject
             else
                 await _exportService.ExportToJsonAsync(results, filePath);
 
-            var successBox = MessageBoxManager.GetMessageBoxStandard("Success", $"Results exported to: {filePath}", ButtonEnum.Ok, Icon.Success);
+            var successBox = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Success"), string.Format(_localizationService.GetString("ExportSuccessMessage"), filePath), ButtonEnum.Ok, Icon.Success);
             await successBox.ShowAsync();
         }
         catch (Exception ex)
         {
-            var errorBox = MessageBoxManager.GetMessageBoxStandard("Error", $"Export failed: {ex.Message}");
+            var errorBox = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ExportFailedMessage"), ex.Message));
             await errorBox.ShowAsync();
         }
     }
@@ -256,7 +339,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("Error", $"Failed to open location: {ex.Message}");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("FailedToOpenLocation"), ex.Message));
             await box.ShowAsync();
         }
     }
@@ -286,7 +369,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("Error", $"Failed to open location: {ex.Message}");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("FailedToOpenLocation"), ex.Message));
             await box.ShowAsync();
         }
     }
