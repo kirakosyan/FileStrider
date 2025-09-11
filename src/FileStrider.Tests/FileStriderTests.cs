@@ -335,6 +335,7 @@ public class LocalizationServiceTests
         Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "en");
         Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "es");
         Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "fr");
+        Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "sv");
     }
 
     /// <summary>
@@ -380,6 +381,12 @@ public class LocalizationServiceTests
         var frenchString = localizationService.GetString("AppTitle");
         Assert.Contains("FileStrider", frenchString);
         Assert.Contains("Outil", frenchString);
+        
+        // Switch to Swedish and test
+        localizationService.ChangeLanguage("sv");
+        var swedishString = localizationService.GetString("AppTitle");
+        Assert.Contains("FileStrider", swedishString);
+        Assert.Contains("Verktyg", swedishString);
     }
 
     /// <summary>

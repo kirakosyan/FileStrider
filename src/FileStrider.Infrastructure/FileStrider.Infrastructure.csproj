@@ -18,6 +18,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Strings.es.resx" />
     <EmbeddedResource Include="Resources\Strings.fr.resx" />
+    <EmbeddedResource Include="Resources\Strings.sv.resx" />
   </ItemGroup>
 
 </Project>
