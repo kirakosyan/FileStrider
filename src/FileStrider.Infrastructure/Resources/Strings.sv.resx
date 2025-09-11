@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Application Title -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>FileStrider - Verktyg för fil- och mappupptäckt</value>
+  </data>
+  <data name="AppSubtitle" xml:space="preserve">
+    <value>Verktyg för upptäckt av stora filer och mappar</value>
+  </data>
+  
+  <!-- UI Labels -->
+  <data name="ScanPath" xml:space="preserve">
+    <value>Skanningssökväg:</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>Bläddra...</value>
+  </data>
+  <data name="QuickScan" xml:space="preserve">
+    <value>🔍 Snabbskanning</value>
+  </data>
+  <data name="StartScan" xml:space="preserve">
+    <value>▶️ Starta skanning</value>
+  </data>
+  <data name="TopN" xml:space="preserve">
+    <value>Topp N:</value>
+  </data>
+  <data name="IncludeHidden" xml:space="preserve">
+    <value>Inkludera dolda</value>
+  </data>
+  <data name="FoldersOnly" xml:space="preserve">
+    <value>Endast mappar</value>
+  </data>
+  <data name="FoldersOnlyTooltip" xml:space="preserve">
+    <value>Hoppa över enskilda filer för snabbare skanning</value>
+  </data>
+  <data name="MinSize" xml:space="preserve">
+    <value>Min storlek (bytes):</value>
+  </data>
+  <data name="LargestFiles" xml:space="preserve">
+    <value>🔥 Största filerna</value>
+  </data>
+  <data name="LargestFolders" xml:space="preserve">
+    <value>📁 Största mapparna</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>❌ Avbryt</value>
+  </data>
+  <data name="ExportCsv" xml:space="preserve">
+    <value>📄 Exportera CSV</value>
+  </data>
+  <data name="ExportJson" xml:space="preserve">
+    <value>📝 Exportera JSON</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Språk:</value>
+  </data>
+  
+  <!-- Status Messages -->
+  <data name="ReadyToScan" xml:space="preserve">
+    <value>Redo att skanna...</value>
+  </data>
+  <data name="Scanning" xml:space="preserve">
+    <value>Skanning pågår...</value>
+  </data>
+  
+  <!-- File Details -->
+  <data name="Size" xml:space="preserve">
+    <value>Storlek:</value>
+  </data>
+  <data name="Modified" xml:space="preserve">
+    <value>Ändrad:</value>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>Objekt:</value>
+  </data>
+  <data name="Bytes" xml:space="preserve">
+    <value>bytes</value>
+  </data>
+  
+  <!-- Dialog Messages -->
+  <data name="Error" xml:space="preserve">
+    <value>Fel</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Framgång</value>
+  </data>
+  <data name="NoResults" xml:space="preserve">
+    <value>Inga resultat</value>
+  </data>
+  <data name="NoResultsMessage" xml:space="preserve">
+    <value>Inga skanningsresultat att exportera</value>
+  </data>
+  <data name="ExportSuccessMessage" xml:space="preserve">
+    <value>Resultat exporterade till: {0}</value>
+  </data>
+  <data name="ExportFailedMessage" xml:space="preserve">
+    <value>Export misslyckades: {0}</value>
+  </data>
+  <data name="FailedToOpenLocation" xml:space="preserve">
+    <value>Misslyckades med att öppna plats: {0}</value>
+  </data>
+  <data name="SelectFolderToScan" xml:space="preserve">
+    <value>Välj mapp att skanna</value>
+  </data>
+</root>
