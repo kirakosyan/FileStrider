@@ -455,10 +455,6 @@ public partial class MainWindowViewModel : ObservableObject
         else
         {
             var totalSize = TopFiles.Sum(file => Math.Max(file.Size, 1L));
-            if (totalSize == 0)
-            {
-                return;
-            }
 
             for (int i = 0; i < TopFiles.Count; i++)
             {
