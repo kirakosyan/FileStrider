@@ -260,11 +260,8 @@
                                     
                                     <TextBlock Grid.Row="0" 
                                                FontWeight="Bold"
-                                               TextTrimming="CharacterEllipsis">
-                                        <Run Text="{Binding Category}"/>
-                                        <Run Text=" " Foreground="Gray"/>
-                                        <Run Text="{Binding Extension}" Foreground="Gray" FontSize="10"/>
-                                    </TextBlock>
+                                               TextTrimming="CharacterEllipsis"
+                                               Text="{Binding Category}"/>
                                     <TextBlock Grid.Row="1" 
                                                FontSize="10"
                                                Foreground="Gray">

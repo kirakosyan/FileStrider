@@ -458,16 +458,18 @@ public class FileTypeAnalyzerTests
         // Assert
         Assert.NotEmpty(statistics);
         
-        // Check that we have both category and extension level statistics
+        // Check that we have category level statistics (no duplicates)
         var imageCategory = statistics.FirstOrDefault(s => s.Category == "Images" && string.IsNullOrEmpty(s.Extension));
         Assert.NotNull(imageCategory);
         Assert.Equal(2, imageCategory.FileCount);
         Assert.Equal(3000, imageCategory.TotalSize);
         
-        var jpgExtension = statistics.FirstOrDefault(s => s.Extension == ".jpg");
-        Assert.NotNull(jpgExtension);
-        Assert.Equal(1, jpgExtension.FileCount);
-        Assert.Equal(1000, jpgExtension.TotalSize);
+        // Verify we don't have extension-level duplicates
+        var extensionEntries = statistics.Where(s => !string.IsNullOrEmpty(s.Extension));
+        Assert.Empty(extensionEntries); // Should be empty since we only return category-level stats
+        
+        // Verify all statistics are category-level only
+        Assert.All(statistics, stat => Assert.True(string.IsNullOrEmpty(stat.Extension)));
     }
 
     /// <summary>

@@ -93,30 +93,8 @@ public class FileTypeAnalyzer : IFileTypeAnalyzer
             .OrderByDescending(s => s.TotalSize)
             .ToList();
 
-        // Also create extension-level statistics for the top extensions
-        var extensionStats = extensionGroups
-            .Select(g =>
-            {
-                var extensionSize = g.Files.Sum(f => f.Size);
-                return new FileTypeStats
-                {
-                    Extension = g.Extension,
-                    Category = g.Category,
-                    FileCount = g.Files.Count,
-                    TotalSize = extensionSize,
-                    Percentage = totalSize > 0 ? (double)extensionSize / totalSize * 100 : 0
-                };
-            })
-            .OrderByDescending(s => s.TotalSize)
-            .Take(20) // Limit to top 20 extensions to avoid clutter
-            .ToList();
-
-        // Combine category and extension stats
-        var result = new List<FileTypeStats>();
-        result.AddRange(categoryStats);
-        result.AddRange(extensionStats);
-
-        return result.AsReadOnly();
+        // Return only category-level statistics to avoid duplication in the UI
+        return categoryStats.AsReadOnly();
     }
 
     /// <summary>
