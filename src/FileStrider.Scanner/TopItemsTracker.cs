@@ -32,6 +32,8 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
     /// <param name="item">The item to add to the tracker.</param>
     public void Add(T item)
     {
+        if (item == null) return; // Ignore null items
+        
         lock (_lock)
         {
             if (_items.Count < _maxItems)
@@ -49,7 +51,7 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
                 {
                     _items[_maxItems - 1] = item;
                     
-                    // Bubble up to maintain sorted order
+                    // Bubble up to maintain sorted order (simpler and more reliable than binary search insertion)
                     for (int i = _maxItems - 2; i >= 0 && _comparer.Compare(_items[i], _items[i + 1]) > 0; i--)
                     {
                         (_items[i], _items[i + 1]) = (_items[i + 1], _items[i]);

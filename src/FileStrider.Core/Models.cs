@@ -125,20 +125,51 @@ public record ScanOptions
 /// </summary>
 public class ScanProgress
 {
+    private int _filesScanned;
+    private int _foldersScanned;
+    private long _bytesProcessed;
+    
     /// <summary>
     /// Gets or sets the total number of files that have been scanned so far.
     /// </summary>
-    public int FilesScanned { get; set; }
+    public int FilesScanned 
+    { 
+        get => _filesScanned; 
+        set => _filesScanned = value; 
+    }
     
     /// <summary>
     /// Gets or sets the total number of folders that have been scanned so far.
     /// </summary>
-    public int FoldersScanned { get; set; }
+    public int FoldersScanned 
+    { 
+        get => _foldersScanned; 
+        set => _foldersScanned = value; 
+    }
     
     /// <summary>
     /// Gets or sets the total number of bytes processed so far.
     /// </summary>
-    public long BytesProcessed { get; set; }
+    public long BytesProcessed 
+    { 
+        get => _bytesProcessed; 
+        set => _bytesProcessed = value; 
+    }
+    
+    /// <summary>
+    /// Thread-safe increment for files scanned counter.
+    /// </summary>
+    public void IncrementFilesScanned() => Interlocked.Increment(ref _filesScanned);
+    
+    /// <summary>
+    /// Thread-safe increment for folders scanned counter.
+    /// </summary>
+    public void IncrementFoldersScanned() => Interlocked.Increment(ref _foldersScanned);
+    
+    /// <summary>
+    /// Thread-safe add to bytes processed counter.
+    /// </summary>
+    public void AddBytesProcessed(long bytes) => Interlocked.Add(ref _bytesProcessed, bytes);
     
     /// <summary>
     /// Gets or sets the time elapsed since the scan started.

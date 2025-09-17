@@ -52,13 +52,13 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // Register application services
-                services.AddSingleton<IFileTypeAnalyzer, FileTypeAnalyzer>();
                 services.AddSingleton<IFileSystemScanner, FileSystemScanner>();
                 services.AddSingleton<IFolderPicker, AvaloniaFolderPicker>();
                 services.AddSingleton<IExportService, ExportService>();
                 services.AddSingleton<IConfigurationService, ConfigurationService>();
                 services.AddSingleton<IShellService, ShellService>();
                 services.AddSingleton<ILocalizationService, LocalizationService>();
+                services.AddSingleton<IFileTypeAnalyzer, FileTypeAnalyzer>();
 
                 // Register view models
                 services.AddTransient<MainWindowViewModel>();

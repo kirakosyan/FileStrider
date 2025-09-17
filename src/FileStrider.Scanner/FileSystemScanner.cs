@@ -31,6 +31,19 @@ public class FileSystemScanner : IFileSystemScanner
     /// <returns>A task that represents the asynchronous scan operation, containing the scan results.</returns>
     public async Task<ScanResults> ScanAsync(ScanOptions options, IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
     {
+        // Validate input parameters
+        if (options == null)
+            throw new ArgumentNullException(nameof(options));
+        
+        if (string.IsNullOrWhiteSpace(options.RootPath))
+            throw new ArgumentException("Root path cannot be null or empty", nameof(options));
+        
+        if (!Directory.Exists(options.RootPath))
+            throw new DirectoryNotFoundException($"Root path does not exist: {options.RootPath}");
+        
+        if (options.TopN <= 0)
+            throw new ArgumentOutOfRangeException(nameof(options), "TopN must be greater than 0");
+
         var results = new ScanResults();
         var scanProgress = new ScanProgress();
         var startTime = DateTime.UtcNow;
@@ -49,7 +62,7 @@ public class FileSystemScanner : IFileSystemScanner
             // Start producer task (directory enumeration)
             var producerTask = Task.Run(async () =>
             {
-                await ProduceFileSystemEntriesAsync(options, writer, scanProgress, progress, startTime, cancellationToken);
+                await ProduceFileSystemEntriesAsync(options, writer, scanProgress, progress, startTime, cancellationToken).ConfigureAwait(false);
             }, cancellationToken);
 
             // Start consumer tasks (file processing)
@@ -58,18 +71,18 @@ public class FileSystemScanner : IFileSystemScanner
             {
                 consumerTasks.Add(Task.Run(async () =>
                 {
-                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, startTime, options, cancellationToken);
+                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, startTime, options, cancellationToken).ConfigureAwait(false);
                 }, cancellationToken));
             }
 
             // Wait for producer to complete
-            await producerTask;
+            await producerTask.ConfigureAwait(false);
 
             // Wait for all items to be processed
-            await reader.Completion;
+            await reader.Completion.ConfigureAwait(false);
 
             // Wait for consumers to finish
-            await Task.WhenAll(consumerTasks);
+            await Task.WhenAll(consumerTasks).ConfigureAwait(false);
 
             // Compute folder sizes and top folders
             var topFolders = ComputeTopFolders(folderSizes, options, startTime);
@@ -127,12 +140,12 @@ public class FileSystemScanner : IFileSystemScanner
                 
                 progress.CurrentPath = entry.FullPath;
                 if (entry.IsDirectory)
-                    progress.FoldersScanned++;
+                    progress.IncrementFoldersScanned();
                 else
-                    progress.FilesScanned++;
+                    progress.IncrementFilesScanned();
 
                 // Throttle progress updates
-                if (progress.FilesScanned % 100 == 0)
+                if ((progress.FilesScanned + progress.FoldersScanned) % 100 == 0)
                 {
                     var elapsed = DateTime.UtcNow - startTime;
                     progress.Elapsed = elapsed;
@@ -195,7 +208,7 @@ public class FileSystemScanner : IFileSystemScanner
                     directoryPath = Path.GetDirectoryName(directoryPath);
                 }
 
-                progress.BytesProcessed += entry.Size;
+                progress.AddBytesProcessed(entry.Size);
             }
         }
     }

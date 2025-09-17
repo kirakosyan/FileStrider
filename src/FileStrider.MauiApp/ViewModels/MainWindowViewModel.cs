@@ -187,14 +187,14 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (string.IsNullOrEmpty(SelectedPath))
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("Error", "Please select a folder to scan");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), _localizationService.GetString("SelectFolderToScan"));
             await box.ShowAsync();
             return;
         }
 
         if (!Directory.Exists(SelectedPath))
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("Error", "Selected directory does not exist");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), _localizationService.GetString("DirectoryNotExist"));
             await box.ShowAsync();
             return;
         }
@@ -250,24 +250,39 @@ public partial class MainWindowViewModel : ObservableObject
 
             if (results.WasCancelled)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard("Cancelled", "Scan was cancelled by user");
+                var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Cancelled"), _localizationService.GetString("ScanCancelledMessage"));
                 await box.ShowAsync();
             }
             else if (!string.IsNullOrEmpty(results.ErrorMessage))
             {
-                var box = MessageBoxManager.GetMessageBoxStandard("Error", $"Scan failed: {results.ErrorMessage}");
+                var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ScanFailedMessage"), results.ErrorMessage));
                 await box.ShowAsync();
             }
             else
             {
-                var box = MessageBoxManager.GetMessageBoxStandard("Complete", "Scan completed successfully!", ButtonEnum.Ok, Icon.Success);
+                var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Complete"), _localizationService.GetString("ScanCompletedMessage"), ButtonEnum.Ok, Icon.Success);
                 await box.ShowAsync();
-                ScanStats = $"Scan completed! Found {TopFiles.Count} files and {TopFolders.Count} folders";
+                ScanStats = string.Format(_localizationService.GetString("ScanCompletedStats"), TopFiles.Count, TopFolders.Count);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Cancelled"), _localizationService.GetString("ScanCancelledMessage"));
+            await box.ShowAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("AccessDeniedMessage"), ex.Message));
+            await box.ShowAsync();
+        }
+        catch (DirectoryNotFoundException ex)
+        {
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("DirectoryNotFoundMessage"), ex.Message));
+            await box.ShowAsync();
         }
         catch (Exception ex)
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("Error", $"Scan failed: {ex.Message}");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ScanFailedMessage"), ex.Message));
             await box.ShowAsync();
         }
         finally
@@ -358,12 +373,12 @@ public partial class MainWindowViewModel : ObservableObject
         try
         {
             await _shellService.CopyToClipboardAsync(file.FullPath);
-            var box = MessageBoxManager.GetMessageBoxStandard("Copied", "File path copied to clipboard", ButtonEnum.Ok, Icon.Success);
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Success"), _localizationService.GetString("PathCopiedMessage"), ButtonEnum.Ok, Icon.Success);
             await box.ShowAsync();
         }
         catch (Exception ex)
         {
-            var box = MessageBoxManager.GetMessageBoxStandard("Error", $"Failed to copy to clipboard: {ex.Message}");
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("CopyFailedMessage"), ex.Message));
             await box.ShowAsync();
         }
     }
