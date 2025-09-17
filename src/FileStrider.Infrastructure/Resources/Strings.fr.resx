@@ -100,6 +100,9 @@
   <data name="LargestFolders" xml:space="preserve">
     <value>📁 Plus Gros Dossiers</value>
   </data>
+  <data name="FileTypeBreakdown" xml:space="preserve">
+    <value>📂 Répartition par Type de Fichier</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>❌ Annuler</value>
   </data>
@@ -133,6 +136,9 @@
   </data>
   <data name="Bytes" xml:space="preserve">
     <value>octets</value>
+  </data>
+  <data name="AverageSize" xml:space="preserve">
+    <value>Taille moy. :</value>
   </data>
   
   <!-- Dialog Messages -->

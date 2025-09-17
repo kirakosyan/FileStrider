@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.IO.Enumeration;
 using System.Threading.Channels;
 using FileStrider.Core.Contracts;
 using FileStrider.Core.Models;
@@ -49,8 +50,8 @@ public class FileSystemScanner : IFileSystemScanner
         var startTime = DateTime.UtcNow;
 
         var filesTracker = new TopItemsTracker<FileItem>(options.TopN, (a, b) => b.Size.CompareTo(a.Size));
-        var foldersTracker = new TopItemsTracker<FolderItem>(options.TopN, (a, b) => b.RecursiveSize.CompareTo(a.RecursiveSize));
-        var folderSizes = new ConcurrentDictionary<string, long>(System.StringComparer.OrdinalIgnoreCase);
+        var folderStats = new ConcurrentDictionary<string, FolderAccumulator>(StringComparer.OrdinalIgnoreCase);
+        var workerCount = GetSafeWorkerCount(options.ConcurrencyLimit);
 
         try
         {
@@ -67,11 +68,11 @@ public class FileSystemScanner : IFileSystemScanner
 
             // Start consumer tasks (file processing)
             var consumerTasks = new List<Task>();
-            for (int i = 0; i < options.ConcurrencyLimit; i++)
+            for (int i = 0; i < workerCount; i++)
             {
                 consumerTasks.Add(Task.Run(async () =>
                 {
-                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderSizes, scanProgress, progress, startTime, options, cancellationToken).ConfigureAwait(false);
+                    await ConsumeFileSystemEntriesAsync(reader, filesTracker, folderStats, scanProgress, progress, startTime, options, cancellationToken).ConfigureAwait(false);
                 }, cancellationToken));
             }
 
@@ -85,7 +86,7 @@ public class FileSystemScanner : IFileSystemScanner
             await Task.WhenAll(consumerTasks).ConfigureAwait(false);
 
             // Compute folder sizes and top folders
-            var topFolders = ComputeTopFolders(folderSizes, options, startTime);
+            var topFolders = ComputeTopFolders(folderStats, options, startTime);
 
             var topFiles = filesTracker.GetTop();
             results.TopFiles.AddRange(topFiles);
@@ -119,6 +120,17 @@ public class FileSystemScanner : IFileSystemScanner
     /// Producer task that recursively enumerates all files and directories in the specified path
     /// and writes them to a channel for processing by consumer tasks.
     /// </summary>
+    private static int GetSafeWorkerCount(int requestedConcurrency)
+    {
+        var processorCount = Math.Max(1, Environment.ProcessorCount);
+        if (requestedConcurrency <= 0)
+        {
+            return processorCount;
+        }
+
+        return Math.Clamp(requestedConcurrency, 1, processorCount * 2);
+    }
+
     private async Task ProduceFileSystemEntriesAsync(ScanOptions options, ChannelWriter<FileSystemEntry> writer, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, CancellationToken cancellationToken)
     {
         try
@@ -163,7 +175,7 @@ public class FileSystemScanner : IFileSystemScanner
     /// Consumer task that processes file system entries from the channel, tracking top files
     /// and accumulating folder size information for later analysis.
     /// </summary>
-    private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, long> folderSizes, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, ScanOptions scanOptions, CancellationToken cancellationToken)
+    private async Task ConsumeFileSystemEntriesAsync(ChannelReader<FileSystemEntry> reader, TopItemsTracker<FileItem> filesTracker, ConcurrentDictionary<string, FolderAccumulator> folderStats, ScanProgress progress, IProgress<ScanProgress>? progressReporter, DateTime startTime, ScanOptions scanOptions, CancellationToken cancellationToken)
     {
         // Normalize the root path once for comparisons and as a boundary for aggregation
         var rootFullPathTrimmed = Path.GetFullPath(scanOptions.RootPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -172,6 +184,11 @@ public class FileSystemScanner : IFileSystemScanner
         {
             if (!entry.IsDirectory)
             {
+                if (MatchesAnyPattern(entry.Name, scanOptions.ExcludePatterns))
+                {
+                    continue;
+                }
+
                 // Only process files if not in FoldersOnly mode
                 if (!scanOptions.FoldersOnly)
                 {
@@ -198,8 +215,8 @@ public class FileSystemScanner : IFileSystemScanner
                     if (!dirFullTrimmed.StartsWith(rootFullPathTrimmed, StringComparison.OrdinalIgnoreCase))
                         break;
 
-                    // Use normalized full path as the key to prevent duplicates
-                    folderSizes.AddOrUpdate(dirFullTrimmed, entry.Size, (key, value) => value + entry.Size);
+                    var accumulator = folderStats.GetOrAdd(dirFullTrimmed, static _ => new FolderAccumulator());
+                    accumulator.Add(entry.Size);
 
                     // If we've reached the root directory, stop climbing further
                     if (string.Equals(dirFullTrimmed, rootFullPathTrimmed, StringComparison.OrdinalIgnoreCase))
@@ -306,29 +323,62 @@ public class FileSystemScanner : IFileSystemScanner
     /// </summary>
     private bool ShouldSkipDirectory(string path, HashSet<string> excludeDirectories, HashSet<string> excludePatterns)
     {
-        var dirName = Path.GetFileName(path);
-        return excludeDirectories.Contains(dirName) || 
-               excludePatterns.Any(pattern => System.Text.RegularExpressions.Regex.IsMatch(dirName, pattern));
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        var trimmed = Path.TrimEndingDirectorySeparator(path);
+        var dirName = Path.GetFileName(trimmed);
+        if (string.IsNullOrEmpty(dirName))
+            return false;
+
+        if (excludeDirectories.Contains(dirName))
+            return true;
+
+        return MatchesAnyPattern(dirName, excludePatterns);
+    }
+
+    private static bool MatchesAnyPattern(string candidate, HashSet<string> patterns)
+    {
+        if (string.IsNullOrEmpty(candidate) || patterns == null || patterns.Count == 0)
+            return false;
+
+        foreach (var pattern in patterns)
+        {
+            if (string.IsNullOrWhiteSpace(pattern))
+                continue;
+
+            try
+            {
+                if (FileSystemName.MatchesSimpleExpression(pattern, candidate, ignoreCase: true))
+                    return true;
+            }
+            catch (ArgumentException)
+            {
+                // Ignore invalid patterns and continue checking others
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
     /// Computes the top largest folders from the accumulated folder size data.
     /// </summary>
-    private List<FolderItem> ComputeTopFolders(ConcurrentDictionary<string, long> folderSizes, ScanOptions options, DateTime startTime)
+    private List<FolderItem> ComputeTopFolders(ConcurrentDictionary<string, FolderAccumulator> folderStats, ScanOptions options, DateTime startTime)
     {
         var folderItems = new List<FolderItem>();
 
-        foreach (var kvp in folderSizes)
+        foreach (var kvp in folderStats)
         {
             try
             {
                 var dirInfo = new DirectoryInfo(kvp.Key);
                 var folderItem = new FolderItem
                 {
-                    Name = dirInfo.Name,
+                    Name = string.IsNullOrEmpty(dirInfo.Name) ? dirInfo.FullName : dirInfo.Name,
                     FullPath = kvp.Key,
-                    RecursiveSize = kvp.Value,
-                    ItemCount = 0, // Could be computed if needed
+                    RecursiveSize = kvp.Value.TotalSize,
+                    ItemCount = kvp.Value.ItemCount,
                     LastModified = dirInfo.LastWriteTime
                 };
                 folderItems.Add(folderItem);
@@ -370,9 +420,31 @@ internal class FileSystemEntry
     /// Gets a value indicating whether this entry represents a directory.
     /// </summary>
     public bool IsDirectory { get; init; }
-    
+
     /// <summary>
     /// Gets the date and time when the entry was last modified.
     /// </summary>
     public DateTime LastModified { get; init; }
+}
+
+/// <summary>
+/// Aggregates folder statistics across concurrent scan operations.
+/// </summary>
+internal sealed class FolderAccumulator
+{
+    private long _totalSize;
+    private int _itemCount;
+
+    public void Add(long fileSize)
+    {
+        if (fileSize < 0)
+            return;
+
+        Interlocked.Add(ref _totalSize, fileSize);
+        Interlocked.Increment(ref _itemCount);
+    }
+
+    public long TotalSize => Interlocked.Read(ref _totalSize);
+
+    public int ItemCount => Volatile.Read(ref _itemCount);
 }

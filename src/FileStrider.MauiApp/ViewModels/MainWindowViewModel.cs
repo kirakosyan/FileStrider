@@ -84,6 +84,7 @@ public partial class MainWindowViewModel : ObservableObject
         SelectedPath = Directory.GetCurrentDirectory();
         LoadDefaultSettings();
         UpdateLocalizedProperties();
+        ScanStats = _localizationService.GetString("ReadyToScan");
     }
 
     private void UpdateLocalizedProperties()
@@ -118,6 +119,8 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(ItemsLabel));
         OnPropertyChanged(nameof(BytesLabel));
         OnPropertyChanged(nameof(DiskUsageVisualizationLabel));
+        OnPropertyChanged(nameof(FileTypeBreakdownLabel));
+        OnPropertyChanged(nameof(AverageSizeLabel));
         OnPropertyChanged(nameof(FileSizeFormat));
         OnPropertyChanged(nameof(FileModifiedFormat));
         OnPropertyChanged(nameof(FolderSizeFormat));
@@ -156,7 +159,9 @@ public partial class MainWindowViewModel : ObservableObject
     public string ItemsLabel => _localizationService.GetString("Items");
     public string BytesLabel => _localizationService.GetString("Bytes");
     public string DiskUsageVisualizationLabel => _localizationService.GetString("DiskUsageVisualization");
-    
+    public string FileTypeBreakdownLabel => _localizationService.GetString("FileTypeBreakdown");
+    public string AverageSizeLabel => _localizationService.GetString("AverageSize");
+
     // Format strings for templates
     public string FileSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
     public string FileModifiedFormat => $"{ModifiedLabel} {{0:yyyy-MM-dd HH:mm}}";

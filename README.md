@@ -7,7 +7,7 @@ FileStrider is a powerful, cross-platform desktop application that helps you dis
 ## ✨ Features
 
 - **🔍 Fast File System Scanning**: Efficiently scans your directories to find the largest files and folders
-- **📊 File Type Analysis**: NEW! Analyze disk usage by file type with detailed statistics and percentages
+- **📊 File Type Analysis**: NEW! Analyze disk usage by file type with detailed statistics, percentages, and a visual breakdown panel
 - **🎯 Top N Results**: Configurable number of top results to display (default: 20)
 - **📈 Detailed Information**: Shows file/folder sizes, modification dates, and item counts
 - **🖱️ Double-Click Integration**: Double-click any file or folder to open it in your system's file manager (Windows Explorer, macOS Finder, or Linux file manager)

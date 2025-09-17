@@ -100,6 +100,9 @@
   <data name="LargestFolders" xml:space="preserve">
     <value>📁 Största mapparna</value>
   </data>
+  <data name="FileTypeBreakdown" xml:space="preserve">
+    <value>📂 Filtypsfördelning</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>❌ Avbryt</value>
   </data>
@@ -133,6 +136,9 @@
   </data>
   <data name="Bytes" xml:space="preserve">
     <value>bytes</value>
+  </data>
+  <data name="AverageSize" xml:space="preserve">
+    <value>Snittstorlek:</value>
   </data>
   
   <!-- Dialog Messages -->

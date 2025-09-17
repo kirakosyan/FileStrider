@@ -112,12 +112,17 @@ public record ScanOptions
     /// <summary>
     /// Gets the set of regex patterns for directories and files to exclude from the scan.
     /// </summary>
-    public HashSet<string> ExcludePatterns { get; init; } = new();
-    
+    public HashSet<string> ExcludePatterns { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Gets the set of directory names to exclude from the scan.
     /// </summary>
-    public HashSet<string> ExcludeDirectories { get; init; } = new() { "node_modules", ".git", "Library/Caches" };
+    public HashSet<string> ExcludeDirectories { get; init; } = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "node_modules",
+        ".git",
+        "Library/Caches"
+    };
 }
 
 /// <summary>

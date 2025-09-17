@@ -296,6 +296,57 @@ public class FileSystemScannerTests
                 "Elapsed time should be reported during progress updates");
         }
     }
+
+    /// <summary>
+    /// Tests that exclude patterns are treated as glob patterns without throwing and excluded files are skipped.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_ShouldRespectGlobExcludePatterns()
+    {
+        // Arrange
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var keepPath = Path.Combine(tempDir, "keep.txt");
+            await File.WriteAllTextAsync(keepPath, new string('a', 1024));
+            var skipPath = Path.Combine(tempDir, "skip.TMP");
+            await File.WriteAllTextAsync(skipPath, new string('b', 1024));
+
+            var options = new ScanOptions
+            {
+                RootPath = tempDir,
+                TopN = 5,
+                ExcludePatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "*.tmp" }
+            };
+
+            // Act
+            var results = await scanner.ScanAsync(options);
+
+            // Assert
+            Assert.DoesNotContain(results.TopFiles, file => file.FullPath.EndsWith("skip.TMP", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(results.TopFiles, file => file.FullPath.EndsWith("keep.txt", StringComparison.OrdinalIgnoreCase));
+
+            var rootFolder = results.TopFolders.FirstOrDefault(f => f.FullPath == Path.GetFullPath(tempDir));
+            Assert.NotNull(rootFolder);
+            Assert.True(rootFolder!.ItemCount >= 1, "Folder item count should reflect aggregated files");
+            Assert.Equal(new FileInfo(keepPath).Length, rootFolder.RecursiveSize);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(tempDir, true);
+            }
+            catch
+            {
+                // Ignore cleanup failures on CI
+            }
+        }
+    }
 }
 
 /// <summary>
