@@ -81,7 +81,7 @@ public class TreemapPanel : Panel
                 break;
             }
 
-            horizontal = remainingWidth >= remainingHeight;
+            // horizontal = remainingWidth >= remainingHeight; // Removed to keep direction constant per level
         }
 
         return finalSize;
