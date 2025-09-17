@@ -160,4 +160,7 @@
   <data name="SelectFolderToScan" xml:space="preserve">
     <value>Sélectionner le Dossier à Scanner</value>
   </data>
+  <data name="DiskUsageVisualization" xml:space="preserve">
+    <value>📊 Visualisation de l'Utilisation du Disque</value>
+  </data>
 </root>

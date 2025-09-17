@@ -160,4 +160,7 @@
   <data name="SelectFolderToScan" xml:space="preserve">
     <value>Välj mapp att skanna</value>
   </data>
+  <data name="DiskUsageVisualization" xml:space="preserve">
+    <value>📊 Diskanvändningsvisualisering</value>
+  </data>
 </root>

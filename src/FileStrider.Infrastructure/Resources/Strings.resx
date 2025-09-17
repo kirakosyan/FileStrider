@@ -193,4 +193,7 @@
   <data name="CopyFailedMessage" xml:space="preserve">
     <value>Failed to copy to clipboard: {0}</value>
   </data>
+  <data name="DiskUsageVisualization" xml:space="preserve">
+    <value>📊 Disk Usage Visualization</value>
+  </data>
 </root>

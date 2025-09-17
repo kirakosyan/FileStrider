@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FileStrider.Core.Contracts;
 using FileStrider.Core.Models;
+using FileStrider.MauiApp.Models;
 using System.Collections.ObjectModel;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -16,6 +17,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IShellService _shellService;
     private readonly IConfigurationService _configurationService;
     private readonly ILocalizationService _localizationService;
+    private readonly IFileTypeAnalyzer _fileTypeAnalyzer;
     private CancellationTokenSource? _cancellationTokenSource;
 
     [ObservableProperty]
@@ -56,6 +58,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<FileItem> TopFiles { get; } = new();
     public ObservableCollection<FolderItem> TopFolders { get; } = new();
+    public ObservableCollection<TreemapItem> TreemapItems { get; } = new();
     public ObservableCollection<FileTypeStats> FileTypeStatistics { get; } = new();
 
     public MainWindowViewModel(
@@ -64,7 +67,8 @@ public partial class MainWindowViewModel : ObservableObject
         IExportService exportService,
         IShellService shellService,
         IConfigurationService configurationService,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IFileTypeAnalyzer fileTypeAnalyzer)
     {
         _scanner = scanner;
         _folderPicker = folderPicker;
@@ -72,6 +76,7 @@ public partial class MainWindowViewModel : ObservableObject
         _shellService = shellService;
         _configurationService = configurationService;
         _localizationService = localizationService;
+        _fileTypeAnalyzer = fileTypeAnalyzer;
         
         // Subscribe to localization changes
         _localizationService.PropertyChanged += (s, e) => UpdateLocalizedProperties();
@@ -112,6 +117,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(ModifiedLabel));
         OnPropertyChanged(nameof(ItemsLabel));
         OnPropertyChanged(nameof(BytesLabel));
+        OnPropertyChanged(nameof(DiskUsageVisualizationLabel));
         OnPropertyChanged(nameof(FileSizeFormat));
         OnPropertyChanged(nameof(FileModifiedFormat));
         OnPropertyChanged(nameof(FolderSizeFormat));
@@ -149,6 +155,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string ModifiedLabel => _localizationService.GetString("Modified");
     public string ItemsLabel => _localizationService.GetString("Items");
     public string BytesLabel => _localizationService.GetString("Bytes");
+    public string DiskUsageVisualizationLabel => _localizationService.GetString("DiskUsageVisualization");
     
     // Format strings for templates
     public string FileSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
@@ -202,6 +209,7 @@ public partial class MainWindowViewModel : ObservableObject
         TopFiles.Clear();
         TopFolders.Clear();
         FileTypeStatistics.Clear();
+        TreemapItems.Clear();
         HasResults = false;
 
         var options = new ScanOptions
@@ -245,6 +253,9 @@ public partial class MainWindowViewModel : ObservableObject
             {
                 FileTypeStatistics.Add(fileTypeStat);
             }
+
+            // Populate treemap data
+            PopulateTreemapData(results);
 
             HasResults = TopFiles.Any() || TopFolders.Any();
 
@@ -417,5 +428,45 @@ public partial class MainWindowViewModel : ObservableObject
             return path;
         
         return "..." + path.Substring(path.Length - maxLength + 3);
+    }
+
+    /// <summary>
+    /// Populates the treemap visualization data from scan results.
+    /// </summary>
+    /// <param name="results">The scan results to convert to treemap items.</param>
+    private void PopulateTreemapData(ScanResults results)
+    {
+        TreemapItems.Clear();
+
+        // Add top folders to treemap
+        foreach (var folder in results.TopFolders.Take(20)) // Limit to top 20 for performance
+        {
+            var treemapItem = new TreemapItem
+            {
+                Name = folder.Name,
+                Size = folder.RecursiveSize,
+                FullPath = folder.FullPath,
+                IsFile = false,
+                Category = "Folders",
+                Color = TreemapColors.GetColorForCategory("Folders")
+            };
+            TreemapItems.Add(treemapItem);
+        }
+
+        // Add top files to treemap if not in folders-only mode
+        foreach (var file in results.TopFiles.Take(10)) // Limit to top 10 files
+        {
+            var category = _fileTypeAnalyzer.GetFileCategory(file.Type);
+            var treemapItem = new TreemapItem
+            {
+                Name = file.Name,
+                Size = file.Size,
+                FullPath = file.FullPath,
+                IsFile = true,
+                Category = category,
+                Color = TreemapColors.GetColorForCategory(category)
+            };
+            TreemapItems.Add(treemapItem);
+        }
     }
 }

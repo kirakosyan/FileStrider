@@ -2,11 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:FileStrider.MauiApp.ViewModels"
         xmlns:models="using:FileStrider.Core.Models"
+        xmlns:controls="using:FileStrider.MauiApp.Controls"
+        xmlns:local="using:FileStrider.MauiApp.Controls"
         x:Class="FileStrider.MauiApp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
-        Width="1000" Height="700"
-        MinWidth="800" MinHeight="600">
+        Width="1200" Height="700"
+        MinWidth="1000" MinHeight="600">
     
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -121,18 +123,24 @@
 
         <!-- Results Area -->
         <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Top Row: Files and Folders -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Files -->
-            <Border Grid.Column="0" 
-                    BorderBrush="LightGray" 
-                    BorderThickness="1" 
-                    CornerRadius="5" 
-                    Margin="0,0,2.5,0">
+                <!-- Files -->
+                <Border Grid.Column="0" 
+                        BorderBrush="LightGray" 
+                        BorderThickness="1" 
+                        CornerRadius="5" 
+                        Margin="0,0,2.5,5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -177,12 +185,12 @@
                 </Grid>
             </Border>
 
-            <!-- Folders -->
-            <Border Grid.Column="1" 
-                    BorderBrush="LightGray" 
-                    BorderThickness="1" 
-                    CornerRadius="5" 
-                    Margin="2.5,0,2.5,0">
+                <!-- Folders -->
+                <Border Grid.Column="1" 
+                        BorderBrush="LightGray" 
+                        BorderThickness="1" 
+                        CornerRadius="5" 
+                        Margin="2.5,0,0,5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -229,55 +237,24 @@
                 </Grid>
             </Border>
 
-            <!-- File Type Statistics -->
-            <Border Grid.Column="2" 
-                    BorderBrush="LightGray" 
-                    BorderThickness="1" 
-                    CornerRadius="5" 
-                    Margin="2.5,0,0,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    
-                    <TextBlock Grid.Row="0" 
-                               Text="📊 File Types" 
-                               FontSize="16" 
-                               FontWeight="Bold" 
-                               Margin="10,10,10,5"/>
-                    
-                    <ListBox Grid.Row="1" 
-                             ItemsSource="{Binding FileTypeStatistics}"
-                             Margin="5">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:FileTypeStats">
-                                <Grid Margin="5">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <TextBlock Grid.Row="0" 
-                                               FontWeight="Bold"
-                                               TextTrimming="CharacterEllipsis"
-                                               Text="{Binding Category}"/>
-                                    <TextBlock Grid.Row="1" 
-                                               FontSize="10"
-                                               Foreground="Gray">
-                                        <Run Text="{Binding FileCount, StringFormat='N0'}"/>
-                                        <Run Text=" files | "/>
-                                        <Run Text="{Binding TotalSize, StringFormat='N0'}"/>
-                                        <Run Text=" bytes ("/>
-                                        <Run Text="{Binding Percentage, StringFormat='F1'}"/>
-                                        <Run Text="%)"/>
-                                    </TextBlock>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
+            </Grid>
+            
+            <!-- Bottom Row: Treemap Visualization -->
+            <Grid Grid.Row="1">
+                <Border BorderBrush="LightGray" 
+                        BorderThickness="1" 
+                        CornerRadius="5" 
+                        Margin="0,5,0,0">
+                    <StackPanel Spacing="10" Margin="10">
+                        <TextBlock Text="{Binding DiskUsageVisualizationLabel}" 
+                                   FontWeight="Bold" 
+                                   FontSize="16"/>
+                        
+                        <local:TreemapControl Items="{Binding TreemapItems}" 
+                                              MinHeight="300"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- Status Bar -->
