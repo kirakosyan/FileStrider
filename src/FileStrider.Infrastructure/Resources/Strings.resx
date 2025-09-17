@@ -100,6 +100,9 @@
   <data name="LargestFolders" xml:space="preserve">
     <value>📁 Largest Folders</value>
   </data>
+  <data name="StorageMap" xml:space="preserve">
+    <value>🗺️ Storage Map</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>❌ Cancel</value>
   </data>
