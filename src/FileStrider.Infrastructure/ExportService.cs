@@ -41,6 +41,20 @@ public class ExportService : IExportService
             var sizeInMB = folder.RecursiveSize / (1024.0 * 1024.0);
             await writer.WriteLineAsync($"{EscapeCsvField(folder.Name)},{EscapeCsvField(folder.FullPath)},{folder.RecursiveSize},{sizeInMB:F2},{folder.ItemCount},{folder.LastModified:yyyy-MM-dd HH:mm:ss}");
         }
+
+        // Export file type statistics if available
+        if (results.FileTypeStatistics.Any())
+        {
+            await writer.WriteLineAsync();
+            await writer.WriteLineAsync("File Type Statistics");
+            await writer.WriteLineAsync("Extension,Category,File Count,Total Size (bytes),Total Size (MB),Percentage,Average Size (bytes)");
+            
+            foreach (var stat in results.FileTypeStatistics)
+            {
+                var totalSizeInMB = stat.TotalSize / (1024.0 * 1024.0);
+                await writer.WriteLineAsync($"{EscapeCsvField(stat.Extension)},{EscapeCsvField(stat.Category)},{stat.FileCount},{stat.TotalSize},{totalSizeInMB:F2},{stat.Percentage:F1}%,{stat.AverageSize}");
+            }
+        }
     }
 
     /// <summary>
@@ -82,6 +96,17 @@ public class ExportService : IExportService
                 RecursiveSizeInMB = f.RecursiveSize / (1024.0 * 1024.0),
                 f.ItemCount,
                 f.LastModified
+            }),
+            FileTypeStatistics = results.FileTypeStatistics.Select(s => new
+            {
+                s.Extension,
+                s.Category,
+                s.FileCount,
+                s.TotalSize,
+                TotalSizeInMB = s.TotalSize / (1024.0 * 1024.0),
+                s.Percentage,
+                s.AverageSize,
+                AverageSizeInMB = s.AverageSize / (1024.0 * 1024.0)
             })
         };
 

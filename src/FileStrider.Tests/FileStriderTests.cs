@@ -3,6 +3,7 @@ using FileStrider.Scanner;
 using FileStrider.Infrastructure.Export;
 using FileStrider.Infrastructure.Configuration;
 using FileStrider.Infrastructure.Localization;
+using FileStrider.Infrastructure.Analysis;
 
 namespace FileStrider.Tests;
 
@@ -137,7 +138,8 @@ public class ScanOptionsTests
     public async Task FileSystemScanner_FoldersOnly_ShouldSkipFileTracking()
     {
         // Arrange
-        var scanner = new FileSystemScanner();
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
         var tempDir = Path.GetTempPath();
         
         // Test with normal scanning (should include files)
@@ -271,7 +273,8 @@ public class FileSystemScannerTests
     public async Task Scanner_ShouldReportElapsedTime_DuringProgress()
     {
         // Arrange
-        var scanner = new FileSystemScanner();
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
         var tempDir = Path.GetTempPath();
         var options = new ScanOptions { RootPath = tempDir, TopN = 1 };
         
@@ -404,5 +407,83 @@ public class LocalizationServiceTests
         
         // Assert
         Assert.Equal(originalLanguage, localizationService.CurrentLanguage);
+    }
+}
+
+/// <summary>
+/// Unit tests for the FileTypeAnalyzer to verify file type analysis functionality.
+/// </summary>
+public class FileTypeAnalyzerTests
+{
+    /// <summary>
+    /// Tests that FileTypeAnalyzer correctly categorizes common file types.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_GetFileCategory_ShouldReturnCorrectCategories()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+        
+        // Act & Assert
+        Assert.Equal("Images", analyzer.GetFileCategory(".jpg"));
+        Assert.Equal("Images", analyzer.GetFileCategory(".png"));
+        Assert.Equal("Videos", analyzer.GetFileCategory(".mp4"));
+        Assert.Equal("Audio", analyzer.GetFileCategory(".mp3"));
+        Assert.Equal("Documents", analyzer.GetFileCategory(".pdf"));
+        Assert.Equal("Code", analyzer.GetFileCategory(".cs"));
+        Assert.Equal("Archives", analyzer.GetFileCategory(".zip"));
+        Assert.Equal("Other", analyzer.GetFileCategory(".unknown"));
+        Assert.Equal("Other", analyzer.GetFileCategory(""));
+    }
+
+    /// <summary>
+    /// Tests that FileTypeAnalyzer correctly analyzes file type statistics.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_AnalyzeFileTypes_ShouldGenerateCorrectStatistics()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+        var files = new List<FileItem>
+        {
+            new() { Name = "image1.jpg", Type = ".jpg", Size = 1000 },
+            new() { Name = "image2.png", Type = ".png", Size = 2000 },
+            new() { Name = "video.mp4", Type = ".mp4", Size = 5000 },
+            new() { Name = "document.pdf", Type = ".pdf", Size = 1500 }
+        };
+        
+        // Act
+        var statistics = analyzer.AnalyzeFileTypes(files);
+        
+        // Assert
+        Assert.NotEmpty(statistics);
+        
+        // Check that we have both category and extension level statistics
+        var imageCategory = statistics.FirstOrDefault(s => s.Category == "Images" && string.IsNullOrEmpty(s.Extension));
+        Assert.NotNull(imageCategory);
+        Assert.Equal(2, imageCategory.FileCount);
+        Assert.Equal(3000, imageCategory.TotalSize);
+        
+        var jpgExtension = statistics.FirstOrDefault(s => s.Extension == ".jpg");
+        Assert.NotNull(jpgExtension);
+        Assert.Equal(1, jpgExtension.FileCount);
+        Assert.Equal(1000, jpgExtension.TotalSize);
+    }
+
+    /// <summary>
+    /// Tests that FileTypeAnalyzer handles empty file lists correctly.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_AnalyzeFileTypes_EmptyList_ShouldReturnEmpty()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+        var files = new List<FileItem>();
+        
+        // Act
+        var statistics = analyzer.AnalyzeFileTypes(files);
+        
+        // Assert
+        Assert.Empty(statistics);
     }
 }
