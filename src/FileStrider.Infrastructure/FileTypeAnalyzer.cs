@@ -57,7 +57,7 @@ public class FileTypeAnalyzer : IFileTypeAnalyzer
     public IReadOnlyList<FileTypeStats> AnalyzeFileTypes(IEnumerable<FileItem> files)
     {
         var fileList = files.ToList();
-        if (!fileList.Any())
+        if (fileList.Count == 0)
             return Array.Empty<FileTypeStats>();
 
         var totalSize = fileList.Sum(f => f.Size);

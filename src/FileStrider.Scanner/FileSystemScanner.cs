@@ -74,13 +74,14 @@ public class FileSystemScanner : IFileSystemScanner
             // Compute folder sizes and top folders
             var topFolders = ComputeTopFolders(folderSizes, options, startTime);
 
-            results.TopFiles.AddRange(filesTracker.GetTop());
+            var topFiles = filesTracker.GetTop();
+            results.TopFiles.AddRange(topFiles);
             results.TopFolders.AddRange(topFolders);
             
             // Analyze file types if not in FoldersOnly mode
             if (!options.FoldersOnly)
             {
-                results.FileTypeStatistics.AddRange(_fileTypeAnalyzer.AnalyzeFileTypes(filesTracker.GetTop()));
+                results.FileTypeStatistics.AddRange(_fileTypeAnalyzer.AnalyzeFileTypes(topFiles));
             }
             
             results.Progress = scanProgress;
