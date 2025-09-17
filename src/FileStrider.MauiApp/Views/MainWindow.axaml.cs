@@ -34,4 +34,15 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    private async void StorageMapItem_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Border border && border.DataContext is StorageMapSliceViewModel slice)
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                await viewModel.OpenStorageMapItemCommand.ExecuteAsync(slice);
+            }
+        }
+    }
 }

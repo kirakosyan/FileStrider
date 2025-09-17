@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FileStrider.Core.Contracts;
@@ -17,6 +18,18 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IConfigurationService _configurationService;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _cancellationTokenSource;
+
+    private static readonly IBrush[] StorageMapPalette =
+    {
+        new SolidColorBrush(Color.Parse("#4CAF50")),
+        new SolidColorBrush(Color.Parse("#2196F3")),
+        new SolidColorBrush(Color.Parse("#FF9800")),
+        new SolidColorBrush(Color.Parse("#9C27B0")),
+        new SolidColorBrush(Color.Parse("#009688")),
+        new SolidColorBrush(Color.Parse("#E91E63")),
+        new SolidColorBrush(Color.Parse("#3F51B5")),
+        new SolidColorBrush(Color.Parse("#795548"))
+    };
 
     [ObservableProperty]
     private string title = "";
@@ -56,6 +69,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<FileItem> TopFiles { get; } = new();
     public ObservableCollection<FolderItem> TopFolders { get; } = new();
+    public ObservableCollection<StorageMapSliceViewModel> StorageMapSlices { get; } = new();
 
     public MainWindowViewModel(
         IFileSystemScanner scanner,
@@ -107,6 +121,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(ExportCsvLabel));
         OnPropertyChanged(nameof(ExportJsonLabel));
         OnPropertyChanged(nameof(LanguageLabel));
+        OnPropertyChanged(nameof(StorageMapLabel));
         OnPropertyChanged(nameof(SizeLabel));
         OnPropertyChanged(nameof(ModifiedLabel));
         OnPropertyChanged(nameof(ItemsLabel));
@@ -144,6 +159,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string ExportCsvLabel => _localizationService.GetString("ExportCsv");
     public string ExportJsonLabel => _localizationService.GetString("ExportJson");
     public string LanguageLabel => _localizationService.GetString("Language");
+    public string StorageMapLabel => _localizationService.GetString("StorageMap");
     public string SizeLabel => _localizationService.GetString("Size");
     public string ModifiedLabel => _localizationService.GetString("Modified");
     public string ItemsLabel => _localizationService.GetString("Items");
@@ -200,6 +216,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         TopFiles.Clear();
         TopFolders.Clear();
+        StorageMapSlices.Clear();
         HasResults = false;
 
         var options = new ScanOptions
@@ -239,7 +256,9 @@ public partial class MainWindowViewModel : ObservableObject
                 TopFolders.Add(folder);
             }
 
-            HasResults = TopFiles.Any() || TopFolders.Any();
+            UpdateStorageMapSlices();
+
+            HasResults = TopFiles.Any() || TopFolders.Any() || StorageMapSlices.Any();
 
             if (results.WasCancelled)
             {
@@ -374,18 +393,82 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private async Task OpenStorageMapItem(StorageMapSliceViewModel? slice)
+    {
+        if (slice is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _shellService.OpenFileLocationAsync(slice.FullPath);
+        }
+        catch (Exception ex)
+        {
+            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("FailedToOpenLocation"), ex.Message));
+            await box.ShowAsync();
+        }
+    }
+
     private static string FormatBytes(long bytes)
     {
         string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
         int i;
         double dblSByte = bytes;
-        
+
         for (i = 0; i < suffixes.Length && bytes >= 1024; i++, bytes /= 1024)
         {
             dblSByte = bytes / 1024.0;
         }
 
         return $"{dblSByte:0.##} {suffixes[i]}";
+    }
+
+    private void UpdateStorageMapSlices()
+    {
+        StorageMapSlices.Clear();
+
+        if (!TopFolders.Any() && !TopFiles.Any())
+        {
+            return;
+        }
+
+        if (TopFolders.Any())
+        {
+            var totalSize = TopFolders.Sum(folder => Math.Max(folder.RecursiveSize, 1L));
+            if (totalSize == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < TopFolders.Count; i++)
+            {
+                var folder = TopFolders[i];
+                var weight = Math.Max(folder.RecursiveSize, 1L);
+                var share = (double)weight / totalSize;
+                var brush = StorageMapPalette[i % StorageMapPalette.Length];
+                StorageMapSlices.Add(new StorageMapSliceViewModel(folder.Name, folder.FullPath, folder.RecursiveSize, share, FormatBytes(folder.RecursiveSize), brush));
+            }
+        }
+        else
+        {
+            var totalSize = TopFiles.Sum(file => Math.Max(file.Size, 1L));
+            if (totalSize == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < TopFiles.Count; i++)
+            {
+                var file = TopFiles[i];
+                var weight = Math.Max(file.Size, 1L);
+                var share = (double)weight / totalSize;
+                var brush = StorageMapPalette[i % StorageMapPalette.Length];
+                StorageMapSlices.Add(new StorageMapSliceViewModel(file.Name, file.FullPath, file.Size, share, FormatBytes(file.Size), brush));
+            }
+        }
     }
 
     private static string TruncatePath(string path, int maxLength)

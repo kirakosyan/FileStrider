@@ -100,6 +100,9 @@
   <data name="LargestFolders" xml:space="preserve">
     <value>📁 Carpetas Más Grandes</value>
   </data>
+  <data name="StorageMap" xml:space="preserve">
+    <value>🗺️ Mapa de almacenamiento</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>❌ Cancelar</value>
   </data>
