@@ -172,6 +172,11 @@ public class ScanResults
     public List<FolderItem> TopFolders { get; init; } = new();
     
     /// <summary>
+    /// Gets the list of file type statistics from the scan.
+    /// </summary>
+    public List<FileTypeStats> FileTypeStatistics { get; init; } = new();
+    
+    /// <summary>
     /// Gets or sets the final progress information from the scan.
     /// </summary>
     public ScanProgress Progress { get; set; } = new();
@@ -201,3 +206,39 @@ public record LanguageInfo(
     string NativeName,
     string FlagEmoji
 );
+
+/// <summary>
+/// Represents statistics for a specific file type or extension.
+/// </summary>
+public class FileTypeStats
+{
+    /// <summary>
+    /// Gets the file extension (e.g., ".jpg", ".pdf") or category name.
+    /// </summary>
+    public string Extension { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Gets the human-readable category name (e.g., "Images", "Documents").
+    /// </summary>
+    public string Category { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Gets the total number of files of this type.
+    /// </summary>
+    public int FileCount { get; init; }
+    
+    /// <summary>
+    /// Gets the total size in bytes of all files of this type.
+    /// </summary>
+    public long TotalSize { get; init; }
+    
+    /// <summary>
+    /// Gets the percentage of total scanned size that this file type represents.
+    /// </summary>
+    public double Percentage { get; init; }
+    
+    /// <summary>
+    /// Gets the average file size for this file type.
+    /// </summary>
+    public long AverageSize => FileCount > 0 ? TotalSize / FileCount : 0;
+}

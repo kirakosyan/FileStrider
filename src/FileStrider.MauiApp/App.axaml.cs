@@ -11,6 +11,7 @@ using FileStrider.Platform.Services;
 using FileStrider.Infrastructure.Export;
 using FileStrider.Infrastructure.Configuration;
 using FileStrider.Infrastructure.Localization;
+using FileStrider.Infrastructure.Analysis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -51,6 +52,7 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // Register application services
+                services.AddSingleton<IFileTypeAnalyzer, FileTypeAnalyzer>();
                 services.AddSingleton<IFileSystemScanner, FileSystemScanner>();
                 services.AddSingleton<IFolderPicker, AvaloniaFolderPicker>();
                 services.AddSingleton<IExportService, ExportService>();

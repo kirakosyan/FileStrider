@@ -11,6 +11,16 @@ namespace FileStrider.Scanner;
 /// </summary>
 public class FileSystemScanner : IFileSystemScanner
 {
+    private readonly IFileTypeAnalyzer _fileTypeAnalyzer;
+
+    /// <summary>
+    /// Initializes a new instance of the FileSystemScanner with the specified dependencies.
+    /// </summary>
+    /// <param name="fileTypeAnalyzer">The service for analyzing file types.</param>
+    public FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer)
+    {
+        _fileTypeAnalyzer = fileTypeAnalyzer;
+    }
     /// <summary>
     /// Scans the file system starting from the specified root path and returns the largest files and folders.
     /// Uses a producer-consumer pattern with bounded channels for memory-efficient, concurrent processing.
@@ -64,8 +74,16 @@ public class FileSystemScanner : IFileSystemScanner
             // Compute folder sizes and top folders
             var topFolders = ComputeTopFolders(folderSizes, options, startTime);
 
-            results.TopFiles.AddRange(filesTracker.GetTop());
+            var topFiles = filesTracker.GetTop();
+            results.TopFiles.AddRange(topFiles);
             results.TopFolders.AddRange(topFolders);
+            
+            // Analyze file types if not in FoldersOnly mode
+            if (!options.FoldersOnly)
+            {
+                results.FileTypeStatistics.AddRange(_fileTypeAnalyzer.AnalyzeFileTypes(topFiles));
+            }
+            
             results.Progress = scanProgress;
             results.IsCompleted = true;
         }

@@ -56,6 +56,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<FileItem> TopFiles { get; } = new();
     public ObservableCollection<FolderItem> TopFolders { get; } = new();
+    public ObservableCollection<FileTypeStats> FileTypeStatistics { get; } = new();
 
     public MainWindowViewModel(
         IFileSystemScanner scanner,
@@ -200,6 +201,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         TopFiles.Clear();
         TopFolders.Clear();
+        FileTypeStatistics.Clear();
         HasResults = false;
 
         var options = new ScanOptions
@@ -237,6 +239,11 @@ public partial class MainWindowViewModel : ObservableObject
             foreach (var folder in results.TopFolders)
             {
                 TopFolders.Add(folder);
+            }
+
+            foreach (var fileTypeStat in results.FileTypeStatistics)
+            {
+                FileTypeStatistics.Add(fileTypeStat);
             }
 
             HasResults = TopFiles.Any() || TopFolders.Any();
@@ -306,6 +313,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             TopFiles = TopFiles.ToList(),
             TopFolders = TopFolders.ToList(),
+            FileTypeStatistics = FileTypeStatistics.ToList(),
             Progress = new ScanProgress { FilesScanned = TopFiles.Count, FoldersScanned = TopFolders.Count }
         };
 
