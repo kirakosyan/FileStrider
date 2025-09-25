@@ -13,6 +13,13 @@ namespace FileStrider.Scanner;
 public class FileSystemScanner : IFileSystemScanner
 {
     private readonly IFileTypeAnalyzer _fileTypeAnalyzer;
+    
+    // Constants for performance tuning
+    private const int MinChannelBufferSize = 500;
+    private const int MaxChannelBufferSize = 2000;
+    private const int BufferSizeMultiplier = 250;
+    private const int ProgressReportingInterval = 100;
+    private const int TaskYieldInterval = 10;
 
     /// <summary>
     /// Initializes a new instance of the FileSystemScanner with the specified dependencies.
@@ -44,19 +51,23 @@ public class FileSystemScanner : IFileSystemScanner
         
         if (options.TopN <= 0)
             throw new ArgumentOutOfRangeException(nameof(options), "TopN must be greater than 0");
+        
+        if (options.ConcurrencyLimit < 1 || options.ConcurrencyLimit > Environment.ProcessorCount * 4)
+            throw new ArgumentOutOfRangeException(nameof(options), $"ConcurrencyLimit must be between 1 and {Environment.ProcessorCount * 4}");
 
         var results = new ScanResults();
         var scanProgress = new ScanProgress();
         var startTime = DateTime.UtcNow;
 
-        var filesTracker = new TopItemsTracker<FileItem>(options.TopN, (a, b) => b.Size.CompareTo(a.Size));
+        using var filesTracker = new TopItemsTracker<FileItem>(options.TopN, (a, b) => b.Size.CompareTo(a.Size));
         var folderStats = new ConcurrentDictionary<string, FolderAccumulator>(StringComparer.OrdinalIgnoreCase);
         var workerCount = GetSafeWorkerCount(options.ConcurrencyLimit);
 
         try
         {
-            // Create bounded channel for producer-consumer pattern
-            var channel = Channel.CreateBounded<FileSystemEntry>(1000);
+            // Create bounded channel for producer-consumer pattern with adaptive buffer size
+            var bufferSize = Math.Max(MinChannelBufferSize, Math.Min(MaxChannelBufferSize, Environment.ProcessorCount * BufferSizeMultiplier));
+            var channel = Channel.CreateBounded<FileSystemEntry>(bufferSize);
             var writer = channel.Writer;
             var reader = channel.Reader;
 
@@ -157,7 +168,7 @@ public class FileSystemScanner : IFileSystemScanner
                     progress.IncrementFilesScanned();
 
                 // Throttle progress updates
-                if ((progress.FilesScanned + progress.FoldersScanned) % 100 == 0)
+                if ((progress.FilesScanned + progress.FoldersScanned) % ProgressReportingInterval == 0)
                 {
                     var elapsed = DateTime.UtcNow - startTime;
                     progress.Elapsed = elapsed;
@@ -312,7 +323,7 @@ public class FileSystemScanner : IFileSystemScanner
                 }
 
                 // Yield control periodically
-                if (stack.Count % 10 == 0)
+                if (stack.Count % TaskYieldInterval == 0)
                     await Task.Yield();
             }
         }

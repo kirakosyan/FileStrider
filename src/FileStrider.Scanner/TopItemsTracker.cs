@@ -7,12 +7,13 @@ namespace FileStrider.Scanner;
 /// the best N items according to a specified comparison function.
 /// </summary>
 /// <typeparam name="T">The type of items to track.</typeparam>
-public class TopItemsTracker<T> : ITopItemsTracker<T>
+public class TopItemsTracker<T> : ITopItemsTracker<T>, IDisposable
 {
     private readonly int _maxItems;
     private readonly IComparer<T> _comparer;
     private readonly List<T> _items = new();
     private readonly object _lock = new();
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopItemsTracker{T}"/> class.
@@ -21,6 +22,9 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
     /// <param name="comparison">The comparison function to determine which items are "best".</param>
     public TopItemsTracker(int maxItems, Comparison<T> comparison)
     {
+        if (maxItems <= 0) throw new ArgumentOutOfRangeException(nameof(maxItems), "maxItems must be greater than 0");
+        ArgumentNullException.ThrowIfNull(comparison);
+        
         _maxItems = maxItems;
         _comparer = Comparer<T>.Create(comparison);
     }
@@ -32,10 +36,14 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
     /// <param name="item">The item to add to the tracker.</param>
     public void Add(T item)
     {
+        if (_disposed) throw new ObjectDisposedException(GetType().Name);
+        
         if (item == null) return; // Ignore null items
         
         lock (_lock)
         {
+            if (_disposed) throw new ObjectDisposedException(GetType().Name);
+            
             if (_items.Count < _maxItems)
             {
                 _items.Add(item);
@@ -68,8 +76,12 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
     /// <returns>A read-only list of the top items currently being tracked.</returns>
     public IReadOnlyList<T> GetTop()
     {
+        if (_disposed) throw new ObjectDisposedException(GetType().Name);
+        
         lock (_lock)
         {
+            if (_disposed) throw new ObjectDisposedException(GetType().Name);
+            
             if (_items.Count > 0 && _items.Count == _maxItems)
             {
                 return _items.ToList();
@@ -88,9 +100,37 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>
     /// </summary>
     public void Clear()
     {
+        if (_disposed) throw new ObjectDisposedException(GetType().Name);
+        
         lock (_lock)
         {
+            if (_disposed) throw new ObjectDisposedException(GetType().Name);
             _items.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Disposes the tracker and releases associated resources.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Protected dispose method for proper disposal pattern.
+    /// </summary>
+    /// <param name="disposing">True if disposing managed resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed && disposing)
+        {
+            lock (_lock)
+            {
+                _items.Clear();
+                _disposed = true;
+            }
         }
     }
 }
