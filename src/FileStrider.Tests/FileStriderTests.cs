@@ -55,6 +55,38 @@ public class TopItemsTrackerTests
         Assert.Equal(3, top[0]);
         Assert.Equal(1, top[1]);
     }
+
+    /// <summary>
+    /// Tests that TopItemsTracker implements IDisposable correctly.
+    /// </summary>
+    [Fact]
+    public void TopItemsTracker_ShouldImplementDisposableCorrectly()
+    {
+        // Arrange
+        var tracker = new TopItemsTracker<int>(3, (a, b) => b.CompareTo(a));
+        tracker.Add(5);
+        tracker.Add(2);
+        
+        // Act
+        tracker.Dispose();
+        
+        // Assert
+        Assert.Throws<ObjectDisposedException>(() => tracker.Add(1));
+        Assert.Throws<ObjectDisposedException>(() => tracker.GetTop());
+        Assert.Throws<ObjectDisposedException>(() => tracker.Clear());
+    }
+
+    /// <summary>
+    /// Tests that TopItemsTracker validates constructor arguments.
+    /// </summary>
+    [Fact]
+    public void TopItemsTracker_ShouldValidateConstructorArguments()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TopItemsTracker<int>(0, (a, b) => a.CompareTo(b)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TopItemsTracker<int>(-1, (a, b) => a.CompareTo(b)));
+        Assert.Throws<ArgumentNullException>(() => new TopItemsTracker<int>(5, null!));
+    }
 }
 
 /// <summary>
@@ -298,6 +330,39 @@ public class FileSystemScannerTests
     }
 
     /// <summary>
+    /// Tests that scanner validates concurrency limit properly.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_ShouldValidateConcurrencyLimit()
+    {
+        // Arrange
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
+        var tempDir = Path.GetTempPath();
+        
+        var invalidOptions = new ScanOptions 
+        { 
+            RootPath = tempDir, 
+            TopN = 1, 
+            ConcurrencyLimit = Environment.ProcessorCount * 10 // Too high
+        };
+        
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
+            scanner.ScanAsync(invalidOptions, null, CancellationToken.None));
+            
+        var zeroOptions = new ScanOptions 
+        { 
+            RootPath = tempDir, 
+            TopN = 1, 
+            ConcurrencyLimit = 0 // Too low
+        };
+        
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
+            scanner.ScanAsync(zeroOptions, null, CancellationToken.None));
+    }
+
+    /// <summary>
     /// Tests that exclude patterns are treated as glob patterns without throwing and excluded files are skipped.
     /// </summary>
     [Fact]
@@ -483,6 +548,9 @@ public class FileTypeAnalyzerTests
         Assert.Equal("Documents", analyzer.GetFileCategory(".pdf"));
         Assert.Equal("Code", analyzer.GetFileCategory(".cs"));
         Assert.Equal("Archives", analyzer.GetFileCategory(".zip"));
+        Assert.Equal("Config", analyzer.GetFileCategory(".ini"));
+        Assert.Equal("Database", analyzer.GetFileCategory(".sqlite"));
+        Assert.Equal("Logs", analyzer.GetFileCategory(".log"));
         Assert.Equal("Other", analyzer.GetFileCategory(".unknown"));
         Assert.Equal("Other", analyzer.GetFileCategory(""));
     }
@@ -538,5 +606,18 @@ public class FileTypeAnalyzerTests
         
         // Assert
         Assert.Empty(statistics);
+    }
+
+    /// <summary>
+    /// Tests that FileTypeAnalyzer throws exception for null input.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_AnalyzeFileTypes_NullInput_ShouldThrow()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+        
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => analyzer.AnalyzeFileTypes(null!));
     }
 }

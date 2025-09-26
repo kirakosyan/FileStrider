@@ -15,26 +15,29 @@ public class FileTypeAnalyzer : IFileTypeAnalyzer
         [".bmp"] = "Images", [".tiff"] = "Images", [".tif"] = "Images", [".webp"] = "Images",
         [".svg"] = "Images", [".ico"] = "Images", [".raw"] = "Images", [".cr2"] = "Images",
         [".nef"] = "Images", [".orf"] = "Images", [".sr2"] = "Images", [".heic"] = "Images",
+        [".avif"] = "Images", [".jxl"] = "Images",
         
         // Videos
         [".mp4"] = "Videos", [".avi"] = "Videos", [".mkv"] = "Videos", [".mov"] = "Videos",
         [".wmv"] = "Videos", [".flv"] = "Videos", [".webm"] = "Videos", [".m4v"] = "Videos",
         [".3gp"] = "Videos", [".mts"] = "Videos", [".ts"] = "Videos", [".vob"] = "Videos",
+        [".mp2"] = "Videos", [".mpg"] = "Videos", [".mpeg"] = "Videos", [".ogv"] = "Videos",
         
         // Audio
         [".mp3"] = "Audio", [".wav"] = "Audio", [".flac"] = "Audio", [".aac"] = "Audio",
         [".ogg"] = "Audio", [".wma"] = "Audio", [".m4a"] = "Audio", [".opus"] = "Audio",
-        [".ape"] = "Audio", [".alac"] = "Audio",
+        [".ape"] = "Audio", [".alac"] = "Audio", [".dsd"] = "Audio", [".dsf"] = "Audio",
         
         // Documents
         [".pdf"] = "Documents", [".doc"] = "Documents", [".docx"] = "Documents", [".xls"] = "Documents",
         [".xlsx"] = "Documents", [".ppt"] = "Documents", [".pptx"] = "Documents", [".txt"] = "Documents",
         [".rtf"] = "Documents", [".odt"] = "Documents", [".ods"] = "Documents", [".odp"] = "Documents",
+        [".epub"] = "Documents", [".mobi"] = "Documents", [".md"] = "Documents", [".tex"] = "Documents",
         
         // Archives
         [".zip"] = "Archives", [".rar"] = "Archives", [".7z"] = "Archives", [".tar"] = "Archives",
         [".gz"] = "Archives", [".bz2"] = "Archives", [".xz"] = "Archives", [".tar.gz"] = "Archives",
-        [".tar.bz2"] = "Archives", [".tar.xz"] = "Archives",
+        [".tar.bz2"] = "Archives", [".tar.xz"] = "Archives", [".lz"] = "Archives", [".lzma"] = "Archives",
         
         // Code
         [".cs"] = "Code", [".js"] = "Code", [".ts"] = "Code", [".py"] = "Code", [".java"] = "Code",
@@ -42,11 +45,23 @@ public class FileTypeAnalyzer : IFileTypeAnalyzer
         [".rb"] = "Code", [".go"] = "Code", [".rs"] = "Code", [".swift"] = "Code", [".kt"] = "Code",
         [".html"] = "Code", [".css"] = "Code", [".scss"] = "Code", [".sass"] = "Code", [".less"] = "Code",
         [".xml"] = "Code", [".json"] = "Code", [".yaml"] = "Code", [".yml"] = "Code",
+        [".sql"] = "Code", [".sh"] = "Code", [".bat"] = "Code", [".ps1"] = "Code", [".vb"] = "Code",
+        
+        // Configuration
+        [".ini"] = "Config", [".cfg"] = "Config", [".conf"] = "Config", [".config"] = "Config",
+        [".properties"] = "Config", [".toml"] = "Config", [".env"] = "Config", [".settings"] = "Config",
+        
+        // Database
+        [".db"] = "Database", [".sqlite"] = "Database", [".sqlite3"] = "Database", [".mdb"] = "Database",
+        [".accdb"] = "Database", [".dbf"] = "Database", [".bak"] = "Database",
+        
+        // Logs
+        [".log"] = "Logs", [".out"] = "Logs", [".err"] = "Logs",
         
         // Executables
         [".exe"] = "Executables", [".msi"] = "Executables", [".deb"] = "Executables", [".rpm"] = "Executables",
         [".dmg"] = "Executables", [".pkg"] = "Executables", [".app"] = "Executables", [".appx"] = "Executables",
-        [".dll"] = "Executables", [".so"] = "Executables", [".dylib"] = "Executables"
+        [".dll"] = "Executables", [".so"] = "Executables", [".dylib"] = "Executables", [".bin"] = "Executables"
     };
 
     /// <summary>
@@ -56,6 +71,8 @@ public class FileTypeAnalyzer : IFileTypeAnalyzer
     /// <returns>A list of file type statistics sorted by total size descending.</returns>
     public IReadOnlyList<FileTypeStats> AnalyzeFileTypes(IEnumerable<FileItem> files)
     {
+        if (files == null) throw new ArgumentNullException(nameof(files));
+        
         var fileList = files.ToList();
         if (fileList.Count == 0)
             return Array.Empty<FileTypeStats>();

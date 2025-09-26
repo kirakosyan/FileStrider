@@ -316,7 +316,14 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanCancel))]
     private void CancelScan()
     {
-        _cancellationTokenSource?.Cancel();
+        try
+        {
+            _cancellationTokenSource?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Token source was already disposed, which is fine
+        }
     }
 
     [RelayCommand]
