@@ -169,4 +169,7 @@
   <data name="DiskUsageVisualization" xml:space="preserve">
     <value>📊 Diskanvändningsvisualisering</value>
   </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Andel av skanningen</value>
+  </data>
 </root>

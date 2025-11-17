@@ -77,10 +77,10 @@ public partial class MainWindowViewModel : ObservableObject
         _configurationService = configurationService;
         _localizationService = localizationService;
         _fileTypeAnalyzer = fileTypeAnalyzer;
-        
+
         // Subscribe to localization changes
         _localizationService.PropertyChanged += (s, e) => UpdateLocalizedProperties();
-        
+
         SelectedPath = Directory.GetCurrentDirectory();
         LoadDefaultSettings();
         UpdateLocalizedProperties();
@@ -94,7 +94,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             ScanStats = _localizationService.GetString("ReadyToScan");
         }
-        
+
         // Notify about all localized properties
         OnPropertyChanged(nameof(AvailableLanguages));
         OnPropertyChanged(nameof(SelectedLanguage));
@@ -121,6 +121,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(DiskUsageVisualizationLabel));
         OnPropertyChanged(nameof(FileTypeBreakdownLabel));
         OnPropertyChanged(nameof(AverageSizeLabel));
+        OnPropertyChanged(nameof(ShareOfScanLabel));
         OnPropertyChanged(nameof(FileSizeFormat));
         OnPropertyChanged(nameof(FileModifiedFormat));
         OnPropertyChanged(nameof(FolderSizeFormat));
@@ -130,7 +131,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     // Localization Properties
     public IReadOnlyList<LanguageInfo> AvailableLanguages => _localizationService.AvailableLanguages;
-    
+
     public LanguageInfo SelectedLanguage
     {
         get => _localizationService.AvailableLanguages.First(l => l.Code == _localizationService.CurrentLanguage);
@@ -161,6 +162,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string DiskUsageVisualizationLabel => _localizationService.GetString("DiskUsageVisualization");
     public string FileTypeBreakdownLabel => _localizationService.GetString("FileTypeBreakdown");
     public string AverageSizeLabel => _localizationService.GetString("AverageSize");
+    public string ShareOfScanLabel => _localizationService.GetString("ShareOfScan");
 
     // Format strings for templates
     public string FileSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
@@ -190,8 +192,60 @@ public partial class MainWindowViewModel : ObservableObject
         var path = await _folderPicker.PickFolderAsync();
         if (!string.IsNullOrEmpty(path))
         {
-            SelectedPath = path;
+            var normalizedPath = NormalizeSelectedPath(path);
+            if (!string.IsNullOrEmpty(normalizedPath))
+            {
+                SelectedPath = normalizedPath;
+            }
         }
+    }
+
+    private static string NormalizeSelectedPath(string path)
+    {
+        var trimmed = path?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return string.Empty;
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            var normalized = trimmed.Replace('/', Path.DirectorySeparatorChar);
+
+            if (IsDriveRoot(normalized))
+            {
+                return $"{char.ToUpperInvariant(normalized[0])}:{Path.DirectorySeparatorChar}";
+            }
+
+            trimmed = normalized;
+        }
+
+        try
+        {
+            return Path.GetFullPath(trimmed);
+        }
+        catch
+        {
+            return trimmed;
+        }
+    }
+
+    private static bool IsDriveRoot(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        if (path.Length == 2 && char.IsLetter(path[0]) && path[1] == ':')
+        {
+            return true;
+        }
+
+        return path.Length == 3
+            && char.IsLetter(path[0])
+            && path[1] == ':'
+            && (path[2] == Path.DirectorySeparatorChar || path[2] == Path.AltDirectorySeparatorChar);
     }
 
     [RelayCommand(CanExecute = nameof(CanScan))]
@@ -425,7 +479,7 @@ public partial class MainWindowViewModel : ObservableObject
         string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
         int i;
         double dblSByte = bytes;
-        
+
         for (i = 0; i < suffixes.Length && bytes >= 1024; i++, bytes /= 1024)
         {
             dblSByte = bytes / 1024.0;
@@ -438,7 +492,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (string.IsNullOrEmpty(path) || path.Length <= maxLength)
             return path;
-        
+
         return "..." + path.Substring(path.Length - maxLength + 3);
     }
 

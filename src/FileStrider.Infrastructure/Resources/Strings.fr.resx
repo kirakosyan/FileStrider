@@ -140,6 +140,9 @@
   <data name="AverageSize" xml:space="preserve">
     <value>Taille moy. :</value>
   </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Part de l'analyse :</value>
+  </data>
   
   <!-- Dialog Messages -->
   <data name="Error" xml:space="preserve">

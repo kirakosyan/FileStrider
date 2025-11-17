@@ -140,6 +140,9 @@
   <data name="AverageSize" xml:space="preserve">
     <value>Avg Size:</value>
   </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Share of scan:</value>
+  </data>
   
   <!-- Dialog Messages -->
   <data name="Error" xml:space="preserve">

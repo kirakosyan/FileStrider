@@ -156,12 +156,12 @@
                     
                     <ListBox Grid.Row="1" 
                              ItemsSource="{Binding TopFiles}"
-                             Margin="5">
+                             Margin="5"
+                             DoubleTapped="TopFilesList_DoubleTapped">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:FileItem">
                                 <Grid Margin="5" 
-                                      ToolTip.Tip="{Binding FullPath}"
-                                      DoubleTapped="FileItem_DoubleTapped">
+                                      ToolTip.Tip="{Binding FullPath}">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
@@ -206,12 +206,12 @@
                     
                     <ListBox Grid.Row="1" 
                              ItemsSource="{Binding TopFolders}"
-                             Margin="5">
+                             Margin="5"
+                             DoubleTapped="TopFoldersList_DoubleTapped">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:FolderItem">
                                 <Grid Margin="5" 
-                                      ToolTip.Tip="{Binding FullPath}"
-                                      DoubleTapped="FolderItem_DoubleTapped">
+                                      ToolTip.Tip="{Binding FullPath}">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>

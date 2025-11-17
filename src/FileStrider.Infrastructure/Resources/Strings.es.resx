@@ -140,6 +140,9 @@
   <data name="AverageSize" xml:space="preserve">
     <value>Tamaño prom.:</value>
   </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Participación del análisis:</value>
+  </data>
   
   <!-- Dialog Messages -->
   <data name="Error" xml:space="preserve">

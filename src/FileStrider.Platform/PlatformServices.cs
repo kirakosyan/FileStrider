@@ -22,7 +22,7 @@ public class ShellService : IShellService
         try
         {
             var directoryPath = Path.GetDirectoryName(filePath) ?? filePath;
-            
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Use explorer to show the file
@@ -146,17 +146,17 @@ public class ConsoleFolderPicker : IFolderPicker
     {
         Console.Write("Enter folder path to scan (or press Enter for current directory): ");
         var input = Console.ReadLine();
-        
+
         if (string.IsNullOrWhiteSpace(input))
         {
             return Task.FromResult<string?>(Directory.GetCurrentDirectory());
         }
-        
+
         if (Directory.Exists(input))
         {
             return Task.FromResult<string?>(Path.GetFullPath(input));
         }
-        
+
         Console.WriteLine($"Directory '{input}' does not exist.");
         return Task.FromResult<string?>(null);
     }
@@ -187,7 +187,21 @@ public class AvaloniaFolderPicker : IFolderPicker
                     AllowMultiple = false
                 });
 
-                return folders.FirstOrDefault()?.Path.LocalPath;
+                var folder = folders.FirstOrDefault();
+                var resolvedPath = ResolveFolderPath(folder);
+
+                if (!string.IsNullOrWhiteSpace(resolvedPath))
+                {
+                    return resolvedPath;
+                }
+
+                // Fall back to current directory if dialog produced an entry without a usable path (happens when selecting drives)
+                if (folder is not null)
+                {
+                    return Directory.GetCurrentDirectory();
+                }
+
+                return null;
             }
 
             // Fallback to current directory if no dialog available
@@ -198,5 +212,109 @@ public class AvaloniaFolderPicker : IFolderPicker
             // Fallback to current directory on error
             return Directory.GetCurrentDirectory();
         }
+    }
+
+    private static string? ResolveFolderPath(IStorageFolder? folder)
+    {
+        if (folder is null)
+        {
+            return null;
+        }
+
+        var localPath = folder.TryGetLocalPath();
+        if (!string.IsNullOrWhiteSpace(localPath))
+        {
+            return NormalizeDrivePath(localPath!);
+        }
+
+        var uriPath = folder.Path?.LocalPath;
+        if (!string.IsNullOrWhiteSpace(uriPath))
+        {
+            return NormalizeDrivePath(uriPath!);
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            var inferred = TryInferDriveFromName(folder.Name);
+            if (!string.IsNullOrWhiteSpace(inferred))
+            {
+                return inferred;
+            }
+        }
+
+        return null;
+    }
+
+    private static string NormalizeDrivePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return path;
+        }
+
+        var trimmed = path.Trim();
+
+        if (OperatingSystem.IsWindows())
+        {
+            trimmed = trimmed.Replace('/', Path.DirectorySeparatorChar);
+
+            if (IsDriveRoot(trimmed))
+            {
+                return FormatDriveRoot(trimmed[0]);
+            }
+        }
+
+        return trimmed;
+    }
+
+    private static string? TryInferDriveFromName(string? folderName)
+    {
+        if (string.IsNullOrWhiteSpace(folderName))
+        {
+            return null;
+        }
+
+        var start = folderName.LastIndexOf('(');
+        var end = folderName.LastIndexOf(')');
+
+        if (start >= 0 && end > start + 1)
+        {
+            var inner = folderName.Substring(start + 1, end - start - 1);
+            if (IsDriveRoot(inner))
+            {
+                return FormatDriveRoot(inner[0]);
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsDriveRoot(string? candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return false;
+        }
+
+        var trimmed = candidate.Trim();
+        if (trimmed.Length == 2 && char.IsLetter(trimmed[0]) && trimmed[1] == ':')
+        {
+            return true;
+        }
+
+        return trimmed.Length == 3
+            && char.IsLetter(trimmed[0])
+            && trimmed[1] == ':'
+            && (trimmed[2] == Path.DirectorySeparatorChar || trimmed[2] == Path.AltDirectorySeparatorChar || trimmed[2] == '/');
+    }
+
+    private static string FormatDriveRoot(char driveLetter)
+    {
+        return string.Create(3, driveLetter, static (span, letter) =>
+        {
+            span[0] = char.ToUpperInvariant(letter);
+            span[1] = ':';
+            span[2] = Path.DirectorySeparatorChar;
+        });
     }
 }
