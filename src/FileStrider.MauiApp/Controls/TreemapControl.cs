@@ -24,6 +24,12 @@ public class TreemapControl : Control
     public static readonly StyledProperty<TreemapItem?> SelectedItemProperty =
         AvaloniaProperty.Register<TreemapControl, TreemapItem?>(nameof(SelectedItem));
 
+    /// <summary>
+    /// Defines the EmptyText property.
+    /// </summary>
+    public static readonly StyledProperty<string> EmptyTextProperty =
+        AvaloniaProperty.Register<TreemapControl, string>(nameof(EmptyText), "No data to display. Run a scan to see the treemap.");
+
     private TreemapItem? _hoveredItem;
 
     /// <summary>
@@ -45,13 +51,22 @@ public class TreemapControl : Control
     }
 
     /// <summary>
+    /// Gets or sets the text to display when there are no items.
+    /// </summary>
+    public string EmptyText
+    {
+        get => GetValue(EmptyTextProperty);
+        set => SetValue(EmptyTextProperty, value);
+    }
+
+    /// <summary>
     /// Event raised when an item is clicked.
     /// </summary>
     public event EventHandler<TreemapItem>? ItemClicked;
 
     static TreemapControl()
     {
-        AffectsRender<TreemapControl>(ItemsProperty, SelectedItemProperty);
+        AffectsRender<TreemapControl>(ItemsProperty, SelectedItemProperty, EmptyTextProperty);
         AffectsMeasure<TreemapControl>(ItemsProperty);
     }
 
@@ -89,14 +104,14 @@ public class TreemapControl : Control
     {
         // Draw background
         context.FillRectangle(Brushes.White, new Rect(0, 0, Bounds.Width, Bounds.Height));
-        
+
         base.Render(context);
 
         if (Items == null || !Items.Any())
         {
             // Draw empty state
             var emptyText = new FormattedText(
-                "No data to display. Run a scan to see the treemap.",
+                EmptyText,
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 Typeface.Default,
@@ -177,7 +192,7 @@ public class TreemapControl : Control
         {
             var sizeText = FormatFileSize(item.Size);
             var percentText = $"({item.Percentage:F1}%)";
-            
+
             var sizeFormattedText = new FormattedText(
                 sizeText,
                 System.Globalization.CultureInfo.CurrentCulture,
@@ -196,7 +211,7 @@ public class TreemapControl : Control
 
             var sizeX = rect.X + (rect.Width - sizeFormattedText.Width) / 2;
             var sizeY = rect.Y + rect.Height - sizeFormattedText.Height - percentFormattedText.Height - 4;
-            
+
             var percentX = rect.X + (rect.Width - percentFormattedText.Width) / 2;
             var percentY = rect.Y + rect.Height - percentFormattedText.Height - 2;
 

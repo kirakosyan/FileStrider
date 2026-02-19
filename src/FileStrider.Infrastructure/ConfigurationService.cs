@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using FileStrider.Core.Contracts;
 using FileStrider.Core.Models;
@@ -45,9 +46,9 @@ public class ConfigurationService : IConfigurationService
                 return options ?? GetDefaultOptions();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // If config file is corrupted or unreadable, return defaults
+            Trace.TraceWarning($"Failed to load configuration: {ex.Message}");
         }
 
         return GetDefaultOptions();
@@ -66,9 +67,9 @@ public class ConfigurationService : IConfigurationService
             var json = JsonSerializer.Serialize(options, JsonOptions);
             await File.WriteAllTextAsync(_configFilePath, json);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Silently fail if unable to save configuration
+            Trace.TraceWarning($"Failed to save configuration: {ex.Message}");
         }
     }
 

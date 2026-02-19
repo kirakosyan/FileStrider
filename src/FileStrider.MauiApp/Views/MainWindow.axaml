@@ -10,10 +10,6 @@
         Icon="/Assets/filestrider-icon.ico"
         Width="1200" Height="700"
         MinWidth="1000" MinHeight="600">
-    
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -325,6 +321,7 @@
                                    FontSize="16"/>
                         
                         <local:TreemapControl Items="{Binding TreemapItems}" 
+                                              EmptyText="{Binding TreemapEmptyText}"
                                               MinHeight="300"/>
                     </StackPanel>
                 </Border>

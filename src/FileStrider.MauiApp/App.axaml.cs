@@ -30,17 +30,22 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Line below is needed to remove Avalonia data validation.
-            // Without this line you will get duplicate validations from both Avalonia and CT
-            BindingPlugins.DataValidators.RemoveAt(0);
+            // Remove Avalonia data validation to avoid duplicates with CommunityToolkit
+            if (BindingPlugins.DataValidators.Count > 0)
+                BindingPlugins.DataValidators.RemoveAt(0);
 
             // Setup dependency injection
             _host = CreateHostBuilder().Build();
-            
+
             var mainViewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow
             {
                 DataContext = mainViewModel,
+            };
+
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                (_host as IDisposable)?.Dispose();
             };
         }
 

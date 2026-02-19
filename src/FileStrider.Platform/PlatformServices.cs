@@ -21,44 +21,42 @@ public class ShellService : IShellService
     {
         try
         {
-            var directoryPath = Path.GetDirectoryName(filePath) ?? filePath;
+            await Task.Run(() =>
+            {
+                var directoryPath = Path.GetDirectoryName(filePath) ?? filePath;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Use explorer to show the file
-                if (File.Exists(filePath))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    Process.Start("explorer.exe", $"/select,\"{filePath}\"");
+                    if (File.Exists(filePath))
+                    {
+                        using var process = Process.Start("explorer.exe", $"/select,\"{filePath}\"");
+                    }
+                    else
+                    {
+                        using var process = Process.Start("explorer.exe", $"\"{directoryPath}\"");
+                    }
                 }
-                else
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    Process.Start("explorer.exe", $"\"{directoryPath}\"");
+                    if (File.Exists(filePath))
+                    {
+                        using var process = Process.Start("open", $"-R \"{filePath}\"");
+                    }
+                    else
+                    {
+                        using var process = Process.Start("open", $"\"{directoryPath}\"");
+                    }
                 }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // Use Finder to show the file
-                if (File.Exists(filePath))
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    Process.Start("open", $"-R \"{filePath}\"");
+                    using var process = Process.Start("xdg-open", $"\"{directoryPath}\"");
                 }
-                else
-                {
-                    Process.Start("open", $"\"{directoryPath}\"");
-                }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                // Use default file manager
-                Process.Start("xdg-open", $"\"{directoryPath}\"");
-            }
+            });
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Failed to open file location: {ex.Message}", ex);
         }
-
-        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -76,25 +74,26 @@ public class ShellService : IShellService
 
         try
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            await Task.Run(() =>
             {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                Process.Start("open", url);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Process.Start("xdg-open", url);
-            }
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    using var process = Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    using var process = Process.Start("open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    using var process = Process.Start("xdg-open", url);
+                }
+            });
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Failed to open URL: {ex.Message}", ex);
         }
-
-        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -110,7 +109,7 @@ public class ShellService : IShellService
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var process = new Process
+                using var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
@@ -127,7 +126,7 @@ public class ShellService : IShellService
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                var process = new Process
+                using var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
@@ -144,7 +143,7 @@ public class ShellService : IShellService
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                var process = new Process
+                using var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {

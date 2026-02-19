@@ -113,7 +113,7 @@
     <value>📝 Exporter JSON</value>
   </data>
   <data name="About" xml:space="preserve">
-    <value>A propos</value>
+    <value>À propos</value>
   </data>
   <data name="SourceCode" xml:space="preserve">
     <value>Code source :</value>
@@ -128,9 +128,6 @@
   <!-- Status Messages -->
   <data name="ReadyToScan" xml:space="preserve">
     <value>Prêt à scanner...</value>
-  </data>
-  <data name="Scanning" xml:space="preserve">
-    <value>Scan en cours...</value>
   </data>
   <data name="ScanProgressStats" xml:space="preserve">
     <value>Fichiers : {0:N0} | Dossiers : {1:N0} | Taille : {2} | Temps : {3:mm\:ss}</value>
@@ -170,10 +167,10 @@
     <value>Aucun résultat de scan à exporter</value>
   </data>
   <data name="AboutTitle" xml:space="preserve">
-    <value>A propos de FileStrider</value>
+    <value>À propos de FileStrider</value>
   </data>
   <data name="AboutDescription" xml:space="preserve">
-    <value>FileStrider vous aide a trouver rapidement les gros fichiers et dossiers sur votre disque.</value>
+    <value>FileStrider vous aide à trouver rapidement les gros fichiers et dossiers sur votre disque.</value>
   </data>
   <data name="FailedToOpenLink" xml:space="preserve">
     <value>Impossible d'ouvrir le lien : {0}</value>
@@ -258,5 +255,11 @@
   </data>
   <data name="CategoryOther" xml:space="preserve">
     <value>Autres</value>
+  </data>
+  <data name="TreemapEmptyText" xml:space="preserve">
+    <value>Aucune donnée à afficher. Lancez un scan pour voir la carte.</value>
+  </data>
+  <data name="SaveFileDialogTitle" xml:space="preserve">
+    <value>Exporter les résultats</value>
   </data>
 </root>

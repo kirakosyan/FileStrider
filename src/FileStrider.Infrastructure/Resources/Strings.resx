@@ -129,9 +129,6 @@
   <data name="ReadyToScan" xml:space="preserve">
     <value>Ready to scan...</value>
   </data>
-  <data name="Scanning" xml:space="preserve">
-    <value>Scanning in progress...</value>
-  </data>
   <data name="ScanProgressStats" xml:space="preserve">
     <value>Files: {0:N0} | Folders: {1:N0} | Size: {2} | Time: {3:mm\:ss}</value>
   </data>
@@ -258,5 +255,11 @@
   </data>
   <data name="CategoryOther" xml:space="preserve">
     <value>Other</value>
+  </data>
+  <data name="TreemapEmptyText" xml:space="preserve">
+    <value>No data to display. Run a scan to see the treemap.</value>
+  </data>
+  <data name="SaveFileDialogTitle" xml:space="preserve">
+    <value>Export Results</value>
   </data>
 </root>

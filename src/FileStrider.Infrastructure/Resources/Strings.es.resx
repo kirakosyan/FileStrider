@@ -116,7 +116,7 @@
     <value>Acerca de</value>
   </data>
   <data name="SourceCode" xml:space="preserve">
-    <value>Codigo fuente:</value>
+    <value>Código fuente:</value>
   </data>
   <data name="Close" xml:space="preserve">
     <value>Cerrar</value>
@@ -128,9 +128,6 @@
   <!-- Status Messages -->
   <data name="ReadyToScan" xml:space="preserve">
     <value>Listo para escanear...</value>
-  </data>
-  <data name="Scanning" xml:space="preserve">
-    <value>Escaneo en progreso...</value>
   </data>
   <data name="ScanProgressStats" xml:space="preserve">
     <value>Archivos: {0:N0} | Carpetas: {1:N0} | Tamaño: {2} | Tiempo: {3:mm\:ss}</value>
@@ -153,7 +150,7 @@
     <value>Tamaño prom.:</value>
   </data>
   <data name="ShareOfScan" xml:space="preserve">
-    <value>Participación del análisis:</value>
+    <value>Porcentaje del escaneo:</value>
   </data>
   
   <!-- Dialog Messages -->
@@ -173,7 +170,7 @@
     <value>Acerca de FileStrider</value>
   </data>
   <data name="AboutDescription" xml:space="preserve">
-    <value>FileStrider te ayuda a encontrar rapido archivos y carpetas grandes en tu disco.</value>
+    <value>FileStrider te ayuda a encontrar rápidamente archivos y carpetas grandes en tu disco.</value>
   </data>
   <data name="FailedToOpenLink" xml:space="preserve">
     <value>No se pudo abrir el enlace: {0}</value>
@@ -239,7 +236,7 @@
     <value>Documentos</value>
   </data>
   <data name="CategoryArchives" xml:space="preserve">
-    <value>Archivos</value>
+    <value>Archivos comprimidos</value>
   </data>
   <data name="CategoryCode" xml:space="preserve">
     <value>Código</value>
@@ -258,5 +255,11 @@
   </data>
   <data name="CategoryOther" xml:space="preserve">
     <value>Otros</value>
+  </data>
+  <data name="TreemapEmptyText" xml:space="preserve">
+    <value>No hay datos para mostrar. Ejecuta un escaneo para ver el mapa.</value>
+  </data>
+  <data name="SaveFileDialogTitle" xml:space="preserve">
+    <value>Exportar Resultados</value>
   </data>
 </root>

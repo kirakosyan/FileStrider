@@ -52,8 +52,8 @@ public class FileSystemScanner : IFileSystemScanner
         if (options.TopN <= 0)
             throw new ArgumentOutOfRangeException(nameof(options), "TopN must be greater than 0");
 
-        if (options.ConcurrencyLimit < 1 || options.ConcurrencyLimit > Environment.ProcessorCount * 4)
-            throw new ArgumentOutOfRangeException(nameof(options), $"ConcurrencyLimit must be between 1 and {Environment.ProcessorCount * 4}");
+        if (options.ConcurrencyLimit < 1 || options.ConcurrencyLimit > Environment.ProcessorCount * 2)
+            throw new ArgumentOutOfRangeException(nameof(options), $"ConcurrencyLimit must be between 1 and {Environment.ProcessorCount * 2}");
 
         var results = new ScanResults();
         var scanProgress = new ScanProgress();
@@ -126,7 +126,7 @@ public class FileSystemScanner : IFileSystemScanner
         }
 
         scanProgress.Elapsed = DateTime.UtcNow - startTime;
-        progress?.Report(scanProgress);
+        progress?.Report(scanProgress.CreateSnapshot());
 
         return results;
     }
@@ -174,9 +174,8 @@ public class FileSystemScanner : IFileSystemScanner
                 // Throttle progress updates
                 if ((progress.FilesScanned + progress.FoldersScanned) % ProgressReportingInterval == 0)
                 {
-                    var elapsed = DateTime.UtcNow - startTime;
-                    progress.Elapsed = elapsed;
-                    progressReporter?.Report(progress);
+                    progress.Elapsed = DateTime.UtcNow - startTime;
+                    progressReporter?.Report(progress.CreateSnapshot());
                 }
             }
         }

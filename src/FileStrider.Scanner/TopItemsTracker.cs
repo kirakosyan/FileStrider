@@ -24,7 +24,7 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>, IDisposable
     {
         if (maxItems <= 0) throw new ArgumentOutOfRangeException(nameof(maxItems), "maxItems must be greater than 0");
         ArgumentNullException.ThrowIfNull(comparison);
-        
+
         _maxItems = maxItems;
         _comparer = Comparer<T>.Create(comparison);
     }
@@ -37,20 +37,17 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>, IDisposable
     public void Add(T item)
     {
         if (_disposed) throw new ObjectDisposedException(GetType().Name);
-        
+
         if (item == null) return; // Ignore null items
-        
+
         lock (_lock)
         {
             if (_disposed) throw new ObjectDisposedException(GetType().Name);
-            
+
             if (_items.Count < _maxItems)
             {
                 _items.Add(item);
-                if (_items.Count == _maxItems)
-                {
-                    _items.Sort(_comparer);
-                }
+                _items.Sort(_comparer);
             }
             else
             {
@@ -58,7 +55,7 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>, IDisposable
                 if (_comparer.Compare(item, _items[_maxItems - 1]) < 0)
                 {
                     _items[_maxItems - 1] = item;
-                    
+
                     // Bubble up to maintain sorted order (simpler and more reliable than binary search insertion)
                     for (int i = _maxItems - 2; i >= 0 && _comparer.Compare(_items[i], _items[i + 1]) > 0; i--)
                     {
@@ -77,20 +74,12 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>, IDisposable
     public IReadOnlyList<T> GetTop()
     {
         if (_disposed) throw new ObjectDisposedException(GetType().Name);
-        
+
         lock (_lock)
         {
             if (_disposed) throw new ObjectDisposedException(GetType().Name);
-            
-            if (_items.Count > 0 && _items.Count == _maxItems)
-            {
-                return _items.ToList();
-            }
-            
-            // Sort if not yet at capacity
-            var sorted = _items.ToList();
-            sorted.Sort(_comparer);
-            return sorted;
+
+            return _items.ToList();
         }
     }
 
@@ -101,7 +90,7 @@ public class TopItemsTracker<T> : ITopItemsTracker<T>, IDisposable
     public void Clear()
     {
         if (_disposed) throw new ObjectDisposedException(GetType().Name);
-        
+
         lock (_lock)
         {
             if (_disposed) throw new ObjectDisposedException(GetType().Name);

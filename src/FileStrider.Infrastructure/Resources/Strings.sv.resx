@@ -116,10 +116,10 @@
     <value>Om</value>
   </data>
   <data name="SourceCode" xml:space="preserve">
-    <value>Kallkod:</value>
+    <value>Källkod:</value>
   </data>
   <data name="Close" xml:space="preserve">
-    <value>Stang</value>
+    <value>Stäng</value>
   </data>
   <data name="Language" xml:space="preserve">
     <value>Språk:</value>
@@ -129,10 +129,6 @@
   <data name="ReadyToScan" xml:space="preserve">
     <value>Redo att skanna...</value>
   </data>
-  <data name="Scanning" xml:space="preserve">
-    <value>Skanning pågår...</value>
-  </data>
-  
   <data name="ScanProgressStats" xml:space="preserve">
     <value>Filer: {0:N0} | Mappar: {1:N0} | Storlek: {2} | Tid: {3:mm\:ss}</value>
   </data>
@@ -171,10 +167,10 @@
     <value>Om FileStrider</value>
   </data>
   <data name="AboutDescription" xml:space="preserve">
-    <value>FileStrider hjalper dig att snabbt hitta stora filer och mappar pa disken.</value>
+    <value>FileStrider hjälper dig att snabbt hitta stora filer och mappar på disken.</value>
   </data>
   <data name="FailedToOpenLink" xml:space="preserve">
-    <value>Kunde inte oppna lank: {0}</value>
+    <value>Kunde inte öppna länk: {0}</value>
   </data>
   <data name="ExportSuccessMessage" xml:space="preserve">
     <value>Resultat exporterade till: {0}</value>
@@ -192,7 +188,7 @@
     <value>📊 Diskanvändningsvisualisering</value>
   </data>
   <data name="ShareOfScan" xml:space="preserve">
-    <value>Andel av skanningen</value>
+    <value>Andel av skanningen:</value>
   </data>
   <data name="DirectoryNotExist" xml:space="preserve">
     <value>Den valda katalogen finns inte</value>
@@ -259,5 +255,11 @@
   </data>
   <data name="CategoryOther" xml:space="preserve">
     <value>Övrigt</value>
+  </data>
+  <data name="TreemapEmptyText" xml:space="preserve">
+    <value>Ingen data att visa. Kör en skanning för att se trädkartan.</value>
+  </data>
+  <data name="SaveFileDialogTitle" xml:space="preserve">
+    <value>Exportera resultat</value>
   </data>
 </root>

@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FileStrider.Core.Contracts;
@@ -140,6 +141,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(FileTypeBreakdownLabel));
         OnPropertyChanged(nameof(AverageSizeLabel));
         OnPropertyChanged(nameof(ShareOfScanLabel));
+        OnPropertyChanged(nameof(TreemapEmptyText));
         OnPropertyChanged(nameof(FileSizeFormat));
         OnPropertyChanged(nameof(FileModifiedFormat));
         OnPropertyChanged(nameof(FolderSizeFormat));
@@ -282,6 +284,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string FileTypeBreakdownLabel => _localizationService.GetString("FileTypeBreakdown");
     public string AverageSizeLabel => _localizationService.GetString("AverageSize");
     public string ShareOfScanLabel => _localizationService.GetString("ShareOfScan");
+    public string TreemapEmptyText => _localizationService.GetString("TreemapEmptyText");
 
     // Format strings for templates
     public string FileSizeFormat => $"{SizeLabel} {{0:N0}} {BytesLabel}";
@@ -410,14 +413,7 @@ public partial class MainWindowViewModel : ObservableObject
         var progress = new Progress<ScanProgress>(p =>
         {
             CurrentPath = TruncatePath(p.CurrentPath, 50);
-            SetProgressScanStats(new ScanProgress
-            {
-                FilesScanned = p.FilesScanned,
-                FoldersScanned = p.FoldersScanned,
-                BytesProcessed = p.BytesProcessed,
-                Elapsed = p.Elapsed,
-                CurrentPath = p.CurrentPath
-            });
+            SetProgressScanStats(p);
         });
 
         try
@@ -629,17 +625,50 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        // Show save file dialog
+        string? filePath = null;
+        var topLevel = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime
+            ? desktopLifetime.MainWindow
+            : null;
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var suggestedFileName = $"FileStrider_Results_{timestamp}";
+
+        if (topLevel?.StorageProvider is { } storageProvider)
+        {
+            var fileType = format == "csv"
+                ? new FilePickerFileType("CSV Files") { Patterns = new[] { "*.csv" } }
+                : new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } };
+
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = _localizationService.GetString("SaveFileDialogTitle"),
+                SuggestedFileName = suggestedFileName,
+                FileTypeChoices = new[] { fileType },
+                DefaultExtension = format
+            });
+
+            if (file is null) return;
+
+            filePath = file.TryGetLocalPath();
+            if (string.IsNullOrEmpty(filePath))
+            {
+                filePath = file.Path?.LocalPath;
+            }
+        }
+
+        if (string.IsNullOrEmpty(filePath))
+        {
+            filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{suggestedFileName}.{format}");
+        }
+
         var results = new ScanResults
         {
             TopFiles = TopFiles.ToList(),
             TopFolders = TopFolders.ToList(),
-            FileTypeStatistics = FileTypeStatistics.ToList(),
+            FileTypeStatistics = _lastFileTypeStatistics.ToList(),
             Progress = new ScanProgress { FilesScanned = TopFiles.Count, FoldersScanned = TopFolders.Count }
         };
-
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var fileName = $"FileStrider_Results_{timestamp}.{format}";
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
 
         try
         {
@@ -705,15 +734,16 @@ public partial class MainWindowViewModel : ObservableObject
     private static string FormatBytes(long bytes)
     {
         string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
-        int i;
-        double dblSByte = bytes;
+        int i = 0;
+        double size = bytes;
 
-        for (i = 0; i < suffixes.Length && bytes >= 1024; i++, bytes /= 1024)
+        while (size >= 1024 && i < suffixes.Length - 1)
         {
-            dblSByte = bytes / 1024.0;
+            size /= 1024;
+            i++;
         }
 
-        return $"{dblSByte:0.##} {suffixes[i]}";
+        return $"{size:0.##} {suffixes[i]}";
     }
 
     private static string TruncatePath(string path, int maxLength)
