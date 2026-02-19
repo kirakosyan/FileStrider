@@ -112,12 +112,17 @@ public record ScanOptions
     /// <summary>
     /// Gets the set of regex patterns for directories and files to exclude from the scan.
     /// </summary>
-    public HashSet<string> ExcludePatterns { get; init; } = new();
-    
+    public HashSet<string> ExcludePatterns { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Gets the set of directory names to exclude from the scan.
     /// </summary>
-    public HashSet<string> ExcludeDirectories { get; init; } = new() { "node_modules", ".git", "Library/Caches" };
+    public HashSet<string> ExcludeDirectories { get; init; } = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "node_modules",
+        ".git",
+        "Library/Caches"
+    };
 }
 
 /// <summary>
@@ -125,20 +130,51 @@ public record ScanOptions
 /// </summary>
 public class ScanProgress
 {
+    private int _filesScanned;
+    private int _foldersScanned;
+    private long _bytesProcessed;
+    
     /// <summary>
     /// Gets or sets the total number of files that have been scanned so far.
     /// </summary>
-    public int FilesScanned { get; set; }
+    public int FilesScanned 
+    { 
+        get => _filesScanned; 
+        set => _filesScanned = value; 
+    }
     
     /// <summary>
     /// Gets or sets the total number of folders that have been scanned so far.
     /// </summary>
-    public int FoldersScanned { get; set; }
+    public int FoldersScanned 
+    { 
+        get => _foldersScanned; 
+        set => _foldersScanned = value; 
+    }
     
     /// <summary>
     /// Gets or sets the total number of bytes processed so far.
     /// </summary>
-    public long BytesProcessed { get; set; }
+    public long BytesProcessed 
+    { 
+        get => _bytesProcessed; 
+        set => _bytesProcessed = value; 
+    }
+    
+    /// <summary>
+    /// Thread-safe increment for files scanned counter.
+    /// </summary>
+    public void IncrementFilesScanned() => Interlocked.Increment(ref _filesScanned);
+    
+    /// <summary>
+    /// Thread-safe increment for folders scanned counter.
+    /// </summary>
+    public void IncrementFoldersScanned() => Interlocked.Increment(ref _foldersScanned);
+    
+    /// <summary>
+    /// Thread-safe add to bytes processed counter.
+    /// </summary>
+    public void AddBytesProcessed(long bytes) => Interlocked.Add(ref _bytesProcessed, bytes);
     
     /// <summary>
     /// Gets or sets the time elapsed since the scan started.
@@ -172,6 +208,11 @@ public class ScanResults
     public List<FolderItem> TopFolders { get; init; } = new();
     
     /// <summary>
+    /// Gets the list of file type statistics from the scan.
+    /// </summary>
+    public List<FileTypeStats> FileTypeStatistics { get; init; } = new();
+    
+    /// <summary>
     /// Gets or sets the final progress information from the scan.
     /// </summary>
     public ScanProgress Progress { get; set; } = new();
@@ -201,3 +242,39 @@ public record LanguageInfo(
     string NativeName,
     string FlagEmoji
 );
+
+/// <summary>
+/// Represents statistics for a specific file type or extension.
+/// </summary>
+public class FileTypeStats
+{
+    /// <summary>
+    /// Gets the file extension (e.g., ".jpg", ".pdf") or category name.
+    /// </summary>
+    public string Extension { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Gets the human-readable category name (e.g., "Images", "Documents").
+    /// </summary>
+    public string Category { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Gets the total number of files of this type.
+    /// </summary>
+    public int FileCount { get; init; }
+    
+    /// <summary>
+    /// Gets the total size in bytes of all files of this type.
+    /// </summary>
+    public long TotalSize { get; init; }
+    
+    /// <summary>
+    /// Gets the percentage of total scanned size that this file type represents.
+    /// </summary>
+    public double Percentage { get; init; }
+    
+    /// <summary>
+    /// Gets the average file size for this file type.
+    /// </summary>
+    public long AverageSize => FileCount > 0 ? TotalSize / FileCount : 0;
+}

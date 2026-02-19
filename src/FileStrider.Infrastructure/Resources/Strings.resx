@@ -100,6 +100,9 @@
   <data name="LargestFolders" xml:space="preserve">
     <value>📁 Largest Folders</value>
   </data>
+  <data name="FileTypeBreakdown" xml:space="preserve">
+    <value>📂 File Type Breakdown</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>❌ Cancel</value>
   </data>
@@ -134,6 +137,12 @@
   <data name="Bytes" xml:space="preserve">
     <value>bytes</value>
   </data>
+  <data name="AverageSize" xml:space="preserve">
+    <value>Avg Size:</value>
+  </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Share of scan:</value>
+  </data>
   
   <!-- Dialog Messages -->
   <data name="Error" xml:space="preserve">
@@ -159,5 +168,41 @@
   </data>
   <data name="SelectFolderToScan" xml:space="preserve">
     <value>Select Folder to Scan</value>
+  </data>
+  <data name="DirectoryNotExist" xml:space="preserve">
+    <value>Selected directory does not exist</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="ScanCancelledMessage" xml:space="preserve">
+    <value>Scan was cancelled by user</value>
+  </data>
+  <data name="Complete" xml:space="preserve">
+    <value>Complete</value>
+  </data>
+  <data name="ScanCompletedMessage" xml:space="preserve">
+    <value>Scan completed successfully!</value>
+  </data>
+  <data name="ScanCompletedStats" xml:space="preserve">
+    <value>Scan completed! Found {0} files and {1} folders</value>
+  </data>
+  <data name="ScanFailedMessage" xml:space="preserve">
+    <value>Scan failed: {0}</value>
+  </data>
+  <data name="AccessDeniedMessage" xml:space="preserve">
+    <value>Access denied: {0}</value>
+  </data>
+  <data name="DirectoryNotFoundMessage" xml:space="preserve">
+    <value>Directory not found: {0}</value>
+  </data>
+  <data name="PathCopiedMessage" xml:space="preserve">
+    <value>File path copied to clipboard</value>
+  </data>
+  <data name="CopyFailedMessage" xml:space="preserve">
+    <value>Failed to copy to clipboard: {0}</value>
+  </data>
+  <data name="DiskUsageVisualization" xml:space="preserve">
+    <value>📊 Disk Usage Visualization</value>
   </data>
 </root>

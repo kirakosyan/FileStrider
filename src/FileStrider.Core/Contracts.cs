@@ -143,3 +143,23 @@ public interface ILocalizationService : INotifyPropertyChanged
     /// <returns>The localized string.</returns>
     string GetString(string key);
 }
+
+/// <summary>
+/// Provides functionality to analyze file types and generate statistics.
+/// </summary>
+public interface IFileTypeAnalyzer
+{
+    /// <summary>
+    /// Analyzes file types from the scan results and generates statistics.
+    /// </summary>
+    /// <param name="files">The list of files to analyze.</param>
+    /// <returns>A list of file type statistics sorted by total size.</returns>
+    IReadOnlyList<FileTypeStats> AnalyzeFileTypes(IEnumerable<FileItem> files);
+    
+    /// <summary>
+    /// Gets the category name for a given file extension.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g., ".jpg").</param>
+    /// <returns>The category name (e.g., "Images").</returns>
+    string GetFileCategory(string extension);
+}

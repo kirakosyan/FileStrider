@@ -7,10 +7,11 @@ FileStrider is a powerful, cross-platform desktop application that helps you dis
 ## ✨ Features
 
 - **🔍 Fast File System Scanning**: Efficiently scans your directories to find the largest files and folders
+- **📊 File Type Analysis**: NEW! Analyze disk usage by file type with detailed statistics, percentages, and a visual breakdown panel
 - **🎯 Top N Results**: Configurable number of top results to display (default: 20)
-- **📊 Detailed Information**: Shows file/folder sizes, modification dates, and item counts
+- **📈 Detailed Information**: Shows file/folder sizes, modification dates, and item counts
 - **🖱️ Double-Click Integration**: Double-click any file or folder to open it in your system's file manager (Windows Explorer, macOS Finder, or Linux file manager)
-- **📤 Export Capabilities**: Export scan results to CSV or JSON formats for further analysis
+- **📤 Enhanced Export**: Export scan results including file type statistics to CSV or JSON formats
 - **⚙️ Flexible Configuration**: 
   - Include/exclude hidden files and folders
   - Set minimum file size filters
@@ -18,7 +19,7 @@ FileStrider is a powerful, cross-platform desktop application that helps you dis
   - Control scan depth and concurrency
 - **🔄 Real-time Progress**: Live updates during scanning with current path and statistics
 - **❌ Cancellable Operations**: Stop long-running scans at any time
-- **🎨 Modern UI**: Clean, intuitive interface built with Avalonia UI
+- **🎨 Modern UI**: Clean, intuitive three-column interface built with Avalonia UI
 
 ## 🖥️ System Requirements
 
@@ -65,14 +66,26 @@ Download the latest release from the [Releases page](https://github.com/kirakosy
    - Include hidden files and folders
    - Set minimum file size threshold
 3. **Start Scanning**: Click "▶️ Start Scan" to begin the analysis
-4. **View Results**: The largest files and folders will appear in the two lists
+4. **View Results**: The largest files, folders, and file type statistics will appear in the three panels
 
 ### Advanced Features
 
+- **File Type Analysis**: View detailed breakdown of disk usage by file type and category
 - **Double-Click to Open**: Double-click any file or folder in the results to open it in your system's file manager with the item highlighted
-- **Export Results**: Use "📄 Export CSV" or "📝 Export JSON" to save your scan results
+- **Enhanced Export**: Use "📄 Export CSV" or "📝 Export JSON" to save your scan results including file type statistics
 - **Cancel Scans**: Use "❌ Cancel" to stop long-running operations
 - **Tooltips**: Hover over items to see their full file paths
+
+### File Type Categories
+
+FileStrider automatically categorizes files into the following types:
+- **Images**: jpg, png, gif, bmp, svg, heic, and more
+- **Videos**: mp4, avi, mkv, mov, webm, and more  
+- **Audio**: mp3, wav, flac, aac, ogg, and more
+- **Documents**: pdf, doc, xls, ppt, txt, and more
+- **Archives**: zip, rar, 7z, tar, gz, and more
+- **Code**: cs, js, py, java, html, css, and more
+- **Executables**: exe, msi, dmg, app, dll, and more
 
 ### Configuration Options
 

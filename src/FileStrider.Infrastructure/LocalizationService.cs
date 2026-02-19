@@ -35,7 +35,8 @@ public class LocalizationService : ILocalizationService
     {
         new("en", "English", "English", "🇺🇸"),
         new("es", "Spanish", "Español", "🇪🇸"),
-        new("fr", "French", "Français", "🇫🇷")
+        new("fr", "French", "Français", "🇫🇷"),
+        new("sv", "Swedish", "Svenska", "🇸🇪")
     };
 
     public LocalizationService()

@@ -26,6 +26,7 @@
     <ProjectReference Include="..\FileStrider.Core\FileStrider.Core.csproj" />
     <ProjectReference Include="..\FileStrider.Scanner\FileStrider.Scanner.csproj" />
     <ProjectReference Include="..\FileStrider.Infrastructure\FileStrider.Infrastructure.csproj" />
+    <ProjectReference Include="..\FileStrider.MauiApp\FileStrider.MauiApp.csproj" />
   </ItemGroup>
 
 </Project>

@@ -13,24 +13,26 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private async void FileItem_DoubleTapped(object? sender, TappedEventArgs e)
+    private async void TopFilesList_DoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is Grid grid && grid.DataContext is FileItem fileItem)
+        if (sender is ListBox listBox && listBox.SelectedItem is FileItem fileItem)
         {
             if (DataContext is MainWindowViewModel viewModel)
             {
                 await viewModel.OpenFileLocationCommand.ExecuteAsync(fileItem);
+                e.Handled = true;
             }
         }
     }
 
-    private async void FolderItem_DoubleTapped(object? sender, TappedEventArgs e)
+    private async void TopFoldersList_DoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is Grid grid && grid.DataContext is FolderItem folderItem)
+        if (sender is ListBox listBox && listBox.SelectedItem is FolderItem folderItem)
         {
             if (DataContext is MainWindowViewModel viewModel)
             {
                 await viewModel.OpenFolderLocationCommand.ExecuteAsync(folderItem);
+                e.Handled = true;
             }
         }
     }

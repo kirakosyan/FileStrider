@@ -3,6 +3,7 @@ using FileStrider.Scanner;
 using FileStrider.Infrastructure.Export;
 using FileStrider.Infrastructure.Configuration;
 using FileStrider.Infrastructure.Localization;
+using FileStrider.Infrastructure.Analysis;
 
 namespace FileStrider.Tests;
 
@@ -19,14 +20,14 @@ public class TopItemsTrackerTests
     {
         // Arrange
         var tracker = new TopItemsTracker<int>(3, (a, b) => b.CompareTo(a)); // Descending order
-        
+
         // Act
         tracker.Add(5);
         tracker.Add(2);
         tracker.Add(8);
         tracker.Add(1);
         tracker.Add(6);
-        
+
         // Assert
         var top = tracker.GetTop();
         Assert.Equal(3, top.Count);
@@ -43,16 +44,48 @@ public class TopItemsTrackerTests
     {
         // Arrange
         var tracker = new TopItemsTracker<int>(5, (a, b) => b.CompareTo(a));
-        
+
         // Act
         tracker.Add(3);
         tracker.Add(1);
-        
+
         // Assert
         var top = tracker.GetTop();
         Assert.Equal(2, top.Count);
         Assert.Equal(3, top[0]);
         Assert.Equal(1, top[1]);
+    }
+
+    /// <summary>
+    /// Tests that TopItemsTracker implements IDisposable correctly.
+    /// </summary>
+    [Fact]
+    public void TopItemsTracker_ShouldImplementDisposableCorrectly()
+    {
+        // Arrange
+        var tracker = new TopItemsTracker<int>(3, (a, b) => b.CompareTo(a));
+        tracker.Add(5);
+        tracker.Add(2);
+
+        // Act
+        tracker.Dispose();
+
+        // Assert
+        Assert.Throws<ObjectDisposedException>(() => tracker.Add(1));
+        Assert.Throws<ObjectDisposedException>(() => tracker.GetTop());
+        Assert.Throws<ObjectDisposedException>(() => tracker.Clear());
+    }
+
+    /// <summary>
+    /// Tests that TopItemsTracker validates constructor arguments.
+    /// </summary>
+    [Fact]
+    public void TopItemsTracker_ShouldValidateConstructorArguments()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TopItemsTracker<int>(0, (a, b) => a.CompareTo(b)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TopItemsTracker<int>(-1, (a, b) => a.CompareTo(b)));
+        Assert.Throws<ArgumentNullException>(() => new TopItemsTracker<int>(5, null!));
     }
 }
 
@@ -69,7 +102,7 @@ public class ScanOptionsTests
     {
         // Act
         var options = new ScanOptions();
-        
+
         // Assert
         Assert.Equal(20, options.TopN);
         Assert.False(options.IncludeHidden);
@@ -89,10 +122,10 @@ public class ScanOptionsTests
     {
         // Arrange
         var options = new ScanOptions();
-        
+
         // Act
         var modified = options with { TopN = 50, IncludeHidden = true, FoldersOnly = true };
-        
+
         // Assert
         Assert.Equal(50, modified.TopN);
         Assert.True(modified.IncludeHidden);
@@ -109,7 +142,7 @@ public class ScanOptionsTests
         // Arrange & Act
         var defaultOptions = new ScanOptions();
         var foldersOnlyOptions = new ScanOptions { FoldersOnly = true };
-        
+
         // Assert
         Assert.False(defaultOptions.FoldersOnly);
         Assert.True(foldersOnlyOptions.FoldersOnly);
@@ -124,7 +157,7 @@ public class ScanOptionsTests
         // Arrange & Act
         var defaultOptions = new ScanOptions();
         var followSymlinksOptions = new ScanOptions { FollowSymlinks = true };
-        
+
         // Assert
         Assert.False(defaultOptions.FollowSymlinks, "FollowSymlinks should default to false for safety");
         Assert.True(followSymlinksOptions.FollowSymlinks);
@@ -137,24 +170,25 @@ public class ScanOptionsTests
     public async Task FileSystemScanner_FoldersOnly_ShouldSkipFileTracking()
     {
         // Arrange
-        var scanner = new FileSystemScanner();
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
         var tempDir = Path.GetTempPath();
-        
+
         // Test with normal scanning (should include files)
         var normalOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = false };
         var normalResults = await scanner.ScanAsync(normalOptions, null, CancellationToken.None);
-        
+
         // Test with FoldersOnly scanning (should skip files but still calculate folder sizes)
         var foldersOnlyOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = true };
         var foldersOnlyResults = await scanner.ScanAsync(foldersOnlyOptions, null, CancellationToken.None);
-        
+
         // Assert
         // Folders should be found in both cases (as long as temp directory has subfolders)
         Assert.True(foldersOnlyResults.TopFolders != null);
-        
+
         // FoldersOnly should result in no files being tracked
         Assert.Empty(foldersOnlyResults.TopFiles);
-        
+
         // Normal scan may have files (depends on temp directory contents)
         // Both should complete successfully
         Assert.True(normalResults.IsCompleted || normalResults.WasCancelled);
@@ -192,7 +226,7 @@ public class ExportServiceTests
         {
             // Act
             await exportService.ExportToCsvAsync(results, tempFile);
-            
+
             // Assert
             Assert.True(File.Exists(tempFile));
             var content = await File.ReadAllTextAsync(tempFile);
@@ -221,10 +255,10 @@ public class ConfigurationServiceTests
     {
         // Arrange
         var configService = new ConfigurationService();
-        
+
         // Act
         var options = await configService.LoadDefaultOptionsAsync();
-        
+
         // Assert
         Assert.NotNull(options);
         Assert.Equal(20, options.TopN);
@@ -240,13 +274,13 @@ public class ConfigurationServiceTests
         // Arrange
         var configService = new ConfigurationService();
         var originalOptions = new ScanOptions { TopN = 100, IncludeHidden = true };
-        
+
         try
         {
             // Act
             await configService.SaveDefaultOptionsAsync(originalOptions);
             var loadedOptions = await configService.LoadDefaultOptionsAsync();
-            
+
             // Assert
             Assert.Equal(100, loadedOptions.TopN);
             Assert.True(loadedOptions.IncludeHidden);
@@ -271,26 +305,211 @@ public class FileSystemScannerTests
     public async Task Scanner_ShouldReportElapsedTime_DuringProgress()
     {
         // Arrange
-        var scanner = new FileSystemScanner();
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
         var tempDir = Path.GetTempPath();
         var options = new ScanOptions { RootPath = tempDir, TopN = 1 };
-        
+
         var progressReports = new List<ScanProgress>();
         var progress = new Progress<ScanProgress>(p => progressReports.Add(p));
-        
+
         // Act
         await scanner.ScanAsync(options, progress, CancellationToken.None);
-        
+
         // Assert
         Assert.NotEmpty(progressReports);
-        
+
         // Find a progress report where files were scanned
         var progressWithFiles = progressReports.FirstOrDefault(p => p.FilesScanned > 0);
         if (progressWithFiles != null)
         {
             // Elapsed time should be greater than zero if files were processed
-            Assert.True(progressWithFiles.Elapsed.TotalMilliseconds >= 0, 
+            Assert.True(progressWithFiles.Elapsed.TotalMilliseconds >= 0,
                 "Elapsed time should be reported during progress updates");
+        }
+    }
+
+    /// <summary>
+    /// Tests that scanner validates concurrency limit properly.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_ShouldValidateConcurrencyLimit()
+    {
+        // Arrange
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
+        var tempDir = Path.GetTempPath();
+
+        var invalidOptions = new ScanOptions
+        {
+            RootPath = tempDir,
+            TopN = 1,
+            ConcurrencyLimit = Environment.ProcessorCount * 10 // Too high
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            scanner.ScanAsync(invalidOptions, null, CancellationToken.None));
+
+        var zeroOptions = new ScanOptions
+        {
+            RootPath = tempDir,
+            TopN = 1,
+            ConcurrencyLimit = 0 // Too low
+        };
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            scanner.ScanAsync(zeroOptions, null, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// Tests that exclude patterns are treated as glob patterns without throwing and excluded files are skipped.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_ShouldRespectGlobExcludePatterns()
+    {
+        // Arrange
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var keepPath = Path.Combine(tempDir, "keep.txt");
+            await File.WriteAllTextAsync(keepPath, new string('a', 1024));
+            var skipPath = Path.Combine(tempDir, "skip.TMP");
+            await File.WriteAllTextAsync(skipPath, new string('b', 1024));
+
+            var options = new ScanOptions
+            {
+                RootPath = tempDir,
+                TopN = 5,
+                ExcludePatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "*.tmp" }
+            };
+
+            // Act
+            var results = await scanner.ScanAsync(options);
+
+            // Assert
+            Assert.DoesNotContain(results.TopFiles, file => file.FullPath.EndsWith("skip.TMP", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(results.TopFiles, file => file.FullPath.EndsWith("keep.txt", StringComparison.OrdinalIgnoreCase));
+
+            var rootFolder = results.TopFolders.FirstOrDefault(f => f.FullPath == Path.GetFullPath(tempDir));
+            Assert.NotNull(rootFolder);
+            Assert.True(rootFolder!.ItemCount >= 1, "Folder item count should reflect aggregated files");
+            Assert.Equal(new FileInfo(keepPath).Length, rootFolder.RecursiveSize);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(tempDir, true);
+            }
+            catch
+            {
+                // Ignore cleanup failures on CI
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that file type statistics include every processed file, not just the displayed top-N entries.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_ShouldComputeFileTypeStatsForAllFiles()
+    {
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var files = new (string Name, int Size, string Extension)[]
+            {
+                ("video.mp4", 2_000_000, ".mp4"),
+                ("photo.jpg", 1_000_000, ".jpg"),
+                ("notes.txt", 500, ".txt")
+            };
+
+            foreach (var file in files)
+            {
+                var path = Path.Combine(tempDir, file.Name);
+                await File.WriteAllBytesAsync(path, new byte[file.Size]);
+            }
+
+            var options = new ScanOptions
+            {
+                RootPath = tempDir,
+                TopN = 1,
+                MinFileSize = 900_000 // Hide smaller files from top list on purpose
+            };
+
+            var results = await scanner.ScanAsync(options);
+
+            var expectedTotal = files.Sum(f => (long)f.Size);
+            var categorizedTotal = results.FileTypeStatistics.Sum(stat => stat.TotalSize);
+
+            Assert.Equal(expectedTotal, categorizedTotal);
+            Assert.Single(results.TopFiles); // Only one top file tracked
+            Assert.Contains(results.FileTypeStatistics, stat => stat.Category == "Videos");
+            Assert.Contains(results.FileTypeStatistics, stat => stat.Category == "Documents" || stat.Category == "Other");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(tempDir, true);
+            }
+            catch
+            {
+                // ignore cleanup issues on CI
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that folder recursive sizes still account for files below the minimum size threshold.
+    /// </summary>
+    [Fact]
+    public async Task Scanner_FolderSizes_ShouldIncludeFilesBelowMinSize()
+    {
+        var fileTypeAnalyzer = new FileTypeAnalyzer();
+        var scanner = new FileSystemScanner(fileTypeAnalyzer);
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var largeFile = Path.Combine(tempDir, "large.bin");
+            var smallFile = Path.Combine(tempDir, "small.bin");
+            await File.WriteAllBytesAsync(largeFile, new byte[2048]);
+            await File.WriteAllBytesAsync(smallFile, new byte[128]);
+
+            var options = new ScanOptions
+            {
+                RootPath = tempDir,
+                TopN = 5,
+                MinFileSize = 1024 // Exclude small file from top files list
+            };
+
+            var results = await scanner.ScanAsync(options);
+
+            var rootFolder = results.TopFolders.FirstOrDefault(f => f.FullPath == Path.GetFullPath(tempDir));
+            Assert.NotNull(rootFolder);
+            Assert.Equal(2048 + 128, rootFolder!.RecursiveSize);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(tempDir, true);
+            }
+            catch
+            {
+                // ignore cleanup issues on CI
+            }
         }
     }
 }
@@ -309,7 +528,7 @@ public class MainWindowViewModelTests
         // This is a basic test to verify that the CanCancel property exists and works
         // The actual command state management is tested through the UI and integration tests
         // Since we're making minimal changes, we'll just verify the property behavior
-        
+
         // For now, we'll just check that the scanner timer fix works (already tested above)
         // The cancel button fix requires UI testing which we'll do manually
         Assert.True(true, "Cancel button fix verified through manual testing");
@@ -329,12 +548,13 @@ public class LocalizationServiceTests
     {
         // Arrange & Act
         var localizationService = new LocalizationService();
-        
+
         // Assert
         Assert.Equal("en", localizationService.CurrentLanguage);
         Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "en");
         Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "es");
         Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "fr");
+        Assert.Contains(localizationService.AvailableLanguages, l => l.Code == "sv");
     }
 
     /// <summary>
@@ -347,10 +567,10 @@ public class LocalizationServiceTests
         var localizationService = new LocalizationService();
         bool propertyChangedFired = false;
         localizationService.PropertyChanged += (s, e) => propertyChangedFired = true;
-        
+
         // Act
         localizationService.ChangeLanguage("es");
-        
+
         // Assert
         Assert.Equal("es", localizationService.CurrentLanguage);
         Assert.True(propertyChangedFired);
@@ -364,22 +584,28 @@ public class LocalizationServiceTests
     {
         // Arrange
         var localizationService = new LocalizationService();
-        
+
         // Act & Assert
         var englishString = localizationService.GetString("AppTitle");
         Assert.Contains("FileStrider", englishString);
-        
+
         // Switch to Spanish and test
         localizationService.ChangeLanguage("es");
         var spanishString = localizationService.GetString("AppTitle");
         Assert.Contains("FileStrider", spanishString);
         Assert.Contains("Herramienta", spanishString);
-        
+
         // Switch to French and test
         localizationService.ChangeLanguage("fr");
         var frenchString = localizationService.GetString("AppTitle");
         Assert.Contains("FileStrider", frenchString);
         Assert.Contains("Outil", frenchString);
+
+        // Switch to Swedish and test
+        localizationService.ChangeLanguage("sv");
+        var swedishString = localizationService.GetString("AppTitle");
+        Assert.Contains("FileStrider", swedishString);
+        Assert.Contains("Verktyg", swedishString);
     }
 
     /// <summary>
@@ -391,11 +617,107 @@ public class LocalizationServiceTests
         // Arrange
         var localizationService = new LocalizationService();
         var originalLanguage = localizationService.CurrentLanguage;
-        
+
         // Act
         localizationService.ChangeLanguage("invalid");
-        
+
         // Assert
         Assert.Equal(originalLanguage, localizationService.CurrentLanguage);
+    }
+}
+
+/// <summary>
+/// Unit tests for the FileTypeAnalyzer to verify file type analysis functionality.
+/// </summary>
+public class FileTypeAnalyzerTests
+{
+    /// <summary>
+    /// Tests that FileTypeAnalyzer correctly categorizes common file types.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_GetFileCategory_ShouldReturnCorrectCategories()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+
+        // Act & Assert
+        Assert.Equal("Images", analyzer.GetFileCategory(".jpg"));
+        Assert.Equal("Images", analyzer.GetFileCategory(".png"));
+        Assert.Equal("Videos", analyzer.GetFileCategory(".mp4"));
+        Assert.Equal("Audio", analyzer.GetFileCategory(".mp3"));
+        Assert.Equal("Documents", analyzer.GetFileCategory(".pdf"));
+        Assert.Equal("Code", analyzer.GetFileCategory(".cs"));
+        Assert.Equal("Archives", analyzer.GetFileCategory(".zip"));
+        Assert.Equal("Config", analyzer.GetFileCategory(".ini"));
+        Assert.Equal("Database", analyzer.GetFileCategory(".sqlite"));
+        Assert.Equal("Logs", analyzer.GetFileCategory(".log"));
+        Assert.Equal("Other", analyzer.GetFileCategory(".unknown"));
+        Assert.Equal("Other", analyzer.GetFileCategory(""));
+    }
+
+    /// <summary>
+    /// Tests that FileTypeAnalyzer correctly analyzes file type statistics.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_AnalyzeFileTypes_ShouldGenerateCorrectStatistics()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+        var files = new List<FileItem>
+        {
+            new() { Name = "image1.jpg", Type = ".jpg", Size = 1000 },
+            new() { Name = "image2.png", Type = ".png", Size = 2000 },
+            new() { Name = "video.mp4", Type = ".mp4", Size = 5000 },
+            new() { Name = "document.pdf", Type = ".pdf", Size = 1500 }
+        };
+
+        // Act
+        var statistics = analyzer.AnalyzeFileTypes(files);
+
+        // Assert
+        Assert.NotEmpty(statistics);
+
+        // Check that we have category level statistics (no duplicates)
+        var imageCategory = statistics.FirstOrDefault(s => s.Category == "Images" && string.IsNullOrEmpty(s.Extension));
+        Assert.NotNull(imageCategory);
+        Assert.Equal(2, imageCategory.FileCount);
+        Assert.Equal(3000, imageCategory.TotalSize);
+
+        // Verify we don't have extension-level duplicates
+        var extensionEntries = statistics.Where(s => !string.IsNullOrEmpty(s.Extension));
+        Assert.Empty(extensionEntries); // Should be empty since we only return category-level stats
+
+        // Verify all statistics are category-level only
+        Assert.All(statistics, stat => Assert.True(string.IsNullOrEmpty(stat.Extension)));
+    }
+
+    /// <summary>
+    /// Tests that FileTypeAnalyzer handles empty file lists correctly.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_AnalyzeFileTypes_EmptyList_ShouldReturnEmpty()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+        var files = new List<FileItem>();
+
+        // Act
+        var statistics = analyzer.AnalyzeFileTypes(files);
+
+        // Assert
+        Assert.Empty(statistics);
+    }
+
+    /// <summary>
+    /// Tests that FileTypeAnalyzer throws exception for null input.
+    /// </summary>
+    [Fact]
+    public void FileTypeAnalyzer_AnalyzeFileTypes_NullInput_ShouldThrow()
+    {
+        // Arrange
+        var analyzer = new FileTypeAnalyzer();
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => analyzer.AnalyzeFileTypes(null!));
     }
 }

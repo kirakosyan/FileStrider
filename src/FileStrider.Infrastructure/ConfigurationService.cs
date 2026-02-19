@@ -87,8 +87,8 @@ public class ConfigurationService : IConfigurationService
             MaxDepth = null,
             MinFileSize = 0,
             ConcurrencyLimit = Math.Min(8, Environment.ProcessorCount),
-            ExcludePatterns = new HashSet<string> { "*.tmp", "*.temp", "*.log" },
-            ExcludeDirectories = new HashSet<string> { "node_modules", ".git", "Library/Caches", ".vs", "bin", "obj" }
+            ExcludePatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "*.tmp", "*.temp", "*.log" },
+            ExcludeDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "node_modules", ".git", "Library/Caches", ".vs", "bin", "obj" }
         };
     }
 }

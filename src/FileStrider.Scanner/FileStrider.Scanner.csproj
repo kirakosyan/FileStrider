@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileStrider.Core\FileStrider.Core.csproj" />
+    <ProjectReference Include="..\FileStrider.Infrastructure\FileStrider.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

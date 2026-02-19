@@ -60,116 +60,116 @@
   </resheader>
   <!-- Application Title -->
   <data name="AppTitle" xml:space="preserve">
-    <value>FileStrider - Outil de Découverte de Fichiers et Dossiers</value>
+    <value>FileStrider - Verktyg för fil- och mappupptäckt</value>
   </data>
   <data name="AppSubtitle" xml:space="preserve">
-    <value>Outil de Découverte de Gros Fichiers et Dossiers</value>
+    <value>Verktyg för upptäckt av stora filer och mappar</value>
   </data>
   
   <!-- UI Labels -->
   <data name="ScanPath" xml:space="preserve">
-    <value>Chemin de Scan :</value>
+    <value>Skanningssökväg:</value>
   </data>
   <data name="Browse" xml:space="preserve">
-    <value>Parcourir...</value>
+    <value>Bläddra...</value>
   </data>
   <data name="QuickScan" xml:space="preserve">
-    <value>🔍 Scan Rapide</value>
+    <value>🔍 Snabbskanning</value>
   </data>
   <data name="StartScan" xml:space="preserve">
-    <value>▶️ Démarrer Scan</value>
+    <value>▶️ Starta skanning</value>
   </data>
   <data name="TopN" xml:space="preserve">
-    <value>Top N :</value>
+    <value>Topp N:</value>
   </data>
   <data name="IncludeHidden" xml:space="preserve">
-    <value>Inclure Cachés</value>
+    <value>Inkludera dolda</value>
   </data>
   <data name="FoldersOnly" xml:space="preserve">
-    <value>Dossiers Seulement</value>
+    <value>Endast mappar</value>
   </data>
   <data name="FoldersOnlyTooltip" xml:space="preserve">
-    <value>Ignorer les fichiers individuels pour un scan plus rapide</value>
+    <value>Hoppa över enskilda filer för snabbare skanning</value>
   </data>
   <data name="MinSize" xml:space="preserve">
-    <value>Taille Min (octets) :</value>
+    <value>Min storlek (bytes):</value>
   </data>
   <data name="LargestFiles" xml:space="preserve">
-    <value>🔥 Plus Gros Fichiers</value>
+    <value>🔥 Största filerna</value>
   </data>
   <data name="LargestFolders" xml:space="preserve">
-    <value>📁 Plus Gros Dossiers</value>
+    <value>📁 Största mapparna</value>
   </data>
   <data name="FileTypeBreakdown" xml:space="preserve">
-    <value>📂 Répartition par Type de Fichier</value>
+    <value>📂 Filtypsfördelning</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>❌ Annuler</value>
+    <value>❌ Avbryt</value>
   </data>
   <data name="ExportCsv" xml:space="preserve">
-    <value>📄 Exporter CSV</value>
+    <value>📄 Exportera CSV</value>
   </data>
   <data name="ExportJson" xml:space="preserve">
-    <value>📝 Exporter JSON</value>
+    <value>📝 Exportera JSON</value>
   </data>
   <data name="Language" xml:space="preserve">
-    <value>Langue :</value>
+    <value>Språk:</value>
   </data>
   
   <!-- Status Messages -->
   <data name="ReadyToScan" xml:space="preserve">
-    <value>Prêt à scanner...</value>
+    <value>Redo att skanna...</value>
   </data>
   <data name="Scanning" xml:space="preserve">
-    <value>Scan en cours...</value>
+    <value>Skanning pågår...</value>
   </data>
   
   <!-- File Details -->
   <data name="Size" xml:space="preserve">
-    <value>Taille :</value>
+    <value>Storlek:</value>
   </data>
   <data name="Modified" xml:space="preserve">
-    <value>Modifié :</value>
+    <value>Ändrad:</value>
   </data>
   <data name="Items" xml:space="preserve">
-    <value>Éléments :</value>
+    <value>Objekt:</value>
   </data>
   <data name="Bytes" xml:space="preserve">
-    <value>octets</value>
+    <value>bytes</value>
   </data>
   <data name="AverageSize" xml:space="preserve">
-    <value>Taille moy. :</value>
-  </data>
-  <data name="ShareOfScan" xml:space="preserve">
-    <value>Part de l'analyse :</value>
+    <value>Snittstorlek:</value>
   </data>
   
   <!-- Dialog Messages -->
   <data name="Error" xml:space="preserve">
-    <value>Erreur</value>
+    <value>Fel</value>
   </data>
   <data name="Success" xml:space="preserve">
-    <value>Succès</value>
+    <value>Framgång</value>
   </data>
   <data name="NoResults" xml:space="preserve">
-    <value>Aucun Résultat</value>
+    <value>Inga resultat</value>
   </data>
   <data name="NoResultsMessage" xml:space="preserve">
-    <value>Aucun résultat de scan à exporter</value>
+    <value>Inga skanningsresultat att exportera</value>
   </data>
   <data name="ExportSuccessMessage" xml:space="preserve">
-    <value>Résultats exportés vers : {0}</value>
+    <value>Resultat exporterade till: {0}</value>
   </data>
   <data name="ExportFailedMessage" xml:space="preserve">
-    <value>Échec de l'exportation : {0}</value>
+    <value>Export misslyckades: {0}</value>
   </data>
   <data name="FailedToOpenLocation" xml:space="preserve">
-    <value>Échec de l'ouverture de l'emplacement : {0}</value>
+    <value>Misslyckades med att öppna plats: {0}</value>
   </data>
   <data name="SelectFolderToScan" xml:space="preserve">
-    <value>Sélectionner le Dossier à Scanner</value>
+    <value>Välj mapp att skanna</value>
   </data>
   <data name="DiskUsageVisualization" xml:space="preserve">
-    <value>📊 Visualisation de l'Utilisation du Disque</value>
+    <value>📊 Diskanvändningsvisualisering</value>
+  </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Andel av skanningen</value>
   </data>
 </root>

@@ -27,6 +27,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaXaml Update="App.axaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+    <AvaloniaXaml Update="Views/MainWindow.axaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaXaml>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FileStrider.Core\FileStrider.Core.csproj" />
     <ProjectReference Include="..\FileStrider.Scanner\FileStrider.Scanner.csproj" />
     <ProjectReference Include="..\FileStrider.Platform\FileStrider.Platform.csproj" />

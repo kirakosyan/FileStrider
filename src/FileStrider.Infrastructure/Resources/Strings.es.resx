@@ -100,6 +100,9 @@
   <data name="LargestFolders" xml:space="preserve">
     <value>📁 Carpetas Más Grandes</value>
   </data>
+  <data name="FileTypeBreakdown" xml:space="preserve">
+    <value>📂 Desglose por Tipo de Archivo</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>❌ Cancelar</value>
   </data>
@@ -134,6 +137,12 @@
   <data name="Bytes" xml:space="preserve">
     <value>bytes</value>
   </data>
+  <data name="AverageSize" xml:space="preserve">
+    <value>Tamaño prom.:</value>
+  </data>
+  <data name="ShareOfScan" xml:space="preserve">
+    <value>Participación del análisis:</value>
+  </data>
   
   <!-- Dialog Messages -->
   <data name="Error" xml:space="preserve">
@@ -159,5 +168,8 @@
   </data>
   <data name="SelectFolderToScan" xml:space="preserve">
     <value>Seleccionar Carpeta para Escanear</value>
+  </data>
+  <data name="DiskUsageVisualization" xml:space="preserve">
+    <value>📊 Visualización de Uso del Disco</value>
   </data>
 </root>
