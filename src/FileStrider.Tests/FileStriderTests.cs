@@ -4,6 +4,9 @@ using FileStrider.Infrastructure.Export;
 using FileStrider.Infrastructure.Configuration;
 using FileStrider.Infrastructure.Localization;
 using FileStrider.Infrastructure.Analysis;
+using System.Collections;
+using System.Globalization;
+using System.Resources;
 
 namespace FileStrider.Tests;
 
@@ -623,6 +626,46 @@ public class LocalizationServiceTests
 
         // Assert
         Assert.Equal(originalLanguage, localizationService.CurrentLanguage);
+    }
+
+    /// <summary>
+    /// Tests that all localized resource files contain the same keys as the default language.
+    /// </summary>
+    [Fact]
+    public void LocalizationResources_ShouldHaveSameKeysAcrossLanguages()
+    {
+        // Arrange
+        var manager = new ResourceManager("FileStrider.Infrastructure.Resources.Strings", typeof(LocalizationService).Assembly);
+        var baselineSet = manager.GetResourceSet(CultureInfo.GetCultureInfo("en"), true, true);
+
+        Assert.NotNull(baselineSet);
+
+        var baselineKeys = baselineSet!
+            .Cast<DictionaryEntry>()
+            .Select(entry => entry.Key?.ToString())
+            .Where(static key => !string.IsNullOrWhiteSpace(key))
+            .Select(static key => key!)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var cultureCode in new[] { "es", "fr", "sv" })
+        {
+            var cultureSet = manager.GetResourceSet(CultureInfo.GetCultureInfo(cultureCode), true, true);
+            Assert.NotNull(cultureSet);
+
+            var cultureKeys = cultureSet!
+                .Cast<DictionaryEntry>()
+                .Select(entry => entry.Key?.ToString())
+                .Where(static key => !string.IsNullOrWhiteSpace(key))
+                .Select(static key => key!)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var missing = baselineKeys.Except(cultureKeys).OrderBy(static key => key).ToArray();
+            var extra = cultureKeys.Except(baselineKeys).OrderBy(static key => key).ToArray();
+
+            Assert.True(
+                missing.Length == 0 && extra.Length == 0,
+                $"Localization key mismatch for '{cultureCode}'. Missing: [{string.Join(", ", missing)}], Extra: [{string.Join(", ", extra)}]");
+        }
     }
 }
 

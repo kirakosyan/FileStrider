@@ -124,6 +124,10 @@
     <value>Skanning pågår...</value>
   </data>
   
+  <data name="ScanProgressStats" xml:space="preserve">
+    <value>Filer: {0:N0} | Mappar: {1:N0} | Storlek: {2} | Tid: {3:mm\:ss}</value>
+  </data>
+  
   <!-- File Details -->
   <data name="Size" xml:space="preserve">
     <value>Storlek:</value>
@@ -171,5 +175,71 @@
   </data>
   <data name="ShareOfScan" xml:space="preserve">
     <value>Andel av skanningen</value>
+  </data>
+  <data name="DirectoryNotExist" xml:space="preserve">
+    <value>Den valda katalogen finns inte</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>Avbruten</value>
+  </data>
+  <data name="ScanCancelledMessage" xml:space="preserve">
+    <value>Skanningen avbröts av användaren</value>
+  </data>
+  <data name="Complete" xml:space="preserve">
+    <value>Klar</value>
+  </data>
+  <data name="ScanCompletedMessage" xml:space="preserve">
+    <value>Skanningen slutfördes!</value>
+  </data>
+  <data name="ScanCompletedStats" xml:space="preserve">
+    <value>Skanning slutförd! Hittade {0} filer och {1} mappar</value>
+  </data>
+  <data name="ScanFailedMessage" xml:space="preserve">
+    <value>Skanningen misslyckades: {0}</value>
+  </data>
+  <data name="AccessDeniedMessage" xml:space="preserve">
+    <value>Åtkomst nekad: {0}</value>
+  </data>
+  <data name="DirectoryNotFoundMessage" xml:space="preserve">
+    <value>Katalogen hittades inte: {0}</value>
+  </data>
+  <data name="PathCopiedMessage" xml:space="preserve">
+    <value>Sökvägen kopierades till urklipp</value>
+  </data>
+  <data name="CopyFailedMessage" xml:space="preserve">
+    <value>Det gick inte att kopiera till urklipp: {0}</value>
+  </data>
+  <data name="CategoryImages" xml:space="preserve">
+    <value>Bilder</value>
+  </data>
+  <data name="CategoryVideos" xml:space="preserve">
+    <value>Videor</value>
+  </data>
+  <data name="CategoryAudio" xml:space="preserve">
+    <value>Ljud</value>
+  </data>
+  <data name="CategoryDocuments" xml:space="preserve">
+    <value>Dokument</value>
+  </data>
+  <data name="CategoryArchives" xml:space="preserve">
+    <value>Arkiv</value>
+  </data>
+  <data name="CategoryCode" xml:space="preserve">
+    <value>Kod</value>
+  </data>
+  <data name="CategoryConfig" xml:space="preserve">
+    <value>Konfiguration</value>
+  </data>
+  <data name="CategoryDatabase" xml:space="preserve">
+    <value>Databas</value>
+  </data>
+  <data name="CategoryLogs" xml:space="preserve">
+    <value>Loggar</value>
+  </data>
+  <data name="CategoryExecutables" xml:space="preserve">
+    <value>Körbara filer</value>
+  </data>
+  <data name="CategoryOther" xml:space="preserve">
+    <value>Övrigt</value>
   </data>
 </root>

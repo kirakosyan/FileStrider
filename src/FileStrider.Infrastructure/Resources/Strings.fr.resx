@@ -123,6 +123,9 @@
   <data name="Scanning" xml:space="preserve">
     <value>Scan en cours...</value>
   </data>
+  <data name="ScanProgressStats" xml:space="preserve">
+    <value>Fichiers : {0:N0} | Dossiers : {1:N0} | Taille : {2} | Temps : {3:mm\:ss}</value>
+  </data>
   
   <!-- File Details -->
   <data name="Size" xml:space="preserve">
@@ -171,5 +174,71 @@
   </data>
   <data name="DiskUsageVisualization" xml:space="preserve">
     <value>📊 Visualisation de l'Utilisation du Disque</value>
+  </data>
+  <data name="DirectoryNotExist" xml:space="preserve">
+    <value>Le répertoire sélectionné n'existe pas</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>Annulé</value>
+  </data>
+  <data name="ScanCancelledMessage" xml:space="preserve">
+    <value>Le scan a été annulé par l'utilisateur</value>
+  </data>
+  <data name="Complete" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="ScanCompletedMessage" xml:space="preserve">
+    <value>Scan terminé avec succès !</value>
+  </data>
+  <data name="ScanCompletedStats" xml:space="preserve">
+    <value>Scan terminé ! {0} fichiers et {1} dossiers trouvés</value>
+  </data>
+  <data name="ScanFailedMessage" xml:space="preserve">
+    <value>Échec du scan : {0}</value>
+  </data>
+  <data name="AccessDeniedMessage" xml:space="preserve">
+    <value>Accès refusé : {0}</value>
+  </data>
+  <data name="DirectoryNotFoundMessage" xml:space="preserve">
+    <value>Répertoire introuvable : {0}</value>
+  </data>
+  <data name="PathCopiedMessage" xml:space="preserve">
+    <value>Chemin du fichier copié dans le presse-papiers</value>
+  </data>
+  <data name="CopyFailedMessage" xml:space="preserve">
+    <value>Échec de la copie dans le presse-papiers : {0}</value>
+  </data>
+  <data name="CategoryImages" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="CategoryVideos" xml:space="preserve">
+    <value>Vidéos</value>
+  </data>
+  <data name="CategoryAudio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="CategoryDocuments" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="CategoryArchives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="CategoryCode" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="CategoryConfig" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="CategoryDatabase" xml:space="preserve">
+    <value>Base de données</value>
+  </data>
+  <data name="CategoryLogs" xml:space="preserve">
+    <value>Journaux</value>
+  </data>
+  <data name="CategoryExecutables" xml:space="preserve">
+    <value>Exécutables</value>
+  </data>
+  <data name="CategoryOther" xml:space="preserve">
+    <value>Autres</value>
   </data>
 </root>

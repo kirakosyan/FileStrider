@@ -42,6 +42,7 @@ public class LocalizationService : ILocalizationService
     public LocalizationService()
     {
         _resourceManager = new ResourceManager("FileStrider.Infrastructure.Resources.Strings", typeof(LocalizationService).Assembly);
+        ApplyCulture(_currentLanguage);
     }
 
     public void ChangeLanguage(string languageCode)
@@ -49,8 +50,17 @@ public class LocalizationService : ILocalizationService
         if (AvailableLanguages.Any(l => l.Code == languageCode))
         {
             CurrentLanguage = languageCode;
-            CultureInfo.CurrentUICulture = new CultureInfo(languageCode);
+            ApplyCulture(languageCode);
         }
+    }
+
+    private static void ApplyCulture(string languageCode)
+    {
+        var culture = new CultureInfo(languageCode);
+        CultureInfo.CurrentUICulture = culture;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
     }
 
     public string GetString(string key)

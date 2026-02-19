@@ -123,6 +123,9 @@
   <data name="Scanning" xml:space="preserve">
     <value>Scanning in progress...</value>
   </data>
+  <data name="ScanProgressStats" xml:space="preserve">
+    <value>Files: {0:N0} | Folders: {1:N0} | Size: {2} | Time: {3:mm\:ss}</value>
+  </data>
   
   <!-- File Details -->
   <data name="Size" xml:space="preserve">
@@ -204,5 +207,38 @@
   </data>
   <data name="DiskUsageVisualization" xml:space="preserve">
     <value>📊 Disk Usage Visualization</value>
+  </data>
+  <data name="CategoryImages" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="CategoryVideos" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+  <data name="CategoryAudio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="CategoryDocuments" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="CategoryArchives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="CategoryCode" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="CategoryConfig" xml:space="preserve">
+    <value>Config</value>
+  </data>
+  <data name="CategoryDatabase" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="CategoryLogs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="CategoryExecutables" xml:space="preserve">
+    <value>Executables</value>
+  </data>
+  <data name="CategoryOther" xml:space="preserve">
+    <value>Other</value>
   </data>
 </root>

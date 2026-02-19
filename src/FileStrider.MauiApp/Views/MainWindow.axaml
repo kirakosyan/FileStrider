@@ -7,6 +7,7 @@
         x:Class="FileStrider.MauiApp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
+        Icon="/Assets/filestrider-icon.ico"
         Width="1200" Height="700"
         MinWidth="1000" MinHeight="600">
     
@@ -159,7 +160,7 @@
                              Margin="5"
                              DoubleTapped="TopFilesList_DoubleTapped">
                         <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:FileItem">
+                            <DataTemplate x:DataType="models:FileItem" x:CompileBindings="False">
                                 <Grid Margin="5" 
                                       ToolTip.Tip="{Binding FullPath}">
                                     <Grid.RowDefinitions>
@@ -174,9 +175,14 @@
                                     <TextBlock Grid.Row="1" 
                                                FontSize="10"
                                                Foreground="Gray">
-                                        <Run Text="Size: "/>
+                                        <Run Text="{Binding DataContext.SizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" "/>
                                         <Run Text="{Binding Size, StringFormat='N0'}"/>
-                                        <Run Text=" bytes | Modified: "/>
+                                        <Run Text=" "/>
+                                        <Run Text="{Binding DataContext.BytesLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" | "/>
+                                        <Run Text="{Binding DataContext.ModifiedLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" "/>
                                         <Run Text="{Binding LastModified, StringFormat='yyyy-MM-dd HH:mm'}"/>
                                     </TextBlock>
                                 </Grid>
@@ -209,7 +215,7 @@
                              Margin="5"
                              DoubleTapped="TopFoldersList_DoubleTapped">
                         <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:FolderItem">
+                            <DataTemplate x:DataType="models:FolderItem" x:CompileBindings="False">
                                 <Grid Margin="5" 
                                       ToolTip.Tip="{Binding FullPath}">
                                     <Grid.RowDefinitions>
@@ -224,11 +230,18 @@
                                     <TextBlock Grid.Row="1" 
                                                FontSize="10"
                                                Foreground="Gray">
-                                        <Run Text="Size: "/>
+                                        <Run Text="{Binding DataContext.SizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" "/>
                                         <Run Text="{Binding RecursiveSize, StringFormat='N0'}"/>
-                                        <Run Text=" bytes | Items: "/>
+                                        <Run Text=" "/>
+                                        <Run Text="{Binding DataContext.BytesLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" | "/>
+                                        <Run Text="{Binding DataContext.ItemsLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" "/>
                                         <Run Text="{Binding ItemCount, StringFormat='N0'}"/>
-                                        <Run Text=" | Modified: "/>
+                                        <Run Text=" | "/>
+                                        <Run Text="{Binding DataContext.ModifiedLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Run Text=" "/>
                                         <Run Text="{Binding LastModified, StringFormat='yyyy-MM-dd HH:mm'}"/>
                                     </TextBlock>
                                 </Grid>

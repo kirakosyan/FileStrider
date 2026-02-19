@@ -11,6 +11,13 @@ namespace FileStrider.MauiApp.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
+    private enum ScanStatsMode
+    {
+        Ready,
+        InProgress,
+        Completed
+    }
+
     private readonly IFileSystemScanner _scanner;
     private readonly IFolderPicker _folderPicker;
     private readonly IExportService _exportService;
@@ -19,6 +26,11 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ILocalizationService _localizationService;
     private readonly IFileTypeAnalyzer _fileTypeAnalyzer;
     private CancellationTokenSource? _cancellationTokenSource;
+    private ScanStatsMode _scanStatsMode = ScanStatsMode.Ready;
+    private ScanProgress? _lastProgressSnapshot;
+    private int _lastCompletedFilesCount;
+    private int _lastCompletedFoldersCount;
+    private readonly List<FileTypeStats> _lastFileTypeStatistics = new();
 
     [ObservableProperty]
     private string title = "";
@@ -84,16 +96,13 @@ public partial class MainWindowViewModel : ObservableObject
         SelectedPath = Directory.GetCurrentDirectory();
         LoadDefaultSettings();
         UpdateLocalizedProperties();
-        ScanStats = _localizationService.GetString("ReadyToScan");
     }
 
     private void UpdateLocalizedProperties()
     {
         Title = _localizationService.GetString("AppTitle");
-        if (ScanStats == "Ready to scan..." || ScanStats == _localizationService.GetString("ReadyToScan"))
-        {
-            ScanStats = _localizationService.GetString("ReadyToScan");
-        }
+        RefreshLocalizedScanStats();
+        RefreshLocalizedFileTypeStatistics();
 
         // Notify about all localized properties
         OnPropertyChanged(nameof(AvailableLanguages));
@@ -127,6 +136,106 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(FolderSizeFormat));
         OnPropertyChanged(nameof(FolderItemsFormat));
         OnPropertyChanged(nameof(FolderModifiedFormat));
+    }
+
+    private void RefreshLocalizedScanStats()
+    {
+        if (_scanStatsMode == ScanStatsMode.InProgress && _lastProgressSnapshot is not null)
+        {
+            ScanStats = string.Format(
+                _localizationService.GetString("ScanProgressStats"),
+                _lastProgressSnapshot.FilesScanned,
+                _lastProgressSnapshot.FoldersScanned,
+                FormatBytes(_lastProgressSnapshot.BytesProcessed),
+                _lastProgressSnapshot.Elapsed);
+            return;
+        }
+
+        if (_scanStatsMode == ScanStatsMode.Completed)
+        {
+            ScanStats = string.Format(
+                _localizationService.GetString("ScanCompletedStats"),
+                _lastCompletedFilesCount,
+                _lastCompletedFoldersCount);
+            return;
+        }
+
+        ScanStats = _localizationService.GetString("ReadyToScan");
+    }
+
+    private void SetReadyScanStats()
+    {
+        _scanStatsMode = ScanStatsMode.Ready;
+        _lastProgressSnapshot = null;
+        RefreshLocalizedScanStats();
+    }
+
+    private void SetProgressScanStats(ScanProgress progress)
+    {
+        _scanStatsMode = ScanStatsMode.InProgress;
+        _lastProgressSnapshot = progress;
+        RefreshLocalizedScanStats();
+    }
+
+    private void SetCompletedScanStats(int filesCount, int foldersCount)
+    {
+        _scanStatsMode = ScanStatsMode.Completed;
+        _lastProgressSnapshot = null;
+        _lastCompletedFilesCount = filesCount;
+        _lastCompletedFoldersCount = foldersCount;
+        RefreshLocalizedScanStats();
+    }
+
+    private void RefreshLocalizedFileTypeStatistics()
+    {
+        if (_lastFileTypeStatistics.Count == 0)
+        {
+            FileTypeStatistics.Clear();
+            return;
+        }
+
+        var localized = _lastFileTypeStatistics
+            .Select(LocalizeFileTypeStat)
+            .ToList();
+
+        FileTypeStatistics.Clear();
+        foreach (var item in localized)
+        {
+            FileTypeStatistics.Add(item);
+        }
+    }
+
+    private FileTypeStats LocalizeFileTypeStat(FileTypeStats stats)
+    {
+        return new FileTypeStats
+        {
+            Extension = stats.Extension,
+            Category = GetLocalizedCategory(stats.Category),
+            FileCount = stats.FileCount,
+            TotalSize = stats.TotalSize,
+            Percentage = stats.Percentage
+        };
+    }
+
+    private string GetLocalizedCategory(string category)
+    {
+        var key = category switch
+        {
+            "Images" => "CategoryImages",
+            "Videos" => "CategoryVideos",
+            "Audio" => "CategoryAudio",
+            "Documents" => "CategoryDocuments",
+            "Archives" => "CategoryArchives",
+            "Code" => "CategoryCode",
+            "Config" => "CategoryConfig",
+            "Database" => "CategoryDatabase",
+            "Logs" => "CategoryLogs",
+            "Executables" => "CategoryExecutables",
+            "Other" => "CategoryOther",
+            _ => null
+        };
+
+        return key is null ? category : _localizationService.GetString(key);
     }
 
     // Localization Properties
@@ -269,6 +378,7 @@ public partial class MainWindowViewModel : ObservableObject
         TopFolders.Clear();
         FileTypeStatistics.Clear();
         TreemapItems.Clear();
+        _lastFileTypeStatistics.Clear();
         HasResults = false;
 
         var options = new ScanOptions
@@ -290,8 +400,14 @@ public partial class MainWindowViewModel : ObservableObject
         var progress = new Progress<ScanProgress>(p =>
         {
             CurrentPath = TruncatePath(p.CurrentPath, 50);
-            ScanStats = $"Files: {p.FilesScanned:N0} | Folders: {p.FoldersScanned:N0} | " +
-                       $"Size: {FormatBytes(p.BytesProcessed)} | Time: {p.Elapsed:mm\\:ss}";
+            SetProgressScanStats(new ScanProgress
+            {
+                FilesScanned = p.FilesScanned,
+                FoldersScanned = p.FoldersScanned,
+                BytesProcessed = p.BytesProcessed,
+                Elapsed = p.Elapsed,
+                CurrentPath = p.CurrentPath
+            });
         });
 
         try
@@ -308,10 +424,9 @@ public partial class MainWindowViewModel : ObservableObject
                 TopFolders.Add(folder);
             }
 
-            foreach (var fileTypeStat in results.FileTypeStatistics)
-            {
-                FileTypeStatistics.Add(fileTypeStat);
-            }
+            _lastFileTypeStatistics.Clear();
+            _lastFileTypeStatistics.AddRange(results.FileTypeStatistics);
+            RefreshLocalizedFileTypeStatistics();
 
             // Populate treemap data
             PopulateTreemapData(results);
@@ -322,38 +437,44 @@ public partial class MainWindowViewModel : ObservableObject
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Cancelled"), _localizationService.GetString("ScanCancelledMessage"));
                 await box.ShowAsync();
+                SetReadyScanStats();
             }
             else if (!string.IsNullOrEmpty(results.ErrorMessage))
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ScanFailedMessage"), results.ErrorMessage));
                 await box.ShowAsync();
+                SetReadyScanStats();
             }
             else
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Complete"), _localizationService.GetString("ScanCompletedMessage"), ButtonEnum.Ok, Icon.Success);
                 await box.ShowAsync();
-                ScanStats = string.Format(_localizationService.GetString("ScanCompletedStats"), TopFiles.Count, TopFolders.Count);
+                SetCompletedScanStats(TopFiles.Count, TopFolders.Count);
             }
         }
         catch (OperationCanceledException)
         {
             var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Cancelled"), _localizationService.GetString("ScanCancelledMessage"));
             await box.ShowAsync();
+            SetReadyScanStats();
         }
         catch (UnauthorizedAccessException ex)
         {
             var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("AccessDeniedMessage"), ex.Message));
             await box.ShowAsync();
+            SetReadyScanStats();
         }
         catch (DirectoryNotFoundException ex)
         {
             var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("DirectoryNotFoundMessage"), ex.Message));
             await box.ShowAsync();
+            SetReadyScanStats();
         }
         catch (Exception ex)
         {
             var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ScanFailedMessage"), ex.Message));
             await box.ShowAsync();
+            SetReadyScanStats();
         }
         finally
         {
