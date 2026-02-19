@@ -112,6 +112,15 @@
   <data name="ExportJson" xml:space="preserve">
     <value>📝 Exporter JSON</value>
   </data>
+  <data name="About" xml:space="preserve">
+    <value>A propos</value>
+  </data>
+  <data name="SourceCode" xml:space="preserve">
+    <value>Code source :</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
   <data name="Language" xml:space="preserve">
     <value>Langue :</value>
   </data>
@@ -159,6 +168,15 @@
   </data>
   <data name="NoResultsMessage" xml:space="preserve">
     <value>Aucun résultat de scan à exporter</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>A propos de FileStrider</value>
+  </data>
+  <data name="AboutDescription" xml:space="preserve">
+    <value>FileStrider vous aide a trouver rapidement les gros fichiers et dossiers sur votre disque.</value>
+  </data>
+  <data name="FailedToOpenLink" xml:space="preserve">
+    <value>Impossible d'ouvrir le lien : {0}</value>
   </data>
   <data name="ExportSuccessMessage" xml:space="preserve">
     <value>Résultats exportés vers : {0}</value>

@@ -1,3 +1,9 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Layout;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FileStrider.Core.Contracts;
@@ -11,6 +17,8 @@ namespace FileStrider.MauiApp.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
+    private const string SourceRepositoryUrl = "https://github.com/kirakosyan/FileStrider";
+
     private enum ScanStatsMode
     {
         Ready,
@@ -122,6 +130,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(CancelLabel));
         OnPropertyChanged(nameof(ExportCsvLabel));
         OnPropertyChanged(nameof(ExportJsonLabel));
+        OnPropertyChanged(nameof(AboutLabel));
         OnPropertyChanged(nameof(LanguageLabel));
         OnPropertyChanged(nameof(SizeLabel));
         OnPropertyChanged(nameof(ModifiedLabel));
@@ -263,6 +272,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string CancelLabel => _localizationService.GetString("Cancel");
     public string ExportCsvLabel => _localizationService.GetString("ExportCsv");
     public string ExportJsonLabel => _localizationService.GetString("ExportJson");
+    public string AboutLabel => _localizationService.GetString("About");
     public string LanguageLabel => _localizationService.GetString("Language");
     public string SizeLabel => _localizationService.GetString("Size");
     public string ModifiedLabel => _localizationService.GetString("Modified");
@@ -499,6 +509,103 @@ public partial class MainWindowViewModel : ObservableObject
         {
             // Token source was already disposed, which is fine
         }
+    }
+
+    [RelayCommand]
+    private async Task ShowAbout()
+    {
+        var sourceLinkButton = new Button
+        {
+            Content = new TextBlock
+            {
+                Text = SourceRepositoryUrl,
+                TextDecorations = TextDecorations.Underline
+            },
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Foreground = Brushes.DodgerBlue,
+            Cursor = new Cursor(StandardCursorType.Hand)
+        };
+
+        sourceLinkButton.Click += async (_, _) =>
+        {
+            try
+            {
+                await _shellService.OpenUrlAsync(SourceRepositoryUrl);
+            }
+            catch (Exception ex)
+            {
+                var box = MessageBoxManager.GetMessageBoxStandard(
+                    _localizationService.GetString("Error"),
+                    string.Format(_localizationService.GetString("FailedToOpenLink"), ex.Message));
+                await box.ShowAsync();
+            }
+        };
+
+        var closeButton = new Button
+        {
+            Content = _localizationService.GetString("Close"),
+            MinWidth = 90
+        };
+
+        var aboutWindow = new Window
+        {
+            Title = _localizationService.GetString("AboutTitle"),
+            Width = 620,
+            Height = 230,
+            CanResize = false,
+            ShowInTaskbar = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new Border
+            {
+                Padding = new Thickness(20),
+                Child = new StackPanel
+                {
+                    Spacing = 12,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = _localizationService.GetString("AboutDescription"),
+                            TextWrapping = TextWrapping.Wrap
+                        },
+                        new StackPanel
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Spacing = 8,
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = _localizationService.GetString("SourceCode"),
+                                    VerticalAlignment = VerticalAlignment.Center
+                                },
+                                sourceLinkButton
+                            }
+                        },
+                        new StackPanel
+                        {
+                            Orientation = Orientation.Horizontal,
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            Children = { closeButton }
+                        }
+                    }
+                }
+            }
+        };
+
+        closeButton.Click += (_, _) => aboutWindow.Close();
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+            && desktop.MainWindow is Window mainWindow)
+        {
+            await aboutWindow.ShowDialog(mainWindow);
+            return;
+        }
+
+        aboutWindow.Show();
     }
 
     [RelayCommand]

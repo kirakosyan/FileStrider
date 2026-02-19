@@ -41,6 +41,13 @@ public interface IShellService
     /// <param name="filePath">The path of the file or folder to open in the file manager.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task OpenFileLocationAsync(string filePath);
+
+    /// <summary>
+    /// Opens the specified URL in the platform's default web browser.
+    /// </summary>
+    /// <param name="url">The URL to open.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task OpenUrlAsync(string url);
     
     /// <summary>
     /// Copies the specified text to the system clipboard.

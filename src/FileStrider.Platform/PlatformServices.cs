@@ -62,6 +62,42 @@ public class ShellService : IShellService
     }
 
     /// <summary>
+    /// Opens the specified URL in the platform's default web browser.
+    /// </summary>
+    /// <param name="url">The URL to open.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the operation fails.</exception>
+    public async Task OpenUrlAsync(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            throw new ArgumentException("URL cannot be null or empty.", nameof(url));
+        }
+
+        try
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Process.Start("open", url);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Process.Start("xdg-open", url);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to open URL: {ex.Message}", ex);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Copies the specified text to the system clipboard using platform-specific commands.
     /// Uses clip.exe on Windows, pbcopy on macOS, and xclip on Linux.
     /// </summary>

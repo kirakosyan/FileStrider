@@ -112,6 +112,15 @@
   <data name="ExportJson" xml:space="preserve">
     <value>📝 Exportera JSON</value>
   </data>
+  <data name="About" xml:space="preserve">
+    <value>Om</value>
+  </data>
+  <data name="SourceCode" xml:space="preserve">
+    <value>Kallkod:</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Stang</value>
+  </data>
   <data name="Language" xml:space="preserve">
     <value>Språk:</value>
   </data>
@@ -157,6 +166,15 @@
   </data>
   <data name="NoResultsMessage" xml:space="preserve">
     <value>Inga skanningsresultat att exportera</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>Om FileStrider</value>
+  </data>
+  <data name="AboutDescription" xml:space="preserve">
+    <value>FileStrider hjalper dig att snabbt hitta stora filer och mappar pa disken.</value>
+  </data>
+  <data name="FailedToOpenLink" xml:space="preserve">
+    <value>Kunde inte oppna lank: {0}</value>
   </data>
   <data name="ExportSuccessMessage" xml:space="preserve">
     <value>Resultat exporterade till: {0}</value>
