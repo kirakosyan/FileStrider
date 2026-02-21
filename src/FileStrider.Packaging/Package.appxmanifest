@@ -4,15 +4,15 @@
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
          IgnorableNamespaces="uap rescap">
 
-  <Identity Name="9971ArmenKirakosyan.FileStrider"
-            Publisher="CN=BF1328E0-7B4C-496F-A203-4A69B637F145"
+  <Identity Name="FileStrider"
+            Publisher="CN=FileStrider"
             Version="1.0.0.0"
             ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>File Strider</DisplayName>
-    <PublisherDisplayName>Armen Kirakosyan</PublisherDisplayName>
-    <Logo>Assets\MsixLogo\StoreLogo.png</Logo>
+    <DisplayName>FileStrider</DisplayName>
+    <PublisherDisplayName>kirakosyan</PublisherDisplayName>
+    <Logo>Images\StoreLogo.png</Logo>
     <Description>Big File and Folder Discovery Tool. Quickly find the largest files and folders on your disk.</Description>
   </Properties>
 
@@ -31,18 +31,18 @@
 
   <Applications>
     <Application Id="App"
-                 Executable="FileStrider.MauiApp.exe"
+                 Executable="FileStrider.MauiApp\FileStrider.MauiApp.exe"
                  EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements DisplayName="FileStrider"
                           Description="Big File and Folder Discovery Tool"
                           BackgroundColor="transparent"
-                          Square150x150Logo="Assets\MsixLogo\Square150x150Logo.png"
-                          Square44x44Logo="Assets\MsixLogo\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Assets\MsixLogo\Wide310x150Logo.png"
-                         Square310x310Logo="Assets\MsixLogo\Square310x310Logo.png"
-                         Square71x71Logo="Assets\MsixLogo\Square71x71Logo.png"
+                          Square150x150Logo="Images\Square150x150Logo.png"
+                          Square44x44Logo="Images\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"
+                         Square310x310Logo="Images\Square310x310Logo.png"
+                         Square71x71Logo="Images\Square71x71Logo.png"
                          ShortName="FileStrider" />
-        <uap:SplashScreen Image="Assets\MsixLogo\SplashScreen.png" />
+        <uap:SplashScreen Image="Images\SplashScreen.png" />
       </uap:VisualElements>
     </Application>
   </Applications>
