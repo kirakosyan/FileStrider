@@ -24,15 +24,19 @@ FileStrider is a powerful, cross-platform desktop application that helps you dis
 ## 🖥️ System Requirements
 
 - **Operating Systems**: Windows, macOS, Linux
-- **.NET Runtime**: .NET 8.0 or later
+- **.NET Runtime**: .NET 10.0 or later
 - **Memory**: 512 MB RAM minimum (more recommended for large scans)
 - **Storage**: 50 MB free disk space
 
 ## 🚀 Installation
 
+### From the Microsoft Store (Windows)
+
+FileStrider is available on the [Microsoft Store](https://apps.microsoft.com/). Search for **File Strider** or visit the app page directly.
+
 ### Prerequisites
 
-1. Install [.NET 8.0 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+1. Install [.NET 10.0 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 
 ### Building from Source
 
@@ -105,11 +109,36 @@ FileStrider is built with a clean, modular architecture:
 - **FileStrider.MauiApp**: Avalonia-based UI application
 - **FileStrider.Tests**: Unit tests
 
+## � MSIX Packaging
+
+To build MSIX packages for the Microsoft Store or sideloading:
+
+### Prerequisites
+
+- [Windows 10/11 SDK](https://developer.microsoft.com/windows/downloads/windows-sdk/) (provides `MakeAppx.exe`)
+
+### Building MSIX Packages
+
+The `scripts/Package-Msix.ps1` script publishes the app as self-contained binaries and creates MSIX packages.
+
+```powershell
+# Build for both x64 and ARM64 (default)
+.\scripts\Package-Msix.ps1
+
+# Build for x64 only
+.\scripts\Package-Msix.ps1 -Architecture x64
+
+# Build and sign with a certificate
+.\scripts\Package-Msix.ps1 -CertificatePath .\cert.pfx -CertificatePassword secret
+```
+
+Output files are named `FileStrider_<Version>_<arch>.msix` (e.g., `FileStrider_1.0.0.0_x64.msix`).
+
 ## 🔧 Development
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Git](https://git-scm.com/)
 
 ### Building
@@ -136,6 +165,8 @@ dotnet run --project src/FileStrider.MauiApp
 
 ```
 FileStrider/
+├── scripts/
+│   └── Package-Msix.ps1           # MSIX packaging script
 ├── src/
 │   ├── FileStrider.Core/          # Core models and interfaces
 │   ├── FileStrider.Scanner/       # File system scanning logic
@@ -144,6 +175,7 @@ FileStrider/
 │   ├── FileStrider.MauiApp/       # Avalonia UI application
 │   └── FileStrider.Tests/         # Unit tests
 ├── FileStrider.sln                # Solution file
+├── PRIVACY_POLICY.md              # Privacy policy
 └── README.md                      # This file
 ```
 
@@ -176,7 +208,11 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 7. Push to the branch (`git push origin feature/AmazingFeature`)
 8. Open a Pull Request
 
-## 📝 License
+## � Privacy
+
+FileStrider does not collect, store, or transmit any personal data. All scanning is performed locally on your device. See the full [Privacy Policy](PRIVACY_POLICY.md).
+
+## �📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
