@@ -3,370 +3,183 @@
         xmlns:vm="using:FileStrider.MauiApp.ViewModels"
         xmlns:models="using:FileStrider.Core.Models"
         xmlns:controls="using:FileStrider.MauiApp.Controls"
-        xmlns:local="using:FileStrider.MauiApp.Controls"
         x:Class="FileStrider.MauiApp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="{Binding Title}"
-        Icon="/Assets/filestrider-icon.ico"
-        Width="1200" Height="700"
-        MinWidth="1000" MinHeight="600">
-
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="🗂️ FileStrider" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,5"/>
-            <TextBlock Text="{Binding AppSubtitle}" 
-                       FontSize="14" 
-                       HorizontalAlignment="Center"
-                       Foreground="Gray"/>
-            <Button Content="{Binding AboutLabel}"
-                    Command="{Binding ShowAboutCommand}"
-                    HorizontalAlignment="Center"
-                    Margin="0,10,0,0"
-                    Padding="14,4"/>
-        </StackPanel>
-
-        <!-- Scan Configuration -->
-        <Border Grid.Row="1" 
-                BorderBrush="LightGray" 
-                BorderThickness="1" 
-                CornerRadius="5" 
-                Padding="15" 
-                Margin="0,0,0,15">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Path Selection -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding ScanPathLabel}" Margin="0,0,0,5"/>
-                <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0,0,10,0">
-                    <TextBox Text="{Binding SelectedPath}" 
-                             Width="400" 
-                             IsReadOnly="True"
-                             VerticalAlignment="Center"/>
-                    <Button Content="{Binding BrowseLabel}" 
-                            Command="{Binding SelectFolderCommand}"
-                            Margin="10,0,0,0"
-                            VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Quick Actions -->
-                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="{Binding QuickScanLabel}" 
-                            Command="{Binding QuickScanCommand}"
-                            Margin="0,0,10,0"
-                            Background="DodgerBlue"
-                            Foreground="White"
-                            Padding="15,5"/>
-                    <Button Content="{Binding StartScanLabel}" 
-                            Command="{Binding StartScanCommand}"
-                            Background="Green"
-                            Foreground="White"
-                            Padding="15,5"/>
-                </StackPanel>
-
-                <!-- Options -->
-                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,15,0,0">
-                    <TextBlock Text="{Binding TopNLabel}" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                    <NumericUpDown Value="{Binding TopN}" 
-                                   Minimum="1" Maximum="200" 
-                                   Width="80" 
-                                   Margin="0,0,20,0"/>
-                    
-                    <CheckBox IsChecked="{Binding IncludeHidden}" 
-                              Content="{Binding IncludeHiddenLabel}" 
-                              Margin="0,0,20,0"/>
-                    
-                    <CheckBox IsChecked="{Binding FoldersOnly}" 
-                              Content="{Binding FoldersOnlyLabel}" 
-                              ToolTip.Tip="{Binding FoldersOnlyTooltip}"
-                              Margin="0,0,20,0"/>
-                    
-                    <TextBlock Text="{Binding MinSizeLabel}" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                    <NumericUpDown Value="{Binding MinFileSize}" 
-                                   Minimum="0" 
-                                   Width="100"
-                                   Margin="0,0,20,0"/>
-                    
-                    <TextBlock Text="{Binding LanguageLabel}" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
-                              SelectedItem="{Binding SelectedLanguage}"
-                              Width="120">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding FlagEmoji}" Margin="0,0,5,0"/>
-                                    <TextBlock Text="{Binding NativeName}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
-            </Grid>
+        Title="{Binding Title}" Icon="/Assets/filestrider-icon.ico"
+        Width="1280" Height="860" MinWidth="1040" MinHeight="700">
+    <Window.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+    </Window.Styles>
+    <Grid Margin="18" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="3">
+                <TextBlock Text="File Strider" FontSize="25" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding AppSubtitle}" FontSize="13"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="{Binding AboutLabel}" Command="{Binding ShowAboutCommand}"
+                    VerticalAlignment="Center"/>
+        </Grid>
+        <Border Grid.Row="1" Padding="12" CornerRadius="8" BorderThickness="1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                    <TextBox Text="{Binding SelectedPath}" IsEnabled="{Binding CanScan}"
+                             Watermark="{Binding ScanPathLabel}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="{Binding BrowseLabel}" Command="{Binding SelectFolderCommand}"/>
+                    <Button Grid.Column="2" Content="{Binding QuickScanLabel}" Command="{Binding QuickScanCommand}"/>
+                    <Button Grid.Column="3" Content="{Binding StartScanLabel}" Command="{Binding StartScanCommand}"
+                            Background="#137E67" Foreground="White" Padding="18,7"/>
+                </Grid>
+                <WrapPanel Orientation="Horizontal" IsEnabled="{Binding CanScan}">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
+                        <TextBlock Text="{Binding TopNLabel}" VerticalAlignment="Center"/>
+                        <NumericUpDown Value="{Binding TopN}" Minimum="1" Maximum="200" FormatString="0" Width="120"/>
+                    </StackPanel>
+                    <CheckBox IsChecked="{Binding IncludeHidden}" Content="{Binding IncludeHiddenLabel}" Margin="0,0,16,6"/>
+                    <CheckBox IsChecked="{Binding FoldersOnly}" Content="{Binding FoldersOnlyLabel}"
+                              ToolTip.Tip="{Binding FoldersOnlyTooltip}" Margin="0,0,16,6"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
+                        <TextBlock Text="{Binding MinSizeLabel}" VerticalAlignment="Center"/>
+                        <NumericUpDown Value="{Binding MinFileSize}" Minimum="0" Maximum="{Binding MaximumMinFileSize}"
+                                       FormatString="0.##" Width="120"/>
+                        <ComboBox ItemsSource="{Binding SizeUnits}" SelectedItem="{Binding SelectedSizeUnit}" Width="80"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+                        <TextBlock Text="{Binding LanguageLabel}" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding AvailableLanguages}" SelectedItem="{Binding SelectedLanguage}" Width="125">
+                            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding NativeName}"/></DataTemplate></ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </WrapPanel>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" IsEnabled="{Binding CanScan}">
+                    <TextBlock Text="{Binding RecentFoldersLabel}" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding RecentPaths}" SelectedItem="{Binding SelectedRecentPath}"
+                              HorizontalAlignment="Stretch" MaxDropDownHeight="250"/>
+                    <Button Grid.Column="2" Content="{Binding SaveSettingsLabel}" Command="{Binding SaveSettingsCommand}"/>
+                </Grid>
+                <Expander Header="{Binding AdvancedOptionsLabel}" HorizontalAlignment="Stretch">
+                    <StackPanel Spacing="8" IsEnabled="{Binding CanScan}">
+                        <WrapPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,6">
+                                <TextBlock Text="{Binding DepthLabel}" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding MaxDepth}" Minimum="0" Maximum="10000" FormatString="0" Width="90"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,6">
+                                <TextBlock Text="{Binding ConcurrencyLabel}" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding ConcurrencyLimit}" Minimum="1"
+                                               Maximum="{Binding MaximumConcurrency}" FormatString="0" Width="80"/>
+                            </StackPanel>
+                            <CheckBox Content="{Binding FollowSymlinksLabel}" IsChecked="{Binding FollowSymlinks}"/>
+                        </WrapPanel>
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+                            <TextBlock Text="{Binding ExcludePatternsLabel}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1" Text="{Binding ExcludePatternsText}"/>
+                            <TextBlock Grid.Row="1" Text="{Binding ExcludeDirectoriesLabel}" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ExcludeDirectoriesText}"/>
+                        </Grid>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
         </Border>
-
-        <!-- Results Area -->
-        <Grid Grid.Row="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            
-            <!-- Top Row: Files and Folders -->
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Files -->
-                <Border Grid.Column="0" 
-                        BorderBrush="LightGray" 
-                        BorderThickness="1" 
-                        CornerRadius="5" 
-                        Margin="0,0,2.5,5">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    
-                    <TextBlock Grid.Row="0" 
-                               Text="{Binding LargestFilesLabel}" 
-                               FontSize="16" 
-                               FontWeight="Bold" 
-                               Margin="10,10,10,5"/>
-                    
-                    <ListBox Grid.Row="1" 
-                             ItemsSource="{Binding TopFiles}"
-                             Margin="5"
-                             DoubleTapped="TopFilesList_DoubleTapped">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:FileItem" x:CompileBindings="False">
-                                <Grid Margin="5" 
-                                      ToolTip.Tip="{Binding FullPath}">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <TextBlock Grid.Row="0" 
-                                               Text="{Binding Name}" 
-                                               FontWeight="Bold"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Row="1" 
-                                               FontSize="10"
-                                               Foreground="Gray">
-                                        <Run Text="{Binding DataContext.SizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding Size, StringFormat='N0'}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding DataContext.BytesLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" | "/>
-                                        <Run Text="{Binding DataContext.ModifiedLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding LastModified, StringFormat='yyyy-MM-dd HH:mm'}"/>
-                                    </TextBlock>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
-
-                <!-- Folders -->
-                <Border Grid.Column="1" 
-                        BorderBrush="LightGray" 
-                        BorderThickness="1" 
-                        CornerRadius="5" 
-                        Margin="2.5,0,2.5,5">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    
-                    <TextBlock Grid.Row="0" 
-                               Text="{Binding LargestFoldersLabel}" 
-                               FontSize="16" 
-                               FontWeight="Bold" 
-                               Margin="10,10,10,5"/>
-                    
-                    <ListBox Grid.Row="1" 
-                             ItemsSource="{Binding TopFolders}"
-                             Margin="5"
-                             DoubleTapped="TopFoldersList_DoubleTapped">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:FolderItem" x:CompileBindings="False">
-                                <Grid Margin="5" 
-                                      ToolTip.Tip="{Binding FullPath}">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <TextBlock Grid.Row="0" 
-                                               Text="{Binding Name}" 
-                                               FontWeight="Bold"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Row="1" 
-                                               FontSize="10"
-                                               Foreground="Gray">
-                                        <Run Text="{Binding DataContext.SizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding RecursiveSize, StringFormat='N0'}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding DataContext.BytesLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" | "/>
-                                        <Run Text="{Binding DataContext.ItemsLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding ItemCount, StringFormat='N0'}"/>
-                                        <Run Text=" | "/>
-                                        <Run Text="{Binding DataContext.ModifiedLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding LastModified, StringFormat='yyyy-MM-dd HH:mm'}"/>
-                                    </TextBlock>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
-
-                <!-- File Type Statistics -->
-                <Border Grid.Column="2"
-                        BorderBrush="LightGray"
-                        BorderThickness="1"
-                        CornerRadius="5"
-                        Margin="2.5,0,0,5">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0"
-                                   Text="{Binding FileTypeBreakdownLabel}"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Margin="10,10,10,5"/>
-
-                        <ListBox Grid.Row="1"
-                                 ItemsSource="{Binding FileTypeStatistics}"
-                                 Margin="5"
-                                 BorderThickness="0"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+        <Grid Grid.Row="2" RowDefinitions="*,1.1*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,*,0.9*" ColumnSpacing="10">
+                <Border Padding="10" CornerRadius="8" BorderThickness="1"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                        <TextBlock Text="{Binding LargestFilesLabel}" FontSize="15" FontWeight="SemiBold"/>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding TopFiles}" DoubleTapped="TopFilesList_DoubleTapped"
+                                 >
                             <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:FileTypeStats" x:CompileBindings="False">
-                                <StackPanel Margin="5" Spacing="4">
-                                    <DockPanel>
-                                        <TextBlock Text="{Binding Category}" FontWeight="Bold" DockPanel.Dock="Left"/>
-                                        <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" DockPanel.Dock="Right" Foreground="Gray"/>
-                                    </DockPanel>
-                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percentage}" Height="6"/>
-                                    <TextBlock FontSize="10" Foreground="Gray">
-                                        <Run Text="{Binding DataContext.ItemsLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding FileCount, StringFormat='{}{0:N0}'}"/>
-                                        <Run Text="  |  "/>
-                                        <Run Text="{Binding DataContext.SizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding TotalSize, StringFormat='{}{0:N0}'}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding DataContext.BytesLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text="  |  "/>
-                                        <Run Text="{Binding DataContext.AverageSizeLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding AverageSize, StringFormat='{}{0:N0}'}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding DataContext.BytesLabel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </DataTemplate>
+                                <DataTemplate x:DataType="models:FileItem">
+                                    <StackPanel Spacing="3" Margin="2,4" ToolTip.Tip="{Binding FullPath}">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplaySize}" FontWeight="SemiBold"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding FullPath}" TextTrimming="CharacterEllipsis" FontSize="11"
+                                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </Grid>
                 </Border>
-
-            </Grid>
-            
-            <!-- Bottom Row: Treemap Visualization -->
-            <Grid Grid.Row="1">
-                <Border BorderBrush="LightGray" 
-                        BorderThickness="1" 
-                        CornerRadius="5" 
-                        Margin="0,5,0,0">
-                    <StackPanel Spacing="10" Margin="10">
-                        <TextBlock Text="{Binding DiskUsageVisualizationLabel}" 
-                                   FontWeight="Bold" 
-                                   FontSize="16"/>
-                        
-                        <local:TreemapControl Items="{Binding TreemapItems}" 
-                                              EmptyText="{Binding TreemapEmptyText}"
-                                              MinHeight="300"/>
-                    </StackPanel>
+                <Border Grid.Column="1" Padding="10" CornerRadius="8" BorderThickness="1"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                        <TextBlock Text="{Binding LargestFoldersLabel}" FontSize="15" FontWeight="SemiBold"/>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding TopFolders}" DoubleTapped="TopFoldersList_DoubleTapped"
+                                 >
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:FolderItem">
+                                    <StackPanel Spacing="3" Margin="2,4" ToolTip.Tip="{Binding FullPath}">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplaySize}" FontWeight="SemiBold"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding FullPath}" TextTrimming="CharacterEllipsis" FontSize="11"
+                                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="2" Padding="10" CornerRadius="8" BorderThickness="1"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                        <TextBlock Text="{Binding FileTypeBreakdownLabel}" FontSize="15" FontWeight="SemiBold"/>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding FileTypeStatistics}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:FileTypeStats">
+                                    <StackPanel Spacing="4" Margin="2,5">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding Category}" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"/>
+                                        </Grid>
+                                        <ProgressBar Value="{Binding Percentage}" Minimum="0" Maximum="100" Height="5"/>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding FileCount, StringFormat='{}{0:N0}'}" FontSize="11"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplaySize}" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
                 </Border>
             </Grid>
+            <Border Grid.Row="1" Padding="10" CornerRadius="8" BorderThickness="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding DiskUsageVisualizationLabel}" FontSize="15" FontWeight="SemiBold"/>
+                        <Button Grid.Column="1" Content="{Binding UpLabel}" Command="{Binding NavigateUpCommand}"
+                                IsEnabled="{Binding CanNavigateUp}" Padding="10,3"/>
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="{Binding TreemapPath}" ToolTip.Tip="{Binding TreemapHint}"
+                               FontSize="11" TextTrimming="CharacterEllipsis"/>
+                    <controls:TreemapControl Grid.Row="2" Items="{Binding TreemapItems}"
+                                             EmptyText="{Binding TreemapEmptyText}" ItemClicked="Treemap_ItemClicked"
+                                             ClipToBounds="True"/>
+                </Grid>
+            </Border>
         </Grid>
-
-        <!-- Status Bar -->
-        <Border Grid.Row="3" 
-                BorderBrush="LightGray" 
-                BorderThickness="1" 
-                CornerRadius="5" 
-                Padding="10" 
-                Margin="0,15,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Vertical">
-                    <TextBlock Text="{Binding ScanStats}" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding CurrentPath}" 
-                               FontSize="10" 
-                               Foreground="Gray"
-                               IsVisible="{Binding IsScanning}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="{Binding CancelLabel}" 
-                            Command="{Binding CancelScanCommand}"
-                            IsVisible="{Binding CanCancel}"
-                            Background="Red"
-                            Foreground="White"
-                            Margin="0,0,10,0"/>
-                    
-                    <Button Content="{Binding ExportCsvLabel}" 
-                            Command="{Binding ExportToCsvCommand}"
-                            IsEnabled="{Binding HasResults}"
-                            Margin="0,0,5,0"/>
-                    
-                    <Button Content="{Binding ExportJsonLabel}" 
-                            Command="{Binding ExportToJsonCommand}"
-                            IsEnabled="{Binding HasResults}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <StackPanel Spacing="3">
+                <TextBlock Text="{Binding ScanStats}" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding CoverageSummary}" FontSize="11" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="12" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding CurrentPath}" FontSize="11" TextTrimming="CharacterEllipsis" IsVisible="{Binding IsScanning}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Button Content="{Binding CancelLabel}" Command="{Binding CancelScanCommand}" IsVisible="{Binding CanCancel}"/>
+                <Button Content="{Binding ExportCsvLabel}" Command="{Binding ExportToCsvCommand}" IsEnabled="{Binding HasResults}"/>
+                <Button Content="{Binding ExportJsonLabel}" Command="{Binding ExportToJsonCommand}" IsEnabled="{Binding HasResults}"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

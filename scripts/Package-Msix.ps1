@@ -81,7 +81,8 @@ $createdPackages = @()
 foreach ($arch in $Architecture) {
     $rid          = $archMap[$arch].RID
     $manifestArch = $archMap[$arch].ManifestArch
-    $publishDir   = Join-Path $projectDir "src\FileStrider.MauiApp\bin\publish\$rid"
+    # A fresh staging folder prevents stale binaries entering an update.
+    $publishDir = Join-Path $projectDir ("artifacts\msix-staging\{0}\{1}" -f [guid]::NewGuid().ToString("N"), $rid)
     $msixOutput   = Join-Path $projectDir "FileStrider_${version}_${arch}.msix"
 
     Write-Host "`n========================================" -ForegroundColor Cyan
@@ -94,6 +95,7 @@ foreach ($arch in $Architecture) {
         -c Release `
         -r $rid `
         --self-contained true `
+        -p:NuGetAuditMode=all `
         -o $publishDir
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed for $rid" }
 

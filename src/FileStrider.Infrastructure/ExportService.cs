@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using FileStrider.Core.Contracts;
 using FileStrider.Core.Models;
@@ -27,7 +28,7 @@ public class ExportService : IExportService
         foreach (var file in results.TopFiles)
         {
             var sizeInMB = file.Size / (1024.0 * 1024.0);
-            await writer.WriteLineAsync($"{EscapeCsvField(file.Name)},{EscapeCsvField(file.FullPath)},{file.Size},{sizeInMB:F2},{EscapeCsvField(file.Type)},{file.LastModified:yyyy-MM-dd HH:mm:ss}");
+            await writer.WriteLineAsync(FormattableString.Invariant($"{EscapeCsvField(file.Name)},{EscapeCsvField(file.FullPath)},{file.Size},{sizeInMB:F2},{EscapeCsvField(file.Type)},{file.LastModified:yyyy-MM-dd HH:mm:ss}"));
         }
         
         await writer.WriteLineAsync();
@@ -39,7 +40,7 @@ public class ExportService : IExportService
         foreach (var folder in results.TopFolders)
         {
             var sizeInMB = folder.RecursiveSize / (1024.0 * 1024.0);
-            await writer.WriteLineAsync($"{EscapeCsvField(folder.Name)},{EscapeCsvField(folder.FullPath)},{folder.RecursiveSize},{sizeInMB:F2},{folder.ItemCount},{folder.LastModified:yyyy-MM-dd HH:mm:ss}");
+            await writer.WriteLineAsync(FormattableString.Invariant($"{EscapeCsvField(folder.Name)},{EscapeCsvField(folder.FullPath)},{folder.RecursiveSize},{sizeInMB:F2},{folder.ItemCount},{folder.LastModified:yyyy-MM-dd HH:mm:ss}"));
         }
 
         // Export file type statistics if available
@@ -52,7 +53,7 @@ public class ExportService : IExportService
             foreach (var stat in results.FileTypeStatistics)
             {
                 var totalSizeInMB = stat.TotalSize / (1024.0 * 1024.0);
-                await writer.WriteLineAsync($"{EscapeCsvField(stat.Extension)},{EscapeCsvField(stat.Category)},{stat.FileCount},{stat.TotalSize},{totalSizeInMB:F2},{stat.Percentage:F1}%,{stat.AverageSize}");
+                await writer.WriteLineAsync(FormattableString.Invariant($"{EscapeCsvField(stat.Extension)},{EscapeCsvField(stat.Category)},{stat.FileCount},{stat.TotalSize},{totalSizeInMB:F2},{stat.Percentage:F1}%,{stat.AverageSize}"));
             }
         }
     }
@@ -69,6 +70,7 @@ public class ExportService : IExportService
         var exportData = new
         {
             ExportedAt = DateTime.UtcNow,
+            results.RootPath,
             ScanCompleted = results.IsCompleted,
             ScanCancelled = results.WasCancelled,
             ErrorMessage = results.ErrorMessage,
@@ -77,7 +79,13 @@ public class ExportService : IExportService
                 results.Progress.FilesScanned,
                 results.Progress.FoldersScanned,
                 results.Progress.BytesProcessed,
-                results.Progress.Elapsed
+                results.Progress.Elapsed,
+                results.Progress.SkippedItems,
+                results.Progress.InaccessibleItems,
+                results.Progress.OfflineItems,
+                results.Progress.ExcludedItems,
+                results.Progress.DepthLimitedDirectories,
+                results.Progress.HasIncompleteCoverage
             },
             TopFiles = results.TopFiles.Select(f => new
             {
@@ -129,6 +137,11 @@ public class ExportService : IExportService
     {
         if (string.IsNullOrEmpty(field))
             return "";
+
+        // Delimiter escaping alone does not prevent spreadsheet formula evaluation.
+        var trimmed = field.TrimStart();
+        if (trimmed.Length > 0 && ("=+-@".Contains(trimmed[0]) || field[0] is '\t' or '\r' or '\n'))
+            field = "'" + field;
 
         if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))
         {

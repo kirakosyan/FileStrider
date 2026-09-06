@@ -45,6 +45,7 @@ public partial class App : Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                mainViewModel.Dispose();
                 (_host as IDisposable)?.Dispose();
             };
         }

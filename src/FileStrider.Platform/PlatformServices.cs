@@ -10,160 +10,47 @@ namespace FileStrider.Platform.Services;
 /// </summary>
 public class ShellService : IShellService
 {
-    /// <summary>
-    /// Opens the file or folder location in the platform's default file manager (Explorer, Finder, etc.).
-    /// On Windows, uses Explorer with /select to highlight the specific file.
-    /// </summary>
-    /// <param name="filePath">The path of the file or folder to open in the file manager.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the operation fails.</exception>
-    public async Task OpenFileLocationAsync(string filePath)
+    public Task OpenFileLocationAsync(string filePath)
     {
-        try
+        filePath = Path.GetFullPath(filePath);
+        if (!File.Exists(filePath) && !Directory.Exists(filePath))
+            throw new FileNotFoundException("The selected item no longer exists.", filePath);
+        var start = new ProcessStartInfo { UseShellExecute = false, CreateNoWindow = true };
+        if (OperatingSystem.IsWindows())
         {
-            await Task.Run(() =>
-            {
-                var directoryPath = Path.GetDirectoryName(filePath) ?? filePath;
-
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    if (File.Exists(filePath))
-                    {
-                        using var process = Process.Start("explorer.exe", $"/select,\"{filePath}\"");
-                    }
-                    else
-                    {
-                        using var process = Process.Start("explorer.exe", $"\"{directoryPath}\"");
-                    }
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    if (File.Exists(filePath))
-                    {
-                        using var process = Process.Start("open", $"-R \"{filePath}\"");
-                    }
-                    else
-                    {
-                        using var process = Process.Start("open", $"\"{directoryPath}\"");
-                    }
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    using var process = Process.Start("xdg-open", $"\"{directoryPath}\"");
-                }
-            });
+            start.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+            start.Arguments = $"/select,\"{filePath}\"";
         }
-        catch (Exception ex)
+        else if (OperatingSystem.IsMacOS())
         {
-            throw new InvalidOperationException($"Failed to open file location: {ex.Message}", ex);
+            start.FileName = "/usr/bin/open";
+            start.ArgumentList.Add("-R");
+            start.ArgumentList.Add(filePath);
         }
+        else
+        {
+            start.FileName = "xdg-open";
+            start.ArgumentList.Add(Directory.Exists(filePath) ? filePath : Path.GetDirectoryName(filePath)!);
+        }
+        using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start the file manager.");
+        return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Opens the specified URL in the platform's default web browser.
-    /// </summary>
-    /// <param name="url">The URL to open.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the operation fails.</exception>
-    public async Task OpenUrlAsync(string url)
+    public Task OpenUrlAsync(string url)
     {
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new ArgumentException("URL cannot be null or empty.", nameof(url));
-        }
-
-        try
-        {
-            await Task.Run(() =>
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    using var process = Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    using var process = Process.Start("open", url);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    using var process = Process.Start("xdg-open", url);
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to open URL: {ex.Message}", ex);
-        }
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http"))
+            throw new ArgumentException("A valid web address is required.", nameof(url));
+        using var process = Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true })
+            ?? throw new InvalidOperationException("Could not open the web browser.");
+        return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Copies the specified text to the system clipboard using platform-specific commands.
-    /// Uses clip.exe on Windows, pbcopy on macOS, and xclip on Linux.
-    /// </summary>
-    /// <param name="text">The text to copy to the clipboard.</param>
-    /// <returns>A task that represents the asynchronous clipboard operation.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the clipboard operation fails.</exception>
     public async Task CopyToClipboardAsync(string text)
     {
-        try
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                using var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "clip",
-                        UseShellExecute = false,
-                        RedirectStandardInput = true,
-                        CreateNoWindow = true
-                    }
-                };
-                process.Start();
-                await process.StandardInput.WriteAsync(text);
-                process.StandardInput.Close();
-                await process.WaitForExitAsync();
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                using var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "pbcopy",
-                        UseShellExecute = false,
-                        RedirectStandardInput = true,
-                        CreateNoWindow = true
-                    }
-                };
-                process.Start();
-                await process.StandardInput.WriteAsync(text);
-                process.StandardInput.Close();
-                await process.WaitForExitAsync();
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                using var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "xclip",
-                        Arguments = "-selection clipboard",
-                        UseShellExecute = false,
-                        RedirectStandardInput = true,
-                        CreateNoWindow = true
-                    }
-                };
-                process.Start();
-                await process.StandardInput.WriteAsync(text);
-                process.StandardInput.Close();
-                await process.WaitForExitAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to copy to clipboard: {ex.Message}", ex);
-        }
+        var window = (Avalonia.Application.Current?.ApplicationLifetime as
+            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        var clipboard = window?.Clipboard ?? throw new InvalidOperationException("The clipboard is unavailable.");
+        await clipboard.SetTextAsync(text);
     }
 }
 
@@ -233,19 +120,18 @@ public class AvaloniaFolderPicker : IFolderPicker
                 // Fall back to current directory if dialog produced an entry without a usable path (happens when selecting drives)
                 if (folder is not null)
                 {
-                    return Directory.GetCurrentDirectory();
+                    throw new InvalidOperationException("The selected folder does not have a usable local path.");
                 }
 
                 return null;
             }
 
             // Fallback to current directory if no dialog available
-            return Directory.GetCurrentDirectory();
+            throw new InvalidOperationException("The folder picker is unavailable.");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Fallback to current directory on error
-            return Directory.GetCurrentDirectory();
+            throw new InvalidOperationException("Could not select a folder.", ex);
         }
     }
 

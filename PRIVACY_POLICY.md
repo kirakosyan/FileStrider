@@ -3,7 +3,7 @@
 **App name:** FileStrider  
 **App ID:** com.kirakosyan.filestrider  
 **Platforms:** Windows  
-**Last updated:** 2026-02-21
+**Last updated:** 2026-09-06
 
 ---
 
@@ -35,7 +35,7 @@ All application data is stored exclusively on your device and is never sent anyw
 
 | Data | Where it is stored | Purpose |
 |---|---|---|
-| App settings (language, preferences) | Local app data directory | Persist your preferences |
+| App settings (language, scan preferences, up to eight recent folder paths, recovery copy) | Local app data directory | Restore preferences and recently scanned locations |
 | Scan results (file/folder sizes, paths) | In-memory only | Display analysis results during the current session |
 | Export files (CSV/JSON) | User-chosen location | Save scan results when you explicitly export them |
 
@@ -58,7 +58,7 @@ All scanning is performed entirely on your local device.
 
 ## 5. Internet Access
 
-FileStrider does **not** require internet access to function. The `internetClient` capability declared in the app manifest is reserved for potential future features (e.g., checking for updates). The app does **not** contact any server owned or operated by the FileStrider developers.
+FileStrider does **not** require internet access to function and does **not** contact any server owned or operated by the developers. Opening the source-code or support link launches your default browser only when you request it. Version 1.1 removes the unused `internetClient` manifest capability.
 
 ---
 

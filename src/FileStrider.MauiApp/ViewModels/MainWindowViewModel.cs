@@ -16,8 +16,31 @@ using MsBox.Avalonia.Enums;
 
 namespace FileStrider.MauiApp.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
+    private int _scanActive;
+    private ScanOptions _loadedOptions = new();
+    public Task Initialization { get; }
+    public ScanResults? LastResults { get; private set; }
+    public ObservableCollection<string> RecentPaths { get; } = new();
+    public IReadOnlyList<SizeUnit> SizeUnits { get; } = new[] {
+        new SizeUnit("B", 1), new SizeUnit("KiB", 1024), new SizeUnit("MiB", 1048576), new SizeUnit("GiB", 1073741824) };
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(MaximumMinFileSize))]
+    private SizeUnit selectedSizeUnit = new("B", 1);
+    public decimal MaximumMinFileSize => long.MaxValue / SelectedSizeUnit.Multiplier;
+    public int MaximumConcurrency => Math.Max(1, Environment.ProcessorCount * 2);
+    [ObservableProperty] private decimal? maxDepth;
+    [ObservableProperty] private decimal? concurrencyLimit = Math.Min(8, Environment.ProcessorCount);
+    [ObservableProperty] private bool followSymlinks;
+    [ObservableProperty] private string excludePatternsText = "";
+    [ObservableProperty] private string excludeDirectoriesText = "";
+    [ObservableProperty] private string statusMessage = "";
+    [ObservableProperty] private string treemapPath = "";
+    [ObservableProperty] private bool canNavigateUp;
+    [ObservableProperty] private string? selectedRecentPath;
+    private Dictionary<string, FolderItem> _folderIndex = new(PathComparer);
+    private ILookup<string, FolderItem>? _children;
+    private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
     private const string SourceRepositoryUrl = "https://github.com/kirakosyan/FileStrider";
 
     private enum ScanStatsMode
@@ -47,10 +70,10 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool isScanning = false;
 
-    [ObservableProperty]
-    private bool canScan = true;
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(StartScanCommand), nameof(QuickScanCommand), nameof(SelectFolderCommand), nameof(SaveSettingsCommand))]
+    private bool canScan = false;
 
-    [ObservableProperty]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(CancelScanCommand))]
     private bool canCancel = false;
 
     [ObservableProperty]
@@ -63,13 +86,13 @@ public partial class MainWindowViewModel : ObservableObject
     private string selectedPath = "";
 
     [ObservableProperty]
-    private int topN = 20;
+    private decimal? topN = 20;
 
     [ObservableProperty]
     private bool includeHidden = false;
 
     [ObservableProperty]
-    private long minFileSize = 0;
+    private decimal? minFileSize = 0;
 
     [ObservableProperty]
     private bool foldersOnly = false;
@@ -100,11 +123,27 @@ public partial class MainWindowViewModel : ObservableObject
         _fileTypeAnalyzer = fileTypeAnalyzer;
 
         // Subscribe to localization changes
-        _localizationService.PropertyChanged += (s, e) => UpdateLocalizedProperties();
+        _localizationService.PropertyChanged += OnLanguageChanged;
 
-        SelectedPath = Directory.GetCurrentDirectory();
-        LoadDefaultSettings();
+        SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        Initialization = InitializeAsync();
         UpdateLocalizedProperties();
+    }
+
+    private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLocalizedProperties();
+    public void Dispose()
+    {
+        _localizationService.PropertyChanged -= OnLanguageChanged;
+        _cancellationTokenSource?.Cancel();
+    }
+    partial void OnSelectedSizeUnitChanged(SizeUnit? oldValue, SizeUnit newValue)
+    {
+        if (oldValue is not null && newValue is not null)
+            MinFileSize = (MinFileSize ?? 0) * oldValue.Multiplier / newValue.Multiplier;
+    }
+    partial void OnSelectedRecentPathChanged(string? value)
+    {
+        if (CanScan && !string.IsNullOrWhiteSpace(value)) SelectedPath = value;
     }
 
     private void UpdateLocalizedProperties()
@@ -147,6 +186,11 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(FolderSizeFormat));
         OnPropertyChanged(nameof(FolderItemsFormat));
         OnPropertyChanged(nameof(FolderModifiedFormat));
+        foreach (var property in new[] { nameof(RecentFoldersLabel), nameof(AdvancedOptionsLabel), nameof(DepthLabel),
+            nameof(ConcurrencyLabel), nameof(FollowSymlinksLabel), nameof(ExcludePatternsLabel), nameof(ExcludeDirectoriesLabel),
+            nameof(SaveSettingsLabel), nameof(UpLabel), nameof(CoverageSummary), nameof(TreemapHint) })
+            OnPropertyChanged(property);
+        if (LastResults is not null && !string.IsNullOrEmpty(TreemapPath)) NavigateTreemap(TreemapPath);
     }
 
     private void RefreshLocalizedScanStats()
@@ -165,9 +209,11 @@ public partial class MainWindowViewModel : ObservableObject
         if (_scanStatsMode == ScanStatsMode.Completed)
         {
             ScanStats = string.Format(
-                _localizationService.GetString("ScanCompletedStats"),
+                _localizationService.GetString("ScanSummary"),
                 _lastCompletedFilesCount,
-                _lastCompletedFoldersCount);
+                _lastCompletedFoldersCount,
+                FormatBytes(LastResults?.Progress.BytesProcessed ?? 0),
+                LastResults?.Progress.Elapsed ?? TimeSpan.Zero);
             return;
         }
 
@@ -186,6 +232,7 @@ public partial class MainWindowViewModel : ObservableObject
         _scanStatsMode = ScanStatsMode.InProgress;
         _lastProgressSnapshot = progress;
         RefreshLocalizedScanStats();
+        OnPropertyChanged(nameof(CoverageSummary));
     }
 
     private void SetCompletedScanStats(int filesCount, int foldersCount)
@@ -293,33 +340,100 @@ public partial class MainWindowViewModel : ObservableObject
     public string FolderItemsFormat => $"{ItemsLabel} {{0:N0}}";
     public string FolderModifiedFormat => $"{ModifiedLabel} {{0:yyyy-MM-dd HH:mm}}";
 
-    private async void LoadDefaultSettings()
+    public string RecentFoldersLabel => _localizationService.GetString("RecentFolders");
+    public string AdvancedOptionsLabel => _localizationService.GetString("AdvancedOptions");
+    public string DepthLabel => _localizationService.GetString("DepthLimit");
+    public string ConcurrencyLabel => _localizationService.GetString("Concurrency");
+    public string FollowSymlinksLabel => _localizationService.GetString("FollowSymlinks");
+    public string ExcludePatternsLabel => _localizationService.GetString("ExcludePatterns");
+    public string ExcludeDirectoriesLabel => _localizationService.GetString("ExcludeDirectories");
+    public string SaveSettingsLabel => _localizationService.GetString("SaveSettings");
+    public string UpLabel => _localizationService.GetString("Up");
+    public string TreemapHint => _localizationService.GetString("TreemapHint");
+    public string CoverageSummary
     {
-        var options = await _configurationService.LoadDefaultOptionsAsync();
-        TopN = options.TopN;
-        IncludeHidden = options.IncludeHidden;
-        MinFileSize = options.MinFileSize;
+        get
+        {
+            var p = IsScanning ? _lastProgressSnapshot : LastResults?.Progress;
+            if (p is null) return "";
+            return (p.HasIncompleteCoverage ? _localizationService.GetString("IncompleteCoverage") + " " : "") +
+                string.Format(_localizationService.GetString("CoverageDetails"),
+                    p.ExcludedItems, p.InaccessibleItems, p.OfflineItems, p.DepthLimitedDirectories);
+        }
     }
 
-    [RelayCommand]
+    private async Task InitializeAsync()
+    {
+        try
+        {
+            _loadedOptions = await _configurationService.LoadDefaultOptionsAsync();
+            TopN = _loadedOptions.TopN; IncludeHidden = _loadedOptions.IncludeHidden;
+            MinFileSize = _loadedOptions.MinFileSize; FoldersOnly = _loadedOptions.FoldersOnly;
+            MaxDepth = _loadedOptions.MaxDepth; ConcurrencyLimit = _loadedOptions.ConcurrencyLimit;
+            FollowSymlinks = _loadedOptions.FollowSymlinks;
+            ExcludePatternsText = string.Join(", ", _loadedOptions.ExcludePatterns ?? []);
+            ExcludeDirectoriesText = string.Join(", ", _loadedOptions.ExcludeDirectories ?? []);
+            if (Directory.Exists(_loadedOptions.RootPath)) SelectedPath = _loadedOptions.RootPath;
+            foreach (var path in _loadedOptions.RecentPaths ?? []) RecentPaths.Add(path);
+            _localizationService.ChangeLanguage(_loadedOptions.Language);
+        }
+        catch (Exception ex) { StatusMessage = ex.Message; }
+        finally { CanScan = true; }
+    }
+
+    public ScanOptions BuildScanOptions()
+    {
+        var count = TopN ?? 20;
+        var amount = MinFileSize ?? 0;
+        if (count < 1 || count > 200 || count != decimal.Truncate(count) ||
+            amount < 0 || amount > MaximumMinFileSize ||
+            MaxDepth < 0 || (MaxDepth.HasValue && MaxDepth != decimal.Truncate(MaxDepth.Value)) ||
+            MaxDepth > int.MaxValue || ConcurrencyLimit is null || ConcurrencyLimit < 1 ||
+            ConcurrencyLimit > MaximumConcurrency || ConcurrencyLimit != decimal.Truncate(ConcurrencyLimit.Value))
+            throw new ArgumentException(_localizationService.GetString("InvalidScanOptions"));
+
+        static HashSet<string> Parse(string value) => new(value.Split(new[] { ',', ';', '\r', '\n' },
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
+        return _loadedOptions with
+        {
+            RootPath = NormalizeSelectedPath(SelectedPath), TopN = (int)count, IncludeHidden = IncludeHidden,
+            MinFileSize = (long)decimal.Ceiling(amount * SelectedSizeUnit.Multiplier), FoldersOnly = FoldersOnly,
+            MaxDepth = MaxDepth.HasValue ? (int)MaxDepth.Value : null,
+            ConcurrencyLimit = (int)ConcurrencyLimit.Value, FollowSymlinks = FollowSymlinks,
+            ExcludePatterns = Parse(ExcludePatternsText), ExcludeDirectories = Parse(ExcludeDirectoriesText),
+            Language = _localizationService.CurrentLanguage, RecentPaths = RecentPaths.ToList()
+        };
+    }
+
+    [RelayCommand(CanExecute = nameof(CanScan))]
+    private async Task SaveSettings()
+    {
+        try
+        {
+            _loadedOptions = BuildScanOptions();
+            await _configurationService.SaveDefaultOptionsAsync(_loadedOptions);
+            StatusMessage = _localizationService.GetString("SettingsSaved");
+        }
+        catch (Exception ex) { StatusMessage = ex.Message; }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task QuickScan()
     {
-        SelectedPath = Directory.GetCurrentDirectory();
+        if (!CanScan || IsScanning) return;
+        SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         await StartScan();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task SelectFolder()
     {
-        var path = await _folderPicker.PickFolderAsync();
-        if (!string.IsNullOrEmpty(path))
+        try
         {
-            var normalizedPath = NormalizeSelectedPath(path);
-            if (!string.IsNullOrEmpty(normalizedPath))
-            {
-                SelectedPath = normalizedPath;
-            }
+            var path = await _folderPicker.PickFolderAsync();
+            if (!string.IsNullOrWhiteSpace(path)) SelectedPath = NormalizeSelectedPath(path);
         }
+        catch (Exception ex) { StatusMessage = ex.Message; }
     }
 
     private static string NormalizeSelectedPath(string path)
@@ -373,124 +487,65 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task StartScan()
     {
-        if (string.IsNullOrEmpty(SelectedPath))
-        {
-            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), _localizationService.GetString("SelectFolderToScan"));
-            await box.ShowAsync();
-            return;
-        }
-
-        if (!Directory.Exists(SelectedPath))
-        {
-            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), _localizationService.GetString("DirectoryNotExist"));
-            await box.ShowAsync();
-            return;
-        }
-
-        TopFiles.Clear();
-        TopFolders.Clear();
-        FileTypeStatistics.Clear();
-        TreemapItems.Clear();
-        _lastFileTypeStatistics.Clear();
-        HasResults = false;
-
-        var options = new ScanOptions
-        {
-            RootPath = SelectedPath,
-            TopN = TopN,
-            IncludeHidden = IncludeHidden,
-            MinFileSize = MinFileSize,
-            FoldersOnly = FoldersOnly
-        };
-
-        IsScanning = true;
-        CanScan = false;
-        CanCancel = true;
-        CancelScanCommand.NotifyCanExecuteChanged();
-
-        _cancellationTokenSource = new CancellationTokenSource();
-
-        var progress = new Progress<ScanProgress>(p =>
-        {
-            CurrentPath = TruncatePath(p.CurrentPath, 50);
-            SetProgressScanStats(p);
-        });
-
+        if (Interlocked.CompareExchange(ref _scanActive, 1, 0) != 0) return;
+        CancellationTokenSource? scanCancellation = null;
         try
         {
-            var results = await _scanner.ScanAsync(options, progress, _cancellationTokenSource.Token);
+            await Initialization;
+            CanScan = false;
+            var options = BuildScanOptions();
+            if (!Directory.Exists(options.RootPath))
+                throw new DirectoryNotFoundException(_localizationService.GetString("DirectoryNotExist"));
 
-            foreach (var file in results.TopFiles)
+            StatusMessage = "";
+            TopFiles.Clear(); TopFolders.Clear(); FileTypeStatistics.Clear(); TreemapItems.Clear();
+            _lastFileTypeStatistics.Clear(); _folderIndex.Clear(); _children = null;
+            LastResults = null; HasResults = false; CanNavigateUp = false; TreemapPath = "";
+            IsScanning = true;
+            SetProgressScanStats(new ScanProgress());
+            scanCancellation = new CancellationTokenSource();
+            _cancellationTokenSource = scanCancellation;
+            CanCancel = true;
+
+            var recent = new[] { options.RootPath }.Concat(RecentPaths).Distinct(PathComparer).Take(8).ToList();
+            RecentPaths.Clear();
+            foreach (var path in recent) RecentPaths.Add(path);
+            _loadedOptions = options with { RecentPaths = recent };
+            try { await _configurationService.SaveDefaultOptionsAsync(_loadedOptions); }
+            catch (Exception ex) { StatusMessage = string.Format(_localizationService.GetString("SettingsSaveFailed"), ex.Message); }
+
+            var progress = new Progress<ScanProgress>(p =>
             {
-                TopFiles.Add(file);
-            }
-
-            foreach (var folder in results.TopFolders)
-            {
-                TopFolders.Add(folder);
-            }
-
-            _lastFileTypeStatistics.Clear();
+                if (!IsScanning || !ReferenceEquals(_cancellationTokenSource, scanCancellation)) return;
+                CurrentPath = p.CurrentPath;
+                SetProgressScanStats(p);
+            });
+            var results = await _scanner.ScanAsync(options, progress, scanCancellation.Token);
+            LastResults = results;
+            foreach (var file in results.TopFiles) TopFiles.Add(file);
+            foreach (var folder in results.TopFolders) TopFolders.Add(folder);
             _lastFileTypeStatistics.AddRange(results.FileTypeStatistics);
             RefreshLocalizedFileTypeStatistics();
-
-            // Populate treemap data
             PopulateTreemapData(results);
-
-            HasResults = TopFiles.Any() || TopFolders.Any();
-
-            if (results.WasCancelled)
-            {
-                var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Cancelled"), _localizationService.GetString("ScanCancelledMessage"));
-                await box.ShowAsync();
-                SetReadyScanStats();
-            }
-            else if (!string.IsNullOrEmpty(results.ErrorMessage))
-            {
-                var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ScanFailedMessage"), results.ErrorMessage));
-                await box.ShowAsync();
-                SetReadyScanStats();
-            }
-            else
-            {
-                var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Complete"), _localizationService.GetString("ScanCompletedMessage"), ButtonEnum.Ok, Icon.Success);
-                await box.ShowAsync();
-                SetCompletedScanStats(TopFiles.Count, TopFolders.Count);
-            }
+            HasResults = true;
+            SetCompletedScanStats(results.Progress.FilesScanned, results.Progress.FoldersScanned);
+            if (results.ErrorMessage is not null)
+                StatusMessage = string.Format(_localizationService.GetString("ScanFailedMessage"), results.ErrorMessage);
+            else if (results.WasCancelled)
+                StatusMessage = _localizationService.GetString("ScanCancelledMessage");
+            else if (results.Progress.HasIncompleteCoverage)
+                StatusMessage = _localizationService.GetString("IncompleteCoverage");
         }
-        catch (OperationCanceledException)
-        {
-            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Cancelled"), _localizationService.GetString("ScanCancelledMessage"));
-            await box.ShowAsync();
-            SetReadyScanStats();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("AccessDeniedMessage"), ex.Message));
-            await box.ShowAsync();
-            SetReadyScanStats();
-        }
-        catch (DirectoryNotFoundException ex)
-        {
-            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("DirectoryNotFoundMessage"), ex.Message));
-            await box.ShowAsync();
-            SetReadyScanStats();
-        }
-        catch (Exception ex)
-        {
-            var box = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ScanFailedMessage"), ex.Message));
-            await box.ShowAsync();
-            SetReadyScanStats();
-        }
+        catch (OperationCanceledException) { StatusMessage = _localizationService.GetString("ScanCancelledMessage"); }
+        catch (Exception ex) { StatusMessage = ex.Message; }
         finally
         {
-            IsScanning = false;
-            CanScan = true;
-            CanCancel = false;
-            CancelScanCommand.NotifyCanExecuteChanged();
-            CurrentPath = "";
-            _cancellationTokenSource?.Dispose();
+            IsScanning = false; CanCancel = false; CurrentPath = "";
             _cancellationTokenSource = null;
+            scanCancellation?.Dispose();
+            Interlocked.Exchange(ref _scanActive, 0);
+            CanScan = true;
+            OnPropertyChanged(nameof(CoverageSummary));
         }
     }
 
@@ -662,20 +717,12 @@ public partial class MainWindowViewModel : ObservableObject
             filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{suggestedFileName}.{format}");
         }
 
-        var results = new ScanResults
-        {
-            TopFiles = TopFiles.ToList(),
-            TopFolders = TopFolders.ToList(),
-            FileTypeStatistics = _lastFileTypeStatistics.ToList(),
-            Progress = new ScanProgress { FilesScanned = TopFiles.Count, FoldersScanned = TopFolders.Count }
-        };
+        var results = LastResults;
+        if (results is null) return;
 
         try
         {
-            if (format == "csv")
-                await _exportService.ExportToCsvAsync(results, filePath);
-            else
-                await _exportService.ExportToJsonAsync(results, filePath);
+            await ExportToPathAsync(format, filePath);
 
             var successBox = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Success"), string.Format(_localizationService.GetString("ExportSuccessMessage"), filePath), ButtonEnum.Ok, Icon.Success);
             await successBox.ShowAsync();
@@ -685,6 +732,17 @@ public partial class MainWindowViewModel : ObservableObject
             var errorBox = MessageBoxManager.GetMessageBoxStandard(_localizationService.GetString("Error"), string.Format(_localizationService.GetString("ExportFailedMessage"), ex.Message));
             await errorBox.ShowAsync();
         }
+    }
+
+    public Task ExportToPathAsync(string format, string filePath)
+    {
+        var results = LastResults ?? throw new InvalidOperationException(_localizationService.GetString("NoResultsMessage"));
+        return format switch
+        {
+            "csv" => _exportService.ExportToCsvAsync(results, filePath),
+            "json" => _exportService.ExportToJsonAsync(results, filePath),
+            _ => throw new ArgumentException("Unsupported export format.", nameof(format))
+        };
     }
 
     [RelayCommand]
@@ -731,20 +789,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
-        int i = 0;
-        double size = bytes;
-
-        while (size >= 1024 && i < suffixes.Length - 1)
-        {
-            size /= 1024;
-            i++;
-        }
-
-        return $"{size:0.##} {suffixes[i]}";
-    }
+    private static string FormatBytes(long bytes) => FileStrider.Core.Models.ByteSize.Format(bytes);
 
     private static string TruncatePath(string path, int maxLength)
     {
@@ -760,37 +805,58 @@ public partial class MainWindowViewModel : ObservableObject
     /// <param name="results">The scan results to convert to treemap items.</param>
     private void PopulateTreemapData(ScanResults results)
     {
+        _folderIndex = results.Folders.ToDictionary(f => f.FullPath, PathComparer);
+        _children = results.Folders.Where(f => !PathComparer.Equals(f.FullPath, results.RootPath))
+            .ToLookup(f => Path.GetDirectoryName(f.FullPath) ?? "", PathComparer);
+        NavigateTreemap(results.RootPath);
+    }
+
+    public void NavigateTreemap(string path)
+    {
+        if (LastResults is null || !_folderIndex.TryGetValue(path, out var folder)) return;
+        TreemapPath = path;
+        CanNavigateUp = !PathComparer.Equals(path, LastResults.RootPath);
         TreemapItems.Clear();
-
-        // Add top folders to treemap
-        foreach (var folder in results.TopFolders.Take(20)) // Limit to top 20 for performance
-        {
-            var treemapItem = new TreemapItem
-            {
-                Name = folder.Name,
-                Size = folder.RecursiveSize,
-                FullPath = folder.FullPath,
-                IsFile = false,
-                Category = "Folders",
-                Color = TreemapColors.GetColorForCategory("Folders")
-            };
-            TreemapItems.Add(treemapItem);
-        }
-
-        // Add top files to treemap if not in folders-only mode
-        foreach (var file in results.TopFiles.Take(10)) // Limit to top 10 files
+        var candidates = (_children?[path] ?? []).Where(f => f.RecursiveSize > 0)
+            .Select(f => new TreemapItem { Name = f.Name, FullPath = f.FullPath, Size = f.RecursiveSize,
+                Category = "Folders", Color = TreemapColors.GetColorForCategory("Folders") }).ToList();
+        var directFiles = LastResults.TopFiles.Where(f => PathComparer.Equals(Path.GetDirectoryName(f.FullPath), path)).ToList();
+        foreach (var file in directFiles)
         {
             var category = _fileTypeAnalyzer.GetFileCategory(file.Type);
-            var treemapItem = new TreemapItem
-            {
-                Name = file.Name,
-                Size = file.Size,
-                FullPath = file.FullPath,
-                IsFile = true,
-                Category = category,
-                Color = TreemapColors.GetColorForCategory(category)
-            };
-            TreemapItems.Add(treemapItem);
+            candidates.Add(new TreemapItem { Name = file.Name, FullPath = file.FullPath, Size = file.Size, IsFile = true,
+                Category = category, Color = TreemapColors.GetColorForCategory(category) });
         }
+        var otherFiles = Math.Max(0, folder.DirectSize - directFiles.Sum(f => f.Size));
+        if (otherFiles > 0) candidates.Add(new TreemapItem {
+            Name = _localizationService.GetString("OtherFiles"), Size = otherFiles, IsAggregate = true,
+            Category = "Other", Color = TreemapColors.GetColorForCategory("Other") });
+        var ordered = candidates.OrderByDescending(c => c.Size).ToList();
+        foreach (var item in ordered.Take(29)) TreemapItems.Add(item);
+        if (ordered.Count > 29)
+            TreemapItems.Add(new TreemapItem { Name = _localizationService.GetString("OtherItems"),
+                Size = ordered.Skip(29).Sum(i => i.Size), IsAggregate = true,
+                Category = "Other", Color = TreemapColors.GetColorForCategory("Other") });
     }
+
+    [RelayCommand]
+    private void NavigateUp()
+    {
+        if (!CanNavigateUp) return;
+        var parent = Path.GetDirectoryName(TreemapPath);
+        if (parent is not null) NavigateTreemap(parent);
+    }
+
+    [RelayCommand]
+    private async Task ActivateTreemapItem(TreemapItem? item)
+    {
+        if (item is null || item.IsAggregate) return;
+        if (!item.IsFile) NavigateTreemap(item.FullPath);
+        else await OpenFileLocation(new FileItem { FullPath = item.FullPath });
+    }
+}
+
+public sealed record SizeUnit(string Name, decimal Multiplier)
+{
+    public override string ToString() => Name;
 }

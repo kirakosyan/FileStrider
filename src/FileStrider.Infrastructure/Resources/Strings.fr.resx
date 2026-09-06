@@ -74,7 +74,7 @@
     <value>Parcourir...</value>
   </data>
   <data name="QuickScan" xml:space="preserve">
-    <value>🔍 Scan Rapide</value>
+    <value>Analyser le dossier personnel</value>
   </data>
   <data name="StartScan" xml:space="preserve">
     <value>▶️ Démarrer Scan</value>
@@ -92,7 +92,7 @@
     <value>Ignorer les fichiers individuels pour un scan plus rapide</value>
   </data>
   <data name="MinSize" xml:space="preserve">
-    <value>Taille Min (octets) :</value>
+    <value>Taille minimale</value>
   </data>
   <data name="LargestFiles" xml:space="preserve">
     <value>🔥 Plus Gros Fichiers</value>
@@ -197,7 +197,7 @@
     <value>Annulé</value>
   </data>
   <data name="ScanCancelledMessage" xml:space="preserve">
-    <value>Le scan a été annulé par l'utilisateur</value>
+    <value>Analyse annulée. Les résultats partiels sont disponibles.</value>
   </data>
   <data name="Complete" xml:space="preserve">
     <value>Terminé</value>
@@ -261,5 +261,59 @@
   </data>
   <data name="SaveFileDialogTitle" xml:space="preserve">
     <value>Exporter les résultats</value>
+  </data>
+  <data name="RecentFolders" xml:space="preserve">
+    <value>Dossiers récents</value>
+  </data>
+  <data name="AdvancedOptions" xml:space="preserve">
+    <value>Options avancées</value>
+  </data>
+  <data name="DepthLimit" xml:space="preserve">
+    <value>Profondeur (vide = illimitée)</value>
+  </data>
+  <data name="Concurrency" xml:space="preserve">
+    <value>Tâches</value>
+  </data>
+  <data name="FollowSymlinks" xml:space="preserve">
+    <value>Suivre les liens symboliques</value>
+  </data>
+  <data name="ExcludePatterns" xml:space="preserve">
+    <value>Motifs exclus (séparés par des virgules)</value>
+  </data>
+  <data name="ExcludeDirectories" xml:space="preserve">
+    <value>Dossiers exclus (séparés par des virgules)</value>
+  </data>
+  <data name="SaveSettings" xml:space="preserve">
+    <value>Enregistrer les paramètres</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>Paramètres enregistrés.</value>
+  </data>
+  <data name="SettingsSaveFailed" xml:space="preserve">
+    <value>Impossible d'enregistrer les paramètres : {0}</value>
+  </data>
+  <data name="InvalidScanOptions" xml:space="preserve">
+    <value>Vérifiez la taille, le nombre de résultats, la profondeur et les tâches.</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>↑ Remonter</value>
+  </data>
+  <data name="TreemapHint" xml:space="preserve">
+    <value>Cliquez sur un dossier pour l'explorer. Les surfaces représentent les octets logiques analysés.</value>
+  </data>
+  <data name="OtherFiles" xml:space="preserve">
+    <value>Autres fichiers de ce dossier</value>
+  </data>
+  <data name="OtherItems" xml:space="preserve">
+    <value>Autres éléments</value>
+  </data>
+  <data name="IncompleteCoverage" xml:space="preserve">
+    <value>Certains emplacements n'ont pas pu être entièrement analysés.</value>
+  </data>
+  <data name="CoverageDetails" xml:space="preserve">
+    <value>Ignorés : {0:N0} exclus · {1:N0} inaccessibles · {2:N0} hors ligne · {3:N0} limite de profondeur</value>
+  </data>
+  <data name="ScanSummary" xml:space="preserve">
+    <value>{0:N0} fichiers · {1:N0} dossiers · {2} · {3:g}</value>
   </data>
 </root>

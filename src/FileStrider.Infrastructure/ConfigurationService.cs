@@ -1,95 +1,92 @@
-using System.Diagnostics;
 using System.Text.Json;
 using FileStrider.Core.Contracts;
 using FileStrider.Core.Models;
 
 namespace FileStrider.Infrastructure.Configuration;
 
-/// <summary>
-/// Service for loading and saving application configuration settings to persistent storage.
-/// Stores configuration as JSON files in the user's local application data directory.
-/// </summary>
 public class ConfigurationService : IConfigurationService
 {
     private readonly string _configFilePath;
+    private readonly SemaphoreSlim _gate = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true
     };
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ConfigurationService"/> class.
-    /// Creates the configuration directory if it doesn't exist.
-    /// </summary>
-    public ConfigurationService()
-    {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var configDirectory = Path.Combine(appDataPath, "FileStrider");
-        Directory.CreateDirectory(configDirectory);
-        _configFilePath = Path.Combine(configDirectory, "config.json");
-    }
+    // Tests supply a private path. Construction never creates or modifies the real profile.
+    public ConfigurationService(string? configFilePath = null) =>
+        _configFilePath = Path.GetFullPath(configFilePath ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileStrider", "config.json"));
 
-    /// <summary>
-    /// Loads the default scan options from persistent storage.
-    /// Returns default ScanOptions if no configuration file exists or if loading fails.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous load operation, returning the configured scan options or defaults if none exist.</returns>
     public async Task<ScanOptions> LoadDefaultOptionsAsync()
     {
+        await _gate.WaitAsync();
         try
         {
-            if (File.Exists(_configFilePath))
+            foreach (var candidate in new[] { _configFilePath, _configFilePath + ".bak" })
             {
-                var json = await File.ReadAllTextAsync(_configFilePath);
-                var options = JsonSerializer.Deserialize<ScanOptions>(json, JsonOptions);
-                return options ?? GetDefaultOptions();
+                try
+                {
+                    if (File.Exists(candidate))
+                    {
+                        var options = JsonSerializer.Deserialize<ScanOptions>(await File.ReadAllTextAsync(candidate), JsonOptions);
+                        if (options is not null) return Normalize(options);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                { System.Diagnostics.Trace.TraceWarning($"Cannot load settings: {ex.Message}"); }
             }
+            return GetDefaultOptions();
         }
-        catch (Exception ex)
-        {
-            Trace.TraceWarning($"Failed to load configuration: {ex.Message}");
-        }
-
-        return GetDefaultOptions();
+        finally { _gate.Release(); }
     }
 
-    /// <summary>
-    /// Saves the specified scan options as the new default configuration.
-    /// Creates the configuration directory if it doesn't exist.
-    /// </summary>
-    /// <param name="options">The scan options to save as defaults.</param>
-    /// <returns>A task that represents the asynchronous save operation.</returns>
     public async Task SaveDefaultOptionsAsync(ScanOptions options)
     {
+        ArgumentNullException.ThrowIfNull(options);
+        await _gate.WaitAsync();
+        var temporary = _configFilePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            var json = JsonSerializer.Serialize(options, JsonOptions);
-            await File.WriteAllTextAsync(_configFilePath, json);
+            Directory.CreateDirectory(Path.GetDirectoryName(_configFilePath)!);
+            await File.WriteAllTextAsync(temporary, JsonSerializer.Serialize(Normalize(options), JsonOptions));
+            if (File.Exists(_configFilePath))
+            {
+                // Only replace the recovery copy when the current file is readable JSON.
+                try
+                {
+                    using var current = JsonDocument.Parse(await File.ReadAllTextAsync(_configFilePath));
+                    File.Copy(_configFilePath, _configFilePath + ".bak", true);
+                }
+                catch (JsonException) { }
+            }
+            File.Move(temporary, _configFilePath, true);
         }
-        catch (Exception ex)
+        finally
         {
-            Trace.TraceWarning($"Failed to save configuration: {ex.Message}");
+            if (File.Exists(temporary)) File.Delete(temporary);
+            _gate.Release();
         }
     }
 
-    /// <summary>
-    /// Gets the default scan options with sensible defaults for first-time use.
-    /// </summary>
-    /// <returns>A new ScanOptions instance with default values.</returns>
-    private static ScanOptions GetDefaultOptions()
+    private static ScanOptions Normalize(ScanOptions options) => options with
     {
-        return new ScanOptions
-        {
-            RootPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            TopN = 20,
-            IncludeHidden = false,
-            FollowSymlinks = false,
-            MaxDepth = null,
-            MinFileSize = 0,
-            ConcurrencyLimit = Math.Min(8, Environment.ProcessorCount),
-            ExcludePatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "*.tmp", "*.temp", "*.log" },
-            ExcludeDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "node_modules", ".git", "Library/Caches", ".vs", "bin", "obj" }
-        };
-    }
+        RootPath = string.IsNullOrWhiteSpace(options.RootPath) ? GetDefaultOptions().RootPath : options.RootPath,
+        TopN = Math.Clamp(options.TopN, 1, 200),
+        MinFileSize = Math.Max(0, options.MinFileSize),
+        MaxDepth = options.MaxDepth is < 0 ? null : options.MaxDepth,
+        ConcurrencyLimit = Math.Clamp(options.ConcurrencyLimit, 1, Math.Max(1, Environment.ProcessorCount * 2)),
+        ExcludePatterns = new HashSet<string>(options.ExcludePatterns ?? [], StringComparer.OrdinalIgnoreCase),
+        ExcludeDirectories = new HashSet<string>(options.ExcludeDirectories ?? [], StringComparer.OrdinalIgnoreCase),
+        RecentPaths = (options.RecentPaths ?? []).Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal).Take(8).ToList(),
+        Language = new[] { "en", "fr", "es", "sv" }.Contains(options.Language) ? options.Language : "en"
+    };
+
+    private static ScanOptions GetDefaultOptions() => new()
+    {
+        RootPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ExcludePatterns = new(StringComparer.OrdinalIgnoreCase) { "*.tmp", "*.temp", "*.log" },
+        ExcludeDirectories = new(StringComparer.OrdinalIgnoreCase) { "node_modules", ".git", "Library/Caches", ".vs", "bin", "obj" }
+    };
 }

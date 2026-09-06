@@ -8,6 +8,7 @@ namespace FileStrider.MauiApp.Models;
 /// </summary>
 public class TreemapItem
 {
+    public bool IsAggregate { get; set; }
     /// <summary>
     /// Gets or sets the name/label of the item.
     /// </summary>
@@ -54,118 +55,43 @@ public class TreemapItem
 /// </summary>
 public static class TreemapLayout
 {
-    /// <summary>
-    /// Calculates the layout for treemap items using the squarified algorithm.
-    /// </summary>
-    /// <param name="items">The items to layout.</param>
-    /// <param name="bounds">The available space for the treemap.</param>
-    /// <returns>The items with calculated bounds.</returns>
     public static List<TreemapItem> CalculateLayout(IEnumerable<TreemapItem> items, Avalonia.Rect bounds)
     {
-        var sortedItems = items.OrderByDescending(i => i.Size).ToList();
-        if (!sortedItems.Any())
-            return new List<TreemapItem>();
-
-        var totalSize = sortedItems.Sum(i => i.Size);
-        if (totalSize == 0)
-            return sortedItems;
-
-        // Normalize sizes to the available area
-        var totalArea = bounds.Width * bounds.Height;
-        foreach (var item in sortedItems)
-        {
-            item.Percentage = (double)item.Size / totalSize * 100;
-        }
-
-        // Simple row-based layout for initial implementation
-        CalculateSimpleLayout(sortedItems, bounds, totalSize);
-        
-        return sortedItems;
+        var all = items.ToList();
+        foreach (var item in all) { item.Bounds = default; item.Percentage = 0; }
+        var positive = all.Where(i => i.Size > 0).OrderByDescending(i => i.Size).ToList();
+        var total = positive.Sum(i => (double)i.Size);
+        if (total == 0 || bounds.Width <= 0 || bounds.Height <= 0 ||
+            !double.IsFinite(bounds.Width) || !double.IsFinite(bounds.Height)) return all;
+        foreach (var item in positive) item.Percentage = 100.0 * item.Size / total;
+        Split(positive, 0, positive.Count, total, bounds);
+        return all;
     }
 
-    /// <summary>
-    /// Simple row-based layout algorithm (can be enhanced with squarified algorithm later).
-    /// </summary>
-    private static void CalculateSimpleLayout(List<TreemapItem> items, Avalonia.Rect bounds, long totalSize)
+    // Balanced binary partitions preserve area exactly and keep every tile inside its parent.
+    private static void Split(List<TreemapItem> items, int start, int count, double total, Avalonia.Rect bounds)
     {
-        if (!items.Any()) return;
-
-        double currentY = bounds.Y;
-        double currentX = bounds.X;
-        double rowHeight = 0;
-        double remainingWidth = bounds.Width;
-        double remainingHeight = bounds.Height;
-        
-        var itemsInCurrentRow = new List<TreemapItem>();
-        
-        foreach (var item in items)
+        if (count == 1) { items[start].Bounds = bounds; return; }
+        var leftCount = 1;
+        double leftSize = items[start].Size;
+        while (leftCount < count - 1 && leftSize + items[start + leftCount].Size <= total / 2)
+            leftSize += items[start + leftCount++].Size;
+        var ratio = leftSize / total;
+        Avalonia.Rect left, right;
+        if (bounds.Width >= bounds.Height)
         {
-            var area = (double)item.Size / totalSize * bounds.Width * bounds.Height;
-            var width = Math.Min(Math.Sqrt(area), remainingWidth);
-            
-            // Ensure width is not zero to avoid NaN
-            if (width <= 0) width = 1;
-            
-            var height = area / width;
-            
-            // Ensure height is reasonable
-            if (double.IsNaN(height) || double.IsInfinity(height) || height <= 0)
-                height = 1;
-            
-            // Check if we should start a new row
-            if (currentX + width > bounds.X + bounds.Width || 
-                (itemsInCurrentRow.Any() && height > rowHeight * 2))
-            {
-                // Finalize current row
-                FinalizeRow(itemsInCurrentRow, currentY, rowHeight, bounds.X, bounds.Width);
-                
-                currentY += rowHeight;
-                remainingHeight -= rowHeight;
-                currentX = bounds.X;
-                rowHeight = 0;
-                itemsInCurrentRow.Clear();
-                
-                // Recalculate for new row
-                remainingWidth = bounds.Width;
-                width = Math.Min(Math.Sqrt(area), remainingWidth);
-                if (width <= 0) width = 1;
-                height = area / width;
-                if (double.IsNaN(height) || double.IsInfinity(height) || height <= 0)
-                    height = 1;
-            }
-            
-            item.Bounds = new Avalonia.Rect(currentX, currentY, width, height);
-            rowHeight = Math.Max(rowHeight, height);
-            currentX += width;
-            remainingWidth = bounds.X + bounds.Width - currentX;
-            
-            itemsInCurrentRow.Add(item);
+            var width = bounds.Width * ratio;
+            left = new(bounds.X, bounds.Y, width, bounds.Height);
+            right = new(bounds.X + width, bounds.Y, Math.Max(0, bounds.Width - width), bounds.Height);
         }
-        
-        // Finalize the last row
-        if (itemsInCurrentRow.Any())
+        else
         {
-            FinalizeRow(itemsInCurrentRow, currentY, rowHeight, bounds.X, bounds.Width);
+            var height = bounds.Height * ratio;
+            left = new(bounds.X, bounds.Y, bounds.Width, height);
+            right = new(bounds.X, bounds.Y + height, bounds.Width, Math.Max(0, bounds.Height - height));
         }
-    }
-    
-    /// <summary>
-    /// Adjusts the widths of items in a row to fill the available width.
-    /// </summary>
-    private static void FinalizeRow(List<TreemapItem> rowItems, double y, double height, double startX, double totalWidth)
-    {
-        if (!rowItems.Any()) return;
-        
-        var totalRowWidth = rowItems.Sum(i => i.Bounds.Width);
-        var scale = totalWidth / totalRowWidth;
-        
-        double currentX = startX;
-        foreach (var item in rowItems)
-        {
-            var scaledWidth = item.Bounds.Width * scale;
-            item.Bounds = new Avalonia.Rect(currentX, y, scaledWidth, height);
-            currentX += scaledWidth;
-        }
+        Split(items, start, leftCount, leftSize, left);
+        Split(items, start + leftCount, count - leftCount, total - leftSize, right);
     }
 }
 

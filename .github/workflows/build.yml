@@ -1,0 +1,42 @@
+name: Build, test and package
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and reject vulnerable dependencies
+        run: dotnet restore FileStrider.sln -p:NuGetAuditMode=all -warnaserror:NU1902,NU1903,NU1904
+      - name: Test
+        run: dotnet test FileStrider.sln -c Release --no-restore --logger trx --results-directory artifacts/tests
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-${{ matrix.os }}
+          path: artifacts/tests
+  package:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build x64 and ARM64 MSIX packages
+        shell: pwsh
+        run: ./scripts/Package-Msix.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-packages
+          path: FileStrider_*.msix

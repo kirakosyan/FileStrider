@@ -74,7 +74,7 @@
     <value>Bläddra...</value>
   </data>
   <data name="QuickScan" xml:space="preserve">
-    <value>🔍 Snabbskanning</value>
+    <value>Skanna hemmappen</value>
   </data>
   <data name="StartScan" xml:space="preserve">
     <value>▶️ Starta skanning</value>
@@ -92,7 +92,7 @@
     <value>Hoppa över enskilda filer för snabbare skanning</value>
   </data>
   <data name="MinSize" xml:space="preserve">
-    <value>Min storlek (bytes):</value>
+    <value>Minsta storlek</value>
   </data>
   <data name="LargestFiles" xml:space="preserve">
     <value>🔥 Största filerna</value>
@@ -197,7 +197,7 @@
     <value>Avbruten</value>
   </data>
   <data name="ScanCancelledMessage" xml:space="preserve">
-    <value>Skanningen avbröts av användaren</value>
+    <value>Skanningen avbröts. Delresultat är tillgängliga.</value>
   </data>
   <data name="Complete" xml:space="preserve">
     <value>Klar</value>
@@ -261,5 +261,59 @@
   </data>
   <data name="SaveFileDialogTitle" xml:space="preserve">
     <value>Exportera resultat</value>
+  </data>
+  <data name="RecentFolders" xml:space="preserve">
+    <value>Senaste mappar</value>
+  </data>
+  <data name="AdvancedOptions" xml:space="preserve">
+    <value>Avancerade alternativ</value>
+  </data>
+  <data name="DepthLimit" xml:space="preserve">
+    <value>Djup (tomt = obegränsat)</value>
+  </data>
+  <data name="Concurrency" xml:space="preserve">
+    <value>Arbetstrådar</value>
+  </data>
+  <data name="FollowSymlinks" xml:space="preserve">
+    <value>Följ symboliska länkar</value>
+  </data>
+  <data name="ExcludePatterns" xml:space="preserve">
+    <value>Undanta mönster (kommaseparerade)</value>
+  </data>
+  <data name="ExcludeDirectories" xml:space="preserve">
+    <value>Undanta mappar (kommaseparerade)</value>
+  </data>
+  <data name="SaveSettings" xml:space="preserve">
+    <value>Spara inställningar</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>Inställningarna har sparats.</value>
+  </data>
+  <data name="SettingsSaveFailed" xml:space="preserve">
+    <value>Kunde inte spara inställningarna: {0}</value>
+  </data>
+  <data name="InvalidScanOptions" xml:space="preserve">
+    <value>Kontrollera storlek, antal resultat, djup och arbetstrådar.</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>↑ Upp</value>
+  </data>
+  <data name="TreemapHint" xml:space="preserve">
+    <value>Klicka på en mapp för att utforska den. Ytorna visar skannade logiska byte.</value>
+  </data>
+  <data name="OtherFiles" xml:space="preserve">
+    <value>Övriga filer i mappen</value>
+  </data>
+  <data name="OtherItems" xml:space="preserve">
+    <value>Övriga objekt</value>
+  </data>
+  <data name="IncompleteCoverage" xml:space="preserve">
+    <value>Vissa platser kunde inte skannas fullständigt.</value>
+  </data>
+  <data name="CoverageDetails" xml:space="preserve">
+    <value>Överhoppade: {0:N0} undantagna · {1:N0} otillgängliga · {2:N0} offline · {3:N0} djupbegränsade</value>
+  </data>
+  <data name="ScanSummary" xml:space="preserve">
+    <value>{0:N0} filer · {1:N0} mappar · {2} · {3:g}</value>
   </data>
 </root>

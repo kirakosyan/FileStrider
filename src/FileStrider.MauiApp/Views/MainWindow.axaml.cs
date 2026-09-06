@@ -13,6 +13,12 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
+    private async void Treemap_ItemClicked(object? sender, FileStrider.MauiApp.Models.TreemapItem item)
+    {
+        if (DataContext is MainWindowViewModel model)
+            await model.ActivateTreemapItemCommand.ExecuteAsync(item);
+    }
+
     private async void TopFilesList_DoubleTapped(object? sender, TappedEventArgs e)
     {
         if (sender is ListBox listBox && listBox.SelectedItem is FileItem fileItem)

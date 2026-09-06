@@ -7,6 +7,7 @@ namespace FileStrider.Core.Models;
 /// </summary>
 public class FileItem
 {
+    public string DisplaySize => ByteSize.Format(Size);
     /// <summary>
     /// Gets the name of the file including extension.
     /// </summary>
@@ -38,6 +39,9 @@ public class FileItem
 /// </summary>
 public class FolderItem
 {
+    public string DisplaySize => ByteSize.Format(RecursiveSize);
+    public long DirectSize { get; init; }
+
     /// <summary>
     /// Gets the name of the folder.
     /// </summary>
@@ -69,6 +73,9 @@ public class FolderItem
 /// </summary>
 public record ScanOptions
 {
+    public List<string> RecentPaths { get; init; } = new();
+    public string Language { get; init; } = "en";
+
     /// <summary>
     /// Gets the root directory path to start the scan from.
     /// </summary>
@@ -130,6 +137,18 @@ public record ScanOptions
 /// </summary>
 public class ScanProgress
 {
+    private int _inaccessibleItems, _offlineItems, _excludedItems, _depthLimitedDirectories;
+    public int InaccessibleItems { get => Volatile.Read(ref _inaccessibleItems); init => _inaccessibleItems = value; }
+    public int OfflineItems { get => Volatile.Read(ref _offlineItems); init => _offlineItems = value; }
+    public int ExcludedItems { get => Volatile.Read(ref _excludedItems); init => _excludedItems = value; }
+    public int DepthLimitedDirectories { get => Volatile.Read(ref _depthLimitedDirectories); init => _depthLimitedDirectories = value; }
+    public int SkippedItems => InaccessibleItems + OfflineItems + ExcludedItems + DepthLimitedDirectories;
+    public bool HasIncompleteCoverage => InaccessibleItems > 0 || OfflineItems > 0 || DepthLimitedDirectories > 0;
+    public void IncrementInaccessibleItems() => Interlocked.Increment(ref _inaccessibleItems);
+    public void IncrementOfflineItems() => Interlocked.Increment(ref _offlineItems);
+    public void IncrementExcludedItems() => Interlocked.Increment(ref _excludedItems);
+    public void IncrementDepthLimitedDirectories() => Interlocked.Increment(ref _depthLimitedDirectories);
+
     private int _filesScanned;
     private int _foldersScanned;
     private long _bytesProcessed;
@@ -183,6 +202,10 @@ public class ScanProgress
     {
         return new ScanProgress
         {
+            InaccessibleItems = InaccessibleItems,
+            OfflineItems = OfflineItems,
+            ExcludedItems = ExcludedItems,
+            DepthLimitedDirectories = DepthLimitedDirectories,
             FilesScanned = Volatile.Read(ref _filesScanned),
             FoldersScanned = Volatile.Read(ref _foldersScanned),
             BytesProcessed = Interlocked.Read(ref _bytesProcessed),
@@ -213,6 +236,9 @@ public class ScanProgress
 /// </summary>
 public class ScanResults
 {
+    public string RootPath { get; init; } = string.Empty;
+    public List<FolderItem> Folders { get; init; } = new();
+
     /// <summary>
     /// Gets the list of top largest files found during the scan.
     /// </summary>
@@ -264,6 +290,7 @@ public record LanguageInfo(
 /// </summary>
 public class FileTypeStats
 {
+    public string DisplaySize => ByteSize.Format(TotalSize);
     /// <summary>
     /// Gets the file extension (e.g., ".jpg", ".pdf") or category name.
     /// </summary>

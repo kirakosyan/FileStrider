@@ -1,235 +1,53 @@
-# 🗂️ FileStrider
+# File Strider
 
-**Big File and Folder Discovery Tool for Mac and PC**
+Find large files and folders, understand storage use, and decide what to keep. File Strider is a free, open-source desktop application built with Avalonia and .NET 10.
 
-FileStrider is a powerful, cross-platform desktop application that helps you discover and manage large files and folders on your system. Whether you're running out of disk space or trying to optimize your storage, FileStrider makes it easy to identify what's taking up the most space.
+[Get File Strider from the Microsoft Store](https://apps.microsoft.com/detail/9PD3M0MHZ8TC)
 
-## ✨ Features
+## Version 1.1
 
-- **🔍 Fast File System Scanning**: Efficiently scans your directories to find the largest files and folders
-- **📊 File Type Analysis**: NEW! Analyze disk usage by file type with detailed statistics, percentages, and a visual breakdown panel
-- **🎯 Top N Results**: Configurable number of top results to display (default: 20)
-- **📈 Detailed Information**: Shows file/folder sizes, modification dates, and item counts
-- **🖱️ Double-Click Integration**: Double-click any file or folder to open it in your system's file manager (Windows Explorer, macOS Finder, or Linux file manager)
-- **📤 Enhanced Export**: Export scan results including file type statistics to CSV or JSON formats
-- **⚙️ Flexible Configuration**: 
-  - Include/exclude hidden files and folders
-  - Set minimum file size filters
-  - Exclude specific directories (node_modules, .git, etc.)
-  - Control scan depth and concurrency
-- **🔄 Real-time Progress**: Live updates during scanning with current path and statistics
-- **❌ Cancellable Operations**: Stop long-running scans at any time
-- **🎨 Modern UI**: Clean, intuitive three-column interface built with Avalonia UI
+- Reliable, cancellable scans with partial results and coverage details.
+- Accurate treemap areas with folder drill-down and an Up button.
+- Top 1–200 files and folders, with readable sizes and file-type statistics.
+- Minimum sizes in B, KiB, MiB or GiB.
+- Saved filters, exclusions, depth, concurrency, language and recent folders.
+- CSV and JSON exports with scan metadata and safe spreadsheet text handling.
+- English, Spanish, French and Swedish, with light and dark themes.
 
-## 🖥️ System Requirements
+Choose a folder, configure the scan, and select **Start Scan**. **Scan home** scans your user folder. Click a treemap folder to explore it, or double-click a list result to open its location in the file manager. Use **Save settings** to save preferences without starting a scan.
 
-- **Operating Systems**: Windows, macOS, Linux
-- **.NET Runtime**: .NET 10.0 or later
-- **Memory**: 512 MB RAM minimum (more recommended for large scans)
-- **Storage**: 50 MB free disk space
+Sizes represent logical bytes, which may differ from allocated disk space for compressed, sparse or hard-linked files. Offline cloud placeholders are skipped. Coverage details identify filtered, inaccessible, offline and depth-limited items. File Strider does not read file contents, delete files, or upload scan data.
 
-## 🚀 Installation
+See [release notes](RELEASE_NOTES.md) and the [privacy policy](PRIVACY_POLICY.md).
 
-### From the Microsoft Store (Windows)
+## Build and test
 
-FileStrider is available on the [Microsoft Store](https://apps.microsoft.com/). Search for **File Strider** or visit the app page directly.
+Install the .NET 10 SDK, then run:
 
-### Prerequisites
-
-1. Install [.NET 10.0 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) or later
-
-### Building from Source
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/kirakosyan/FileStrider.git
-   cd FileStrider
-   ```
-
-2. Build the application:
-   ```bash
-   dotnet build
-   ```
-
-3. Run the application:
-   ```bash
-   dotnet run --project src/FileStrider.MauiApp
-   ```
-
-### Pre-built Releases
-
-Download the latest release from the [Releases page](https://github.com/kirakosyan/FileStrider/releases).
-
-## 📋 Usage
-
-### Basic Scanning
-
-1. **Select a Folder**: Click "Browse..." to choose the directory you want to scan, or use "Quick Scan" to scan the current directory
-2. **Configure Options** (optional):
-   - Set the number of top results to display
-   - Include hidden files and folders
-   - Set minimum file size threshold
-3. **Start Scanning**: Click "▶️ Start Scan" to begin the analysis
-4. **View Results**: The largest files, folders, and file type statistics will appear in the three panels
-
-### Advanced Features
-
-- **File Type Analysis**: View detailed breakdown of disk usage by file type and category
-- **Double-Click to Open**: Double-click any file or folder in the results to open it in your system's file manager with the item highlighted
-- **Enhanced Export**: Use "📄 Export CSV" or "📝 Export JSON" to save your scan results including file type statistics
-- **Cancel Scans**: Use "❌ Cancel" to stop long-running operations
-- **Tooltips**: Hover over items to see their full file paths
-
-### File Type Categories
-
-FileStrider automatically categorizes files into the following types:
-- **Images**: jpg, png, gif, bmp, svg, heic, and more
-- **Videos**: mp4, avi, mkv, mov, webm, and more  
-- **Audio**: mp3, wav, flac, aac, ogg, and more
-- **Documents**: pdf, doc, xls, ppt, txt, and more
-- **Archives**: zip, rar, 7z, tar, gz, and more
-- **Code**: cs, js, py, java, html, css, and more
-- **Executables**: exe, msi, dmg, app, dll, and more
-
-### Configuration Options
-
-- **Top N**: Number of largest items to track (1-200)
-- **Include Hidden**: Whether to include hidden files and directories
-- **Min Size**: Minimum file size in bytes to include in results
-- **Excluded Directories**: By default excludes `node_modules`, `.git`, and `Library/Caches`
-
-## 🏗️ Architecture
-
-FileStrider is built with a clean, modular architecture:
-
-- **FileStrider.Core**: Core models and contracts
-- **FileStrider.Scanner**: File system scanning engine
-- **FileStrider.Platform**: Platform-specific services (file manager integration, clipboard)
-- **FileStrider.Infrastructure**: Configuration and export services
-- **FileStrider.MauiApp**: Avalonia-based UI application
-- **FileStrider.Tests**: Unit tests
-
-## � MSIX Packaging
-
-To build MSIX packages for the Microsoft Store or sideloading:
-
-### Prerequisites
-
-- [Windows 10/11 SDK](https://developer.microsoft.com/windows/downloads/windows-sdk/) (provides `MakeAppx.exe`)
-
-### Building MSIX Packages
-
-The `scripts/Package-Msix.ps1` script publishes the app as self-contained binaries and creates MSIX packages.
-
-```powershell
-# Build for both x64 and ARM64 (default)
-.\scripts\Package-Msix.ps1
-
-# Build for x64 only
-.\scripts\Package-Msix.ps1 -Architecture x64
-
-# Build and sign with a certificate
-.\scripts\Package-Msix.ps1 -CertificatePath .\cert.pfx -CertificatePassword secret
-```
-
-Output files are named `FileStrider_<Version>_<arch>.msix` (e.g., `FileStrider_1.0.0.0_x64.msix`).
-
-## 🔧 Development
-
-### Prerequisites
-
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [Git](https://git-scm.com/)
-
-### Building
-
-```bash
-# Clone the repository
-git clone https://github.com/kirakosyan/FileStrider.git
-cd FileStrider
-
-# Restore dependencies
-dotnet restore
-
-# Build the solution
-dotnet build
-
-# Run tests
-dotnet test
-
-# Run the application
+~~~powershell
+dotnet build FileStrider.sln -c Release
+dotnet test FileStrider.sln -c Release
 dotnet run --project src/FileStrider.MauiApp
-```
+~~~
 
-### Project Structure
+The UI project retains its historical MauiApp directory name; the application uses Avalonia, not MAUI. The solution separates core models, scanning, infrastructure, platform integration, UI and tests.
 
-```
-FileStrider/
-├── scripts/
-│   └── Package-Msix.ps1           # MSIX packaging script
-├── src/
-│   ├── FileStrider.Core/          # Core models and interfaces
-│   ├── FileStrider.Scanner/       # File system scanning logic
-│   ├── FileStrider.Platform/      # Platform-specific services
-│   ├── FileStrider.Infrastructure/# Configuration and export services
-│   ├── FileStrider.MauiApp/       # Avalonia UI application
-│   └── FileStrider.Tests/         # Unit tests
-├── FileStrider.sln                # Solution file
-├── PRIVACY_POLICY.md              # Privacy policy
-└── README.md                      # This file
-```
+Tests create their own temporary fixtures and settings files. Render tests cover all supported languages, light/dark themes, and compact windows. GitHub Actions runs tests on Windows, Linux and macOS, audits dependencies, and builds Windows packages.
 
-## 🧪 Testing
+## Microsoft Store packaging
 
-Run the test suite with:
+On Windows with the Windows 10/11 SDK installed:
 
-```bash
-dotnet test
-```
+~~~powershell
+./scripts/Package-Msix.ps1
+~~~
 
-The test suite includes unit tests for:
-- File system scanning logic
-- Top items tracking
-- Export functionality
-- Platform services
+This publishes self-contained x64 and ARM64 applications into fresh staging directories and generates FileStrider_&lt;version&gt;_&lt;architecture&gt;.msix. The [Store manifest](src/FileStrider.MauiApp/Package.appxmanifest) supplies the application identity and version. Optional certificate parameters are available for signed sideloading; Store submission packages are unsigned.
 
-## 🤝 Contributing
+Source builds run as ordinary desktop applications and do not register a development MSIX over the installed Store application.
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+## Support
 
-### Guidelines
+Report problems and feature requests in [GitHub Issues](https://github.com/kirakosyan/FileStrider/issues). When sharing a report or export, review it first: filenames and paths may contain personal information.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass (`dotnet test`)
-6. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-7. Push to the branch (`git push origin feature/AmazingFeature`)
-8. Open a Pull Request
-
-## � Privacy
-
-FileStrider does not collect, store, or transmit any personal data. All scanning is performed locally on your device. See the full [Privacy Policy](PRIVACY_POLICY.md).
-
-## �📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Avalonia UI](https://avaloniaui.net/) for cross-platform desktop development
-- Uses [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) for MVVM pattern implementation
-- Inspired by tools like WinDirStat, DaisyDisk, and ncdu
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues page](https://github.com/kirakosyan/FileStrider/issues) for existing solutions
-2. Create a new issue with detailed information about your problem
-3. Include your operating system, .NET version, and steps to reproduce
-
----
-
-**Made with ❤️ for developers and system administrators who need to manage disk space efficiently.**
+Licensed under the [MIT License](LICENSE).

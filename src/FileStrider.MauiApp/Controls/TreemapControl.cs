@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Styling;
 using FileStrider.MauiApp.Models;
 using System.Collections.ObjectModel;
 
@@ -31,6 +32,34 @@ public class TreemapControl : Control
         AvaloniaProperty.Register<TreemapControl, string>(nameof(EmptyText), "No data to display. Run a scan to see the treemap.");
 
     private TreemapItem? _hoveredItem;
+
+    /// <summary>
+    /// Gets a theme-aware background brush (white in light mode, dark in dark mode).
+    /// </summary>
+    private IBrush BackgroundBrush => ActualThemeVariant == ThemeVariant.Dark
+        ? new SolidColorBrush(Color.FromRgb(30, 30, 30))
+        : Brushes.White;
+
+    /// <summary>
+    /// Gets a theme-aware foreground brush for text on colored treemap tiles.
+    /// </summary>
+    private IBrush TileForegroundBrush => ActualThemeVariant == ThemeVariant.Dark
+        ? new SolidColorBrush(Color.FromRgb(240, 240, 240))
+        : Brushes.Black;
+
+    /// <summary>
+    /// Gets a theme-aware muted text brush.
+    /// </summary>
+    private IBrush MutedTextBrush => ActualThemeVariant == ThemeVariant.Dark
+        ? new SolidColorBrush(Color.FromRgb(160, 160, 160))
+        : Brushes.Gray;
+
+    /// <summary>
+    /// Gets a theme-aware secondary text brush.
+    /// </summary>
+    private IBrush SecondaryTextBrush => ActualThemeVariant == ThemeVariant.Dark
+        ? new SolidColorBrush(Color.FromRgb(200, 200, 200))
+        : Brushes.DarkGray;
 
     /// <summary>
     /// Gets or sets the collection of items to display in the treemap.
@@ -93,17 +122,27 @@ public class TreemapControl : Control
 
             InvalidateVisual();
         }
+
+        // Re-render when theme changes
+        if (change.Property.Name == "ActualThemeVariant")
+        {
+            InvalidateVisual();
+        }
     }
 
     private void OnItemsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
+        _hoveredItem = null;
+        SelectedItem = null;
+        ToolTip.SetTip(this, null);
         InvalidateVisual();
     }
 
     public override void Render(DrawingContext context)
     {
+        using var clip = context.PushClip(new Rect(Bounds.Size));
         // Draw background
-        context.FillRectangle(Brushes.White, new Rect(0, 0, Bounds.Width, Bounds.Height));
+        context.FillRectangle(BackgroundBrush, new Rect(0, 0, Bounds.Width, Bounds.Height));
 
         base.Render(context);
 
@@ -116,7 +155,7 @@ public class TreemapControl : Control
                 FlowDirection.LeftToRight,
                 Typeface.Default,
                 14,
-                Brushes.Gray);
+                MutedTextBrush);
 
             var textRect = new Rect(
                 (Bounds.Width - emptyText.Width) / 2,
@@ -155,8 +194,11 @@ public class TreemapControl : Control
         }
 
         // Draw rectangle
+        var foreground = fillBrush is ISolidColorBrush solid &&
+            (0.2126 * solid.Color.R + 0.7152 * solid.Color.G + 0.0722 * solid.Color.B) < 140
+            ? Brushes.White : Brushes.Black;
         context.FillRectangle(fillBrush, rect);
-        context.DrawRectangle(new Pen(Brushes.White, 1), rect);
+        context.DrawRectangle(new Pen(BackgroundBrush, 1), rect);
 
         // Draw text if rectangle is large enough
         if (rect.Width > 30 && rect.Height > 20)
@@ -173,7 +215,7 @@ public class TreemapControl : Control
                 FlowDirection.LeftToRight,
                 Typeface.Default,
                 Math.Max(8, Math.Min(12, rect.Height / 4)),
-                Brushes.Black);
+                foreground);
 
             // Center text in rectangle
             var textX = rect.X + (rect.Width - formattedText.Width) / 2;
@@ -199,7 +241,7 @@ public class TreemapControl : Control
                 FlowDirection.LeftToRight,
                 Typeface.Default,
                 Math.Max(6, Math.Min(10, rect.Height / 6)),
-                Brushes.DarkGray);
+                foreground);
 
             var percentFormattedText = new FormattedText(
                 percentText,
@@ -207,7 +249,7 @@ public class TreemapControl : Control
                 FlowDirection.LeftToRight,
                 Typeface.Default,
                 Math.Max(6, Math.Min(9, rect.Height / 7)),
-                Brushes.DarkGray);
+                foreground);
 
             var sizeX = rect.X + (rect.Width - sizeFormattedText.Width) / 2;
             var sizeY = rect.Y + rect.Height - sizeFormattedText.Height - percentFormattedText.Height - 4;
@@ -250,6 +292,7 @@ public class TreemapControl : Control
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
 
         var position = e.GetPosition(this);
         var clickedItem = GetItemAt(position);
@@ -289,18 +332,5 @@ public class TreemapControl : Control
         return null;
     }
 
-    private static string FormatFileSize(long bytes)
-    {
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
-        int suffixIndex = 0;
-        double size = bytes;
-
-        while (size >= 1024 && suffixIndex < suffixes.Length - 1)
-        {
-            size /= 1024;
-            suffixIndex++;
-        }
-
-        return $"{size:F1} {suffixes[suffixIndex]}";
-    }
+    private static string FormatFileSize(long bytes) => FileStrider.Core.Models.ByteSize.Format(bytes);
 }

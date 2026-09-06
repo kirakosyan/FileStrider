@@ -175,7 +175,9 @@ public class ScanOptionsTests
         // Arrange
         var fileTypeAnalyzer = new FileTypeAnalyzer();
         var scanner = new FileSystemScanner(fileTypeAnalyzer);
-        var tempDir = Path.GetTempPath();
+        using var fixture = new TestDirectory();
+        var tempDir = fixture.Path;
+        File.WriteAllText(System.IO.Path.Combine(tempDir, "sample.txt"), "fixture");
 
         // Test with normal scanning (should include files)
         var normalOptions = new ScanOptions { RootPath = tempDir, TopN = 10, FoldersOnly = false };
@@ -257,7 +259,8 @@ public class ConfigurationServiceTests
     public async Task LoadDefaultOptions_ShouldReturnDefaults_WhenNoConfigFile()
     {
         // Arrange
-        var configService = new ConfigurationService();
+        using var fixture = new TestDirectory();
+        var configService = new ConfigurationService(System.IO.Path.Combine(fixture.Path, "config.json"));
 
         // Act
         var options = await configService.LoadDefaultOptionsAsync();
@@ -275,7 +278,8 @@ public class ConfigurationServiceTests
     public async Task SaveAndLoadOptions_ShouldPersist()
     {
         // Arrange
-        var configService = new ConfigurationService();
+        using var fixture = new TestDirectory();
+        var configService = new ConfigurationService(System.IO.Path.Combine(fixture.Path, "config.json"));
         var originalOptions = new ScanOptions { TopN = 100, IncludeHidden = true };
 
         try
@@ -310,11 +314,13 @@ public class FileSystemScannerTests
         // Arrange
         var fileTypeAnalyzer = new FileTypeAnalyzer();
         var scanner = new FileSystemScanner(fileTypeAnalyzer);
-        var tempDir = Path.GetTempPath();
+        using var fixture = new TestDirectory();
+        var tempDir = fixture.Path;
+        File.WriteAllText(System.IO.Path.Combine(tempDir, "sample.txt"), "fixture");
         var options = new ScanOptions { RootPath = tempDir, TopN = 1 };
 
         var progressReports = new List<ScanProgress>();
-        var progress = new Progress<ScanProgress>(p => progressReports.Add(p));
+        var progress = new InlineProgress<ScanProgress>(p => progressReports.Add(p));
 
         // Act
         await scanner.ScanAsync(options, progress, CancellationToken.None);
@@ -341,7 +347,9 @@ public class FileSystemScannerTests
         // Arrange
         var fileTypeAnalyzer = new FileTypeAnalyzer();
         var scanner = new FileSystemScanner(fileTypeAnalyzer);
-        var tempDir = Path.GetTempPath();
+        using var fixture = new TestDirectory();
+        var tempDir = fixture.Path;
+        File.WriteAllText(System.IO.Path.Combine(tempDir, "sample.txt"), "fixture");
 
         var invalidOptions = new ScanOptions
         {
@@ -514,27 +522,6 @@ public class FileSystemScannerTests
                 // ignore cleanup issues on CI
             }
         }
-    }
-}
-
-/// <summary>
-/// Unit tests for the MainWindowViewModel to verify command state management.
-/// </summary>
-public class MainWindowViewModelTests
-{
-    /// <summary>
-    /// Tests that the CancelScanCommand properly reflects the CanCancel state.
-    /// </summary>
-    [Fact]
-    public void CancelScanCommand_ShouldReflectCanCancelState()
-    {
-        // This is a basic test to verify that the CanCancel property exists and works
-        // The actual command state management is tested through the UI and integration tests
-        // Since we're making minimal changes, we'll just verify the property behavior
-
-        // For now, we'll just check that the scanner timer fix works (already tested above)
-        // The cancel button fix requires UI testing which we'll do manually
-        Assert.True(true, "Cancel button fix verified through manual testing");
     }
 }
 
