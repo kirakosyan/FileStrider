@@ -1,3 +1,10 @@
+File Strider 1.1.1 — 6 September 2026
+
+- Fixed scans of drive roots such as C:\ failing immediately on Windows.
+- Scan errors and notices now appear beside the scan controls.
+- About shows the running application version in every supported language.
+- Added a filesystem-root regression and checks for visible errors and About layout.
+
 File Strider 1.1.0 — 6 September 2026
 
 - Reliable cancellation with partial results, safe worker shutdown, and a shared guard against overlapping scans.

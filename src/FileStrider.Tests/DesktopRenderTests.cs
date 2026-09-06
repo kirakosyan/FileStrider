@@ -22,6 +22,58 @@ public static class RenderTestApplication
 public class DesktopRenderTests
 {
     [AvaloniaTheory]
+    [InlineData("en")]
+    [InlineData("fr")]
+    [InlineData("es")]
+    [InlineData("sv")]
+    public async Task AboutShowsTheRunningAssemblyVersionWithoutClipping(string language)
+    {
+        using var fixture = new TestDirectory();
+        using var vm = TestModels.Create(new DemoScanner(new ScanResults()),
+            new ScanOptions { RootPath = fixture.Path, Language = language });
+        await vm.Initialization;
+        Window? about = null;
+        using var subscription = Window.WindowOpenedEvent.AddClassHandler<Window>((window, _) => about = window);
+        try
+        {
+            await vm.ShowAboutCommand.ExecuteAsync(null);
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Assert.NotNull(about);
+            var version = typeof(FileStrider.MauiApp.App).Assembly.GetName().Version!.ToString();
+            Assert.Contains(about.GetVisualDescendants().OfType<TextBlock>(), text => text.Text == vm.VersionText && text.Text.Contains(version));
+            foreach (var button in about.GetVisualDescendants().OfType<Button>())
+            {
+                var point = button.TranslatePoint(default, about)!.Value;
+                Assert.True(point.Y >= 0 && point.Y + button.Bounds.Height <= about.Bounds.Height);
+            }
+        }
+        finally { about?.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task ScanFailureIsVisibleBesideScanControls()
+    {
+        using var fixture = new TestDirectory();
+        using var vm = TestModels.Create(new DemoScanner(new ScanResults { ErrorMessage = "controlled scan failure" }),
+            new ScanOptions { RootPath = fixture.Path });
+        await vm.Initialization;
+        var window = new MainWindow { DataContext = vm, Width = 1040, Height = 700 };
+        try
+        {
+            window.Show();
+            await vm.StartScanCommand.ExecuteAsync(null);
+            Dispatcher.UIThread.RunJobs();
+            var status = window.FindControl<TextBlock>("ScanStatusMessage")!;
+            Assert.True(status.IsEffectivelyVisible);
+            Assert.Contains("controlled scan failure", status.Text);
+            Assert.InRange(status.TranslatePoint(default, window)!.Value.Y, 0, 180);
+            Assert.True(vm.CanScan);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaTheory]
     [InlineData("en", false, 1600, 1000)]
     [InlineData("en", true, 1600, 1000)]
     [InlineData("fr", false, 1600, 1000)]

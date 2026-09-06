@@ -14,6 +14,22 @@ namespace FileStrider.Tests;
 public class ReleaseRegressionTests
 {
     [Fact]
+    public async Task FileSystemRootCanBeScannedWithoutResolvingItAsALink()
+    {
+        var root = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))!;
+        var result = await Scanner().ScanAsync(new ScanOptions
+        {
+            RootPath = root,
+            MaxDepth = 0,
+            ConcurrencyLimit = 1
+        }).WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Null(result.ErrorMessage);
+        Assert.True(result.IsCompleted);
+        Assert.Contains(result.Folders, folder => folder.FullPath == root);
+    }
+
+    [Fact]
     public async Task PreCancelledScanReturnsInsteadOfWaitingForChannelCompletion()
     {
         using var fixture = new TestDirectory();

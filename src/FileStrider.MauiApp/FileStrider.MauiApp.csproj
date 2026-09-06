@@ -14,9 +14,9 @@
     
     <!-- Application metadata -->
     <ApplicationId>com.kirakosyan.filestrider</ApplicationId>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
     <Authors>Armen Kirakosyan</Authors>
     <Description>Big File and Folder Discovery Tool</Description>
     <Product>File Strider</Product>

@@ -139,7 +139,12 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
     {
         var stack = new Stack<(string Path, string PhysicalPath, int Depth)>();
         var root = new DirectoryInfo(options.RootPath);
-        stack.Push((root.FullName, root.ResolveLinkTarget(true)?.FullName ?? root.FullName, 0));
+        // Windows cannot ResolveLinkTarget on a volume root such as C:\ even
+        // though it exists. Only ask for a link target on actual reparse points.
+        var physicalRoot = (root.Attributes & FileAttributes.ReparsePoint) != 0
+            ? root.ResolveLinkTarget(true)?.FullName ?? root.FullName
+            : root.FullName;
+        stack.Push((root.FullName, physicalRoot, 0));
         var visited = new HashSet<string>(PathComparer);
         var enumeration = new EnumerationOptions { AttributesToSkip = 0, IgnoreInaccessible = false, RecurseSubdirectories = false };
         while (stack.TryPop(out var current))

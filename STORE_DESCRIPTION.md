@@ -1,4 +1,4 @@
-# Microsoft Store description — File Strider 1.1
+# Microsoft Store description — File Strider 1.1.1
 
 Updated 6 September 2026 for product `9PD3M0MHZ8TC`.
 
@@ -6,7 +6,7 @@ Category: Utilities + tools / File managers. Secondary category: Productivity.
 Free, publicly discoverable, Windows desktop on x64 and ARM64.
 Support: https://github.com/kirakosyan/FileStrider/issues
 Privacy: [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
-Version 1.1 release notes: [RELEASE_NOTES.md](RELEASE_NOTES.md).
+Version 1.1.1 release notes: [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 The Store also includes localized release notes and eight feature bullets per language. Screenshots render the actual application using synthetic sample data, with no personal filesystem paths. English includes light and dark themes; French, Spanish, and Swedish use localized light-theme screenshots.
 

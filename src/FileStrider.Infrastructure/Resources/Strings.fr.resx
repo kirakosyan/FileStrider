@@ -316,4 +316,5 @@
   <data name="ScanSummary" xml:space="preserve">
     <value>{0:N0} fichiers · {1:N0} dossiers · {2} · {3:g}</value>
   </data>
+  <data name="AppVersion" xml:space="preserve"><value>Version {0}</value></data>
 </root>

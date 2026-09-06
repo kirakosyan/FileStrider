@@ -34,7 +34,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool followSymlinks;
     [ObservableProperty] private string excludePatternsText = "";
     [ObservableProperty] private string excludeDirectoriesText = "";
-    [ObservableProperty] private string statusMessage = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasStatusMessage))] private string statusMessage = "";
+    public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
+    public string VersionText => string.Format(_localizationService.GetString("AppVersion"),
+        typeof(App).Assembly.GetName().Version?.ToString());
     [ObservableProperty] private string treemapPath = "";
     [ObservableProperty] private bool canNavigateUp;
     [ObservableProperty] private string? selectedRecentPath;
@@ -605,7 +608,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             Title = _localizationService.GetString("AboutTitle"),
             Width = 620,
-            Height = 230,
+            SizeToContent = SizeToContent.Height,
             CanResize = false,
             ShowInTaskbar = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -617,6 +620,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                     Spacing = 12,
                     Children =
                     {
+                        new TextBlock
+                        {
+                            Text = VersionText,
+                            FontSize = 16,
+                            FontWeight = FontWeight.SemiBold
+                        },
                         new TextBlock
                         {
                             Text = _localizationService.GetString("AboutDescription"),
