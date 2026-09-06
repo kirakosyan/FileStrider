@@ -240,7 +240,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
 
     private static bool MatchesPattern(string name, IEnumerable<string>? patterns) =>
         patterns?.Any(p => !string.IsNullOrWhiteSpace(p) &&
-            FileSystemName.MatchesSimpleExpression(p, name, OperatingSystem.IsWindows())) == true;
+            FileSystemName.MatchesSimpleExpression(p, name, ignoreCase: true)) == true;
 
     private static string NormalizePath(string path) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
     private static bool IsWithinRoot(string path, string root) => PathComparer.Equals(path, root) ||
