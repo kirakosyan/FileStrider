@@ -12,7 +12,7 @@ public class ExportService : IExportService
 {
     /// <summary>
     /// Exports the scan results to a CSV (Comma Separated Values) file with separate sections for files and folders.
-    /// Includes proper CSV escaping for fields containing special characters.
+    /// Includes scan metadata and proper CSV escaping for fields containing special characters.
     /// </summary>
     /// <param name="results">The scan results to export.</param>
     /// <param name="filePath">The file path where the CSV file should be saved.</param>
@@ -56,6 +56,30 @@ public class ExportService : IExportService
                 await writer.WriteLineAsync(FormattableString.Invariant($"{EscapeCsvField(stat.Extension)},{EscapeCsvField(stat.Category)},{stat.FileCount},{stat.TotalSize},{totalSizeInMB:F2},{stat.Percentage:F1}%,{stat.AverageSize}"));
             }
         }
+
+        await writer.WriteLineAsync();
+        await writer.WriteLineAsync("Scan Metadata");
+        await writer.WriteLineAsync("Field,Value");
+        var metadata = new (string Field, object? Value)[]
+        {
+            ("Exported At (UTC)", DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)),
+            ("Root Path", results.RootPath),
+            ("Scan Completed", results.IsCompleted),
+            ("Scan Cancelled", results.WasCancelled),
+            ("Error Message", results.ErrorMessage),
+            ("Files Scanned", results.Progress.FilesScanned),
+            ("Folders Scanned", results.Progress.FoldersScanned),
+            ("Bytes Processed", results.Progress.BytesProcessed),
+            ("Elapsed", results.Progress.Elapsed.ToString("c", CultureInfo.InvariantCulture)),
+            ("Skipped Items", results.Progress.SkippedItems),
+            ("Inaccessible Items", results.Progress.InaccessibleItems),
+            ("Offline Items", results.Progress.OfflineItems),
+            ("Excluded Items", results.Progress.ExcludedItems),
+            ("Depth Limited Directories", results.Progress.DepthLimitedDirectories),
+            ("Incomplete Coverage", results.Progress.HasIncompleteCoverage)
+        };
+        foreach (var (field, value) in metadata)
+            await writer.WriteLineAsync($"{field},{EscapeCsvField(Convert.ToString(value, CultureInfo.InvariantCulture) ?? "")}");
     }
 
     /// <summary>

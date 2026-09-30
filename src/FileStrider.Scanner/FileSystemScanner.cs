@@ -49,7 +49,16 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
             try
             {
                 await foreach (var entry in EnumerateAsync(options, state, linked.Token).ConfigureAwait(false))
+                {
+                    // Register metadata before workers can process this directory's files.
+                    if (entry.IsDirectory)
+                    {
+                        folders.GetOrAdd(entry.Path, _ => new FolderAccumulator(entry.Modified));
+                        if (!PathComparer.Equals(entry.Path, options.RootPath)) state.IncrementFoldersScanned();
+                        continue;
+                    }
                     await channel.Writer.WriteAsync(entry, linked.Token).ConfigureAwait(false);
+                }
             }
             finally { channel.Writer.TryComplete(); }
         })));
@@ -60,12 +69,6 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                 await foreach (var entry in channel.Reader.ReadAllAsync(linked.Token).ConfigureAwait(false))
                 {
                     linked.Token.ThrowIfCancellationRequested();
-                    if (entry.IsDirectory)
-                    {
-                        folders.GetOrAdd(entry.Path, _ => new FolderAccumulator(entry.Modified));
-                        if (!PathComparer.Equals(entry.Path, options.RootPath)) state.IncrementFoldersScanned();
-                        continue;
-                    }
                     if (!options.FoldersOnly)
                     {
                         var category = fileTypeAnalyzer.GetFileCategory(Path.GetExtension(entry.Path));
@@ -139,11 +142,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
     {
         var stack = new Stack<(string Path, string PhysicalPath, int Depth)>();
         var root = new DirectoryInfo(options.RootPath);
-        // Windows cannot ResolveLinkTarget on a volume root such as C:\ even
-        // though it exists. Only ask for a link target on actual reparse points.
-        var physicalRoot = (root.Attributes & FileAttributes.ReparsePoint) != 0
-            ? root.ResolveLinkTarget(true)?.FullName ?? root.FullName
-            : root.FullName;
+        var physicalRoot = ResolvePhysicalDirectory(root.FullName);
         stack.Push((root.FullName, physicalRoot, 0));
         var visited = new HashSet<string>(PathComparer);
         var enumeration = new EnumerationOptions { AttributesToSkip = 0, IgnoreInaccessible = false, RecurseSubdirectories = false };
@@ -185,7 +184,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                             continue;
                         }
                         var physical = (attributes & FileAttributes.ReparsePoint) != 0
-                            ? info.ResolveLinkTarget(true)?.FullName ?? info.FullName
+                            ? ResolvePhysicalDirectory(info.FullName)
                             : Path.Combine(current.PhysicalPath, info.Name);
                         stack.Push((NormalizePath(info.FullName), physical, current.Depth + 1));
                     }
@@ -231,6 +230,39 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
         try { return Directory.GetLastWriteTime(path); }
         catch (IOException) { return DateTime.MinValue; }
         catch (UnauthorizedAccessException) { return DateTime.MinValue; }
+    }
+
+    // Resolve every component: a normal directory may live beneath a linked ancestor,
+    // and a link's target can itself contain linked ancestors.
+    private static string ResolvePhysicalDirectory(string path)
+    {
+        var candidate = NormalizePath(path);
+        var redirects = new HashSet<string>(PathComparer);
+        while (redirects.Add(candidate))
+        {
+            var physical = Path.GetPathRoot(candidate)!;
+            var components = candidate[physical.Length..].Split(
+                [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries);
+            var redirected = false;
+            for (var i = 0; i < components.Length; i++)
+            {
+                physical = Path.Combine(physical, components[i]);
+                var directory = new DirectoryInfo(physical);
+                // Do not ResolveLinkTarget on ordinary directories or volume roots.
+                if ((directory.Attributes & FileAttributes.ReparsePoint) == 0) continue;
+                var target = directory.ResolveLinkTarget(true);
+                if (target is null) continue;
+
+                candidate = target.FullName;
+                for (var remaining = i + 1; remaining < components.Length; remaining++)
+                    candidate = Path.Combine(candidate, components[remaining]);
+                candidate = NormalizePath(candidate);
+                redirected = true;
+                break;
+            }
+            if (!redirected) return NormalizePath(physical);
+        }
+        throw new IOException($"Cannot resolve a directory link cycle: {path}");
     }
 
     private static bool IsExcludedDirectory(string path, ScanOptions options)

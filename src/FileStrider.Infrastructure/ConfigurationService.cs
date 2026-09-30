@@ -64,10 +64,12 @@ public class ConfigurationService : IConfigurationService
         }
         finally
         {
-            if (File.Exists(temporary)) File.Delete(temporary);
-            _gate.Release();
+            try { if (File.Exists(temporary)) DeleteTemporaryFile(temporary); }
+            finally { _gate.Release(); }
         }
     }
+
+    protected virtual void DeleteTemporaryFile(string path) => File.Delete(path);
 
     private static ScanOptions Normalize(ScanOptions options) => options with
     {

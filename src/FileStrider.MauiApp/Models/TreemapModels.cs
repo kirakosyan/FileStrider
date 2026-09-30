@@ -76,7 +76,10 @@ public static class TreemapLayout
         double leftSize = items[start].Size;
         while (leftCount < count - 1 && leftSize + items[start + leftCount].Size <= total / 2)
             leftSize += items[start + leftCount++].Size;
-        var ratio = leftSize / total;
+        // Subtraction can round a small, positive remainder down to zero.
+        double rightSize = 0;
+        for (var i = leftCount; i < count; i++) rightSize += items[start + i].Size;
+        var ratio = leftSize / (leftSize + rightSize);
         Avalonia.Rect left, right;
         if (bounds.Width >= bounds.Height)
         {
@@ -91,7 +94,7 @@ public static class TreemapLayout
             right = new(bounds.X, bounds.Y + height, bounds.Width, Math.Max(0, bounds.Height - height));
         }
         Split(items, start, leftCount, leftSize, left);
-        Split(items, start + leftCount, count - leftCount, total - leftSize, right);
+        Split(items, start + leftCount, count - leftCount, rightSize, right);
     }
 }
 
