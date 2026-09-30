@@ -77,8 +77,11 @@ public class DesktopRenderTests
     [InlineData("en", false, 1600, 1000)]
     [InlineData("en", true, 1600, 1000)]
     [InlineData("fr", false, 1600, 1000)]
+    [InlineData("fr", true, 1600, 1000)]
     [InlineData("es", false, 1600, 1000)]
+    [InlineData("es", true, 1600, 1000)]
     [InlineData("sv", false, 1600, 1000)]
+    [InlineData("sv", true, 1600, 1000)]
     [InlineData("en", false, 1040, 700)]
     [InlineData("fr", true, 1040, 700)]
     [InlineData("es", false, 1040, 700)]
@@ -118,6 +121,19 @@ public class DesktopRenderTests
             {
                 Directory.CreateDirectory(output);
                 frame.Save(Path.Combine(output, $"{language}-{(dark ? "dark" : "light")}-{width}.png"));
+                if (width == 1600)
+                {
+                    vm.NavigateTreemap(Path.Combine(result.RootPath, "Videos"));
+                    SaveStoreFrame(window, Path.Combine(output, $"{language}-{(dark ? "dark" : "light")}-detail.png"));
+                    vm.NavigateTreemap(result.RootPath);
+                    vm.MaxDepth = 4;
+                    vm.ConcurrencyLimit = Math.Min(4, Environment.ProcessorCount);
+                    vm.SelectedSizeUnit = vm.SizeUnits.Single(unit => unit.Name == "MiB");
+                    vm.MinFileSize = 100;
+                    vm.ExcludePatternsText = "*.tmp, *.log";
+                    window.GetVisualDescendants().OfType<Expander>().Single().IsExpanded = true;
+                    SaveStoreFrame(window, Path.Combine(output, $"{language}-{(dark ? "dark" : "light")}-options.png"));
+                }
             }
         }
         finally { window.Close(); }
@@ -135,16 +151,30 @@ public class DesktopRenderTests
             results.Folders.Add(new FolderItem { Name = name, FullPath = Path.Combine(root, name), RecursiveSize = size, DirectSize = size, ItemCount = 1000 });
         results.TopFolders.AddRange(results.Folders.OrderByDescending(f => f.RecursiveSize));
         results.TopFiles.AddRange(new[] {
-            new FileItem { Name = "Summer road trip.mp4", FullPath = Path.Combine(root,"Videos","Summer road trip.mp4"), Size = 4294967296, Type = ".mp4" },
+            new FileItem { Name = "Training video.mp4", FullPath = Path.Combine(root,"Videos","Training video.mp4"), Size = 4294967296, Type = ".mp4" },
+            new FileItem { Name = "Product demo.mov", FullPath = Path.Combine(root,"Videos","Product demo.mov"), Size = 3221225472, Type = ".mov" },
+            new FileItem { Name = "Workshop recording.mp4", FullPath = Path.Combine(root,"Videos","Workshop recording.mp4"), Size = 2147483648, Type = ".mp4" },
+            new FileItem { Name = "Feature walkthrough.mp4", FullPath = Path.Combine(root,"Videos","Feature walkthrough.mp4"), Size = 2147483648, Type = ".mp4" },
+            new FileItem { Name = "Quick start.mp4", FullPath = Path.Combine(root,"Videos","Quick start.mp4"), Size = 1073741824, Type = ".mp4" },
             new FileItem { Name = "Project archive.zip", FullPath = Path.Combine(root,"Projects","Project archive.zip"), Size = 2147483648, Type = ".zip" },
-            new FileItem { Name = "Family collection.zip", FullPath = Path.Combine(root,"Photos","Family collection.zip"), Size = 1610612736, Type = ".zip" },
+            new FileItem { Name = "Reference images.zip", FullPath = Path.Combine(root,"Photos","Reference images.zip"), Size = 1610612736, Type = ".zip" },
             new FileItem { Name = "Design assets.psd", FullPath = Path.Combine(root,"Projects","Design assets.psd"), Size = 536870912, Type = ".psd" },
-            new FileItem { Name = "Travel journal.pdf", FullPath = Path.Combine(root,"Documents","Travel journal.pdf"), Size = 104857600, Type = ".pdf" }
+            new FileItem { Name = "Reference guide.pdf", FullPath = Path.Combine(root,"Documents","Reference guide.pdf"), Size = 104857600, Type = ".pdf" }
         });
+        results.TopFiles.Sort((a, b) => b.Size.CompareTo(a.Size));
         foreach (var (name, size) in folders)
             results.FileTypeStatistics.Add(new FileTypeStats { Category = name == "Photos" ? "Images" : name == "Projects" ? "Code" : name,
                 TotalSize = size, FileCount = name == "Videos" ? 48 : 6126, Percentage = 100.0 * size / results.Progress.BytesProcessed });
         return results;
+    }
+
+    private static void SaveStoreFrame(MainWindow window, string path)
+    {
+        Dispatcher.UIThread.RunJobs();
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        using var frame = window.CaptureRenderedFrame();
+        Assert.NotNull(frame);
+        frame.Save(path);
     }
     private sealed class DemoScanner(ScanResults result) : IFileSystemScanner
     {

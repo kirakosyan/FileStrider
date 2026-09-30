@@ -12,7 +12,7 @@ public class ExportService : IExportService
 {
     /// <summary>
     /// Exports the scan results to a CSV (Comma Separated Values) file with separate sections for files and folders.
-    /// Includes proper CSV escaping for fields containing special characters.
+    /// Includes scan metadata and proper CSV escaping for fields containing special characters.
     /// </summary>
     /// <param name="results">The scan results to export.</param>
     /// <param name="filePath">The file path where the CSV file should be saved.</param>
@@ -20,6 +20,12 @@ public class ExportService : IExportService
     public async Task ExportToCsvAsync(ScanResults results, string filePath)
     {
         using var writer = new StreamWriter(filePath);
+        var metadata = CreateMetadata(results);
+        await writer.WriteLineAsync("Scan Metadata");
+        await writer.WriteLineAsync("Field,Value");
+        foreach (var (field, value) in metadata.CsvFields())
+            await writer.WriteLineAsync($"{field},{EscapeCsvField(value)}");
+        await writer.WriteLineAsync();
         
         // Export top files
         await writer.WriteLineAsync("Top Files");
@@ -56,6 +62,7 @@ public class ExportService : IExportService
                 await writer.WriteLineAsync(FormattableString.Invariant($"{EscapeCsvField(stat.Extension)},{EscapeCsvField(stat.Category)},{stat.FileCount},{stat.TotalSize},{totalSizeInMB:F2},{stat.Percentage:F1}%,{stat.AverageSize}"));
             }
         }
+
     }
 
     /// <summary>
@@ -67,26 +74,15 @@ public class ExportService : IExportService
     /// <returns>A task that represents the asynchronous export operation.</returns>
     public async Task ExportToJsonAsync(ScanResults results, string filePath)
     {
+        var metadata = CreateMetadata(results);
         var exportData = new
         {
-            ExportedAt = DateTime.UtcNow,
-            results.RootPath,
-            ScanCompleted = results.IsCompleted,
-            ScanCancelled = results.WasCancelled,
-            ErrorMessage = results.ErrorMessage,
-            Progress = new
-            {
-                results.Progress.FilesScanned,
-                results.Progress.FoldersScanned,
-                results.Progress.BytesProcessed,
-                results.Progress.Elapsed,
-                results.Progress.SkippedItems,
-                results.Progress.InaccessibleItems,
-                results.Progress.OfflineItems,
-                results.Progress.ExcludedItems,
-                results.Progress.DepthLimitedDirectories,
-                results.Progress.HasIncompleteCoverage
-            },
+            metadata.ExportedAt,
+            metadata.RootPath,
+            metadata.ScanCompleted,
+            metadata.ScanCancelled,
+            metadata.ErrorMessage,
+            metadata.Progress,
             TopFiles = results.TopFiles.Select(f => new
             {
                 f.Name,
@@ -126,6 +122,42 @@ public class ExportService : IExportService
 
         var json = JsonSerializer.Serialize(exportData, options);
         await File.WriteAllTextAsync(filePath, json);
+    }
+
+    private static ScanMetadata CreateMetadata(ScanResults results)
+    {
+        var progress = results.Progress.CreateSnapshot();
+        return new(DateTime.UtcNow, results.RootPath, results.IsCompleted, results.WasCancelled, results.ErrorMessage,
+            new(progress.FilesScanned, progress.FoldersScanned, progress.BytesProcessed, progress.Elapsed,
+                progress.SkippedItems, progress.InaccessibleItems, progress.OfflineItems, progress.ExcludedItems,
+                progress.DepthLimitedDirectories, progress.HasIncompleteCoverage));
+    }
+
+    private sealed record ProgressMetadata(int FilesScanned, int FoldersScanned, long BytesProcessed, TimeSpan Elapsed,
+        int SkippedItems, int InaccessibleItems, int OfflineItems, int ExcludedItems,
+        int DepthLimitedDirectories, bool HasIncompleteCoverage);
+
+    private sealed record ScanMetadata(DateTime ExportedAt, string RootPath, bool ScanCompleted, bool ScanCancelled,
+        string? ErrorMessage, ProgressMetadata Progress)
+    {
+        public IEnumerable<(string Field, string Value)> CsvFields()
+        {
+            yield return ("Exported At (UTC)", ExportedAt.ToString("O", CultureInfo.InvariantCulture));
+            yield return ("Root Path", RootPath);
+            yield return ("Scan Completed", ScanCompleted.ToString());
+            yield return ("Scan Cancelled", ScanCancelled.ToString());
+            yield return ("Error Message", ErrorMessage ?? "");
+            yield return ("Files Scanned", Progress.FilesScanned.ToString(CultureInfo.InvariantCulture));
+            yield return ("Folders Scanned", Progress.FoldersScanned.ToString(CultureInfo.InvariantCulture));
+            yield return ("Bytes Processed", Progress.BytesProcessed.ToString(CultureInfo.InvariantCulture));
+            yield return ("Elapsed", Progress.Elapsed.ToString("c", CultureInfo.InvariantCulture));
+            yield return ("Skipped Items", Progress.SkippedItems.ToString(CultureInfo.InvariantCulture));
+            yield return ("Inaccessible Items", Progress.InaccessibleItems.ToString(CultureInfo.InvariantCulture));
+            yield return ("Offline Items", Progress.OfflineItems.ToString(CultureInfo.InvariantCulture));
+            yield return ("Excluded Items", Progress.ExcludedItems.ToString(CultureInfo.InvariantCulture));
+            yield return ("Depth Limited Directories", Progress.DepthLimitedDirectories.ToString(CultureInfo.InvariantCulture));
+            yield return ("Incomplete Coverage", Progress.HasIncompleteCoverage.ToString());
+        }
     }
 
     /// <summary>

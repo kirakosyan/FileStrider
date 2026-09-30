@@ -68,12 +68,12 @@
                         <WrapPanel>
                             <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,6">
                                 <TextBlock Text="{Binding DepthLabel}" VerticalAlignment="Center"/>
-                                <NumericUpDown Value="{Binding MaxDepth}" Minimum="0" Maximum="10000" FormatString="0" Width="90"/>
+                                <NumericUpDown Value="{Binding MaxDepth}" Minimum="0" Maximum="10000" FormatString="0" Width="120"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,6">
                                 <TextBlock Text="{Binding ConcurrencyLabel}" VerticalAlignment="Center"/>
                                 <NumericUpDown Value="{Binding ConcurrencyLimit}" Minimum="1"
-                                               Maximum="{Binding MaximumConcurrency}" FormatString="0" Width="80"/>
+                                               Maximum="{Binding MaximumConcurrency}" FormatString="0" Width="120"/>
                             </StackPanel>
                             <CheckBox Content="{Binding FollowSymlinksLabel}" IsChecked="{Binding FollowSymlinks}"/>
                         </WrapPanel>

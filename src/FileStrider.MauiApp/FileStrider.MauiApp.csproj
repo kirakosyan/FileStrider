@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <AssemblyTitle>FileStrider</AssemblyTitle>
+    <AssemblyTitle>File Strider</AssemblyTitle>
     <PackageProjectUrl>https://github.com/kirakosyan/FileStrider</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/kirakosyan/FileStrider</RepositoryUrl>
@@ -14,11 +14,11 @@
     
     <!-- Application metadata -->
     <ApplicationId>com.kirakosyan.filestrider</ApplicationId>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.1.2</Version>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <FileVersion>1.1.2.0</FileVersion>
     <Authors>Armen Kirakosyan</Authors>
-    <Description>Big File and Folder Discovery Tool</Description>
+    <Description>Find large files and folders, explore storage with an interactive treemap, and export reports.</Description>
     <Product>File Strider</Product>
   </PropertyGroup>
 
