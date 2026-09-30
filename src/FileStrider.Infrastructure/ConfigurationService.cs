@@ -64,12 +64,17 @@ public class ConfigurationService : IConfigurationService
         }
         finally
         {
-            try { if (File.Exists(temporary)) DeleteTemporaryFile(temporary); }
+            try { DeleteTemporaryFile(temporary); }
             finally { _gate.Release(); }
         }
     }
 
-    protected virtual void DeleteTemporaryFile(string path) => File.Delete(path);
+    internal static void DeleteTemporaryFile(string path)
+    {
+        try { File.Delete(path); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        { System.Diagnostics.Trace.TraceWarning($"Cannot delete temporary settings file: {ex.Message}"); }
+    }
 
     private static ScanOptions Normalize(ScanOptions options) => options with
     {

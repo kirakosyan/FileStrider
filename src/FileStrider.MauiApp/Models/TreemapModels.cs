@@ -60,26 +60,28 @@ public static class TreemapLayout
         var all = items.ToList();
         foreach (var item in all) { item.Bounds = default; item.Percentage = 0; }
         var positive = all.Where(i => i.Size > 0).OrderByDescending(i => i.Size).ToList();
-        var total = positive.Sum(i => (double)i.Size);
+        // Every range total is exact and available in O(1), including tiny ranges
+        // beside dominant items. Decimal can hold the sum of any List<long>.
+        var sums = new decimal[positive.Count + 1];
+        for (var i = 0; i < positive.Count; i++) sums[i + 1] = sums[i] + positive[i].Size;
+        var total = sums[^1];
         if (total == 0 || bounds.Width <= 0 || bounds.Height <= 0 ||
             !double.IsFinite(bounds.Width) || !double.IsFinite(bounds.Height)) return all;
-        foreach (var item in positive) item.Percentage = 100.0 * item.Size / total;
-        Split(positive, 0, positive.Count, total, bounds);
+        foreach (var item in positive) item.Percentage = (double)(100m * item.Size / total);
+        Split(positive, sums, 0, positive.Count, bounds);
         return all;
     }
 
     // Balanced binary partitions preserve area exactly and keep every tile inside its parent.
-    private static void Split(List<TreemapItem> items, int start, int count, double total, Avalonia.Rect bounds)
+    private static void Split(List<TreemapItem> items, decimal[] sums, int start, int count, Avalonia.Rect bounds)
     {
         if (count == 1) { items[start].Bounds = bounds; return; }
+        var total = sums[start + count] - sums[start];
         var leftCount = 1;
-        double leftSize = items[start].Size;
-        while (leftCount < count - 1 && leftSize + items[start + leftCount].Size <= total / 2)
-            leftSize += items[start + leftCount++].Size;
-        // Subtraction can round a small, positive remainder down to zero.
-        double rightSize = 0;
-        for (var i = leftCount; i < count; i++) rightSize += items[start + i].Size;
-        var ratio = leftSize / (leftSize + rightSize);
+        while (leftCount < count - 1 && sums[start + leftCount + 1] - sums[start] <= total / 2)
+            leftCount++;
+        var leftSize = sums[start + leftCount] - sums[start];
+        var ratio = (double)(leftSize / total);
         Avalonia.Rect left, right;
         if (bounds.Width >= bounds.Height)
         {
@@ -93,8 +95,8 @@ public static class TreemapLayout
             left = new(bounds.X, bounds.Y, bounds.Width, height);
             right = new(bounds.X, bounds.Y + height, bounds.Width, Math.Max(0, bounds.Height - height));
         }
-        Split(items, start, leftCount, leftSize, left);
-        Split(items, start + leftCount, count - leftCount, rightSize, right);
+        Split(items, sums, start, leftCount, left);
+        Split(items, sums, start + leftCount, count - leftCount, right);
     }
 }
 
