@@ -1,143 +1,214 @@
-# Microsoft Store description — File Strider 1.1.1
+# Microsoft Store description — File Strider 1.1.2
 
-Updated 6 September 2026 for product `9PD3M0MHZ8TC`.
+Updated 1 October 2026 for product `9PD3M0MHZ8TC`.
 
 Category: Utilities + tools / File managers. Secondary category: Productivity.
 Free, publicly discoverable, Windows desktop on x64 and ARM64.
 Support: https://github.com/kirakosyan/FileStrider/issues
 Privacy: [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
-Version 1.1.1 release notes: [RELEASE_NOTES.md](RELEASE_NOTES.md).
+Release notes: [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
-The Store also includes localized release notes and eight feature bullets per language. Screenshots render the actual application using synthetic sample data, with no personal filesystem paths. English includes light and dark themes; French, Spanish, and Swedish use localized light-theme screenshots.
+Descriptions match the application's size-ranked lists; the interface does not offer arbitrary list sorting. Store screenshots render the actual application with synthetic data rooted at `C:\Sample Storage`. No real filesystem, account, recent-folder history or personal identity is shown. Each language has four desktop screenshots: overview, dark theme, folder navigation and scan options.
+
+Generate the PNG files with `FILESTRIDER_SCREENSHOT_DIR` set while running `WindowRendersWithoutClippedPrimaryControls` in the render test suite. Inspect every image before upload.
 
 ## English (en-US)
 
 ### Short description
 
-See what takes up storage. Explore large files and folders, drill into a treemap, and export reports. Free, open source, and offline.
+See where your storage goes. Find large files and folders, explore an interactive treemap, and export detailed reports. Free, open source, and offline.
 
 ### Description
 
-File Strider helps you understand where your storage goes. Choose a folder or drive, scan its file metadata, and explore the largest files and folders in a sortable list and interactive treemap.
+Find the files and folders taking up the most space.
 
-• Drill into folders in the treemap and use Up to return to the parent.
-• See a breakdown by file type, including videos, images, documents, archives, and code.
-• Control hidden files, exclusions, scan depth, and minimum size in B, KiB, MiB, or GiB.
-• Cancel a scan and keep the partial results. Coverage details show excluded, inaccessible, offline, and depth-limited locations.
-• Return to recent folders with your language and scan preferences saved.
-• Export CSV or JSON reports and open selected locations in File Explorer.
-• Choose English, French, Spanish, or Swedish, with light and dark themes.
+File Strider scans a folder or drive and presents its largest items in size-ranked lists and an interactive treemap. Explore folders, compare file types, and open a result in File Explorer to decide what to keep.
 
-Free and open source. Scans run on your device without telemetry, ads, or uploads. File Strider reads metadata; it does not inspect file contents or automatically delete or modify scanned files. Settings and recent folder paths are stored locally.
+Make each scan fit your needs with hidden-file controls, exclusion patterns, a depth limit, and size filters. Cancel a scan and retain partial results. Coverage details show what was excluded or could not be scanned.
 
-Sizes represent logical file sizes rather than allocated disk space. Offline cloud placeholders are skipped. Exported reports can contain file paths; review them before sharing.
+Export CSV or JSON reports with scan status, totals, and coverage. Save preferences and revisit recent folders. Available in English, French, Spanish, and Swedish, with light and dark themes.
+
+Free and open source. Runs locally without ads, telemetry, or scan-data uploads. It reads file metadata, not contents, and does not automatically delete or modify scanned files. Settings and recent folder paths are stored locally.
+
+Reported sizes are logical file sizes; allocated disk space may differ. Offline cloud placeholders are skipped. Exported reports include file paths, so review them before sharing.
 
 ### Product features
 
-- Find large files and folders
-- Interactive treemap with folder drill-down
+- Find the largest files and folders
+- Interactive treemap with folder navigation
 - Storage breakdown by file type
-- Filters, exclusions, and scan-depth controls
+- Size filters, exclusions, and scan-depth controls
 - Cancel scans and retain partial results
-- CSV and JSON reports
+- CSV and JSON reports with scan status and coverage
 - Recent folders and saved preferences
-- Offline; English, French, Spanish, and Swedish
+- Offline; four languages; light and dark themes
+
+### Search keywords
+
+disk usage; storage analyzer; large files; folder size; treemap; offline; CSV export
+
+### What's new
+
+Version 1.1.2
+• More accurate folder totals and paths when following links.
+• Correct folder timestamps and file-link sizes.
+• CSV reports now start with scan status, totals, and coverage.
+• Improved settings-save recovery and treemap stability.
+
+### Screenshot captions
+
+- Find the largest files and folders at a glance. Synthetic sample data.
+- Explore storage in dark mode. Synthetic sample data.
+- Drill into a folder to compare files in the treemap. Synthetic sample data.
+- Fine-tune scans with size filters, exclusions, and depth limits. Synthetic sample data.
 
 ## French (fr)
 
 ### Short description
 
-Découvrez ce qui occupe votre stockage. Explorez les fichiers et dossiers volumineux, naviguez dans une carte et exportez des rapports. Gratuit, open source et hors ligne.
+Découvrez ce qui occupe votre stockage. Repérez les fichiers volumineux, explorez une carte interactive et exportez des rapports. Gratuit, open source et hors ligne.
 
 ### Description
 
-File Strider vous aide à comprendre ce qui occupe votre espace de stockage. Choisissez un dossier ou un lecteur, analysez les métadonnées des fichiers et explorez les éléments les plus volumineux dans une liste triable et une carte interactive.
+Repérez les fichiers et dossiers qui occupent le plus d’espace.
 
-• Explorez les dossiers dans la carte et revenez au dossier parent.
-• Consultez la répartition par type : vidéos, images, documents, archives, code et autres.
-• Réglez les fichiers cachés, les exclusions, la profondeur et la taille minimale en B, KiB, MiB ou GiB.
-• Annulez une analyse en conservant les résultats partiels. Les détails indiquent les emplacements exclus, inaccessibles, hors ligne ou limités par la profondeur.
-• Retrouvez vos dossiers récents, votre langue et vos préférences enregistrées.
-• Exportez des rapports CSV ou JSON et ouvrez les emplacements dans l’Explorateur de fichiers.
-• Choisissez l’anglais, le français, l’espagnol ou le suédois, avec un thème clair ou sombre.
+File Strider analyse un dossier ou un lecteur et présente les éléments les plus volumineux dans des listes classées par taille et une carte interactive. Explorez les dossiers, comparez les types de fichiers et ouvrez un résultat dans l’Explorateur de fichiers pour décider quoi conserver.
 
-Gratuit et open source. Les analyses restent sur votre appareil, sans télémétrie, publicité ni transfert de données. File Strider lit les métadonnées ; il n’inspecte pas le contenu et ne supprime ni ne modifie automatiquement les fichiers analysés. Les paramètres et chemins récents sont enregistrés localement.
+Adaptez l’analyse avec les options de fichiers cachés, les exclusions, la profondeur et la taille minimale. Annulez une analyse en conservant les résultats partiels. Les détails de couverture indiquent les éléments exclus ou impossibles à analyser.
 
-Les tailles correspondent aux tailles logiques des fichiers, pas à l’espace alloué sur le disque. Les fichiers cloud disponibles uniquement en ligne sont ignorés. Les rapports exportés peuvent contenir des chemins : vérifiez-les avant de les partager.
+Exportez des rapports CSV ou JSON avec l’état de l’analyse, les totaux et les détails de couverture. Enregistrez vos préférences et retrouvez vos dossiers récents. Disponible en anglais, français, espagnol et suédois, avec des thèmes clair et sombre.
+
+Gratuit et open source. Fonctionne localement, sans publicité, télémétrie ni transfert des données analysées. L’application lit les métadonnées, pas le contenu, et ne supprime ni ne modifie automatiquement les fichiers analysés. Les paramètres et chemins récents restent enregistrés localement.
+
+Les tailles sont logiques ; l’espace alloué sur le disque peut différer. Les fichiers cloud disponibles uniquement en ligne sont ignorés. Les rapports incluent des chemins : vérifiez-les avant de les partager.
 
 ### Product features
 
-- Repérez les fichiers et dossiers volumineux
+- Repérez les fichiers et dossiers les plus volumineux
 - Carte interactive avec navigation dans les dossiers
 - Répartition du stockage par type de fichier
-- Filtres, exclusions et profondeur réglables
-- Annulez et conservez les résultats partiels
-- Rapports CSV et JSON
+- Filtres de taille, exclusions et profondeur réglables
+- Annulez une analyse et conservez les résultats partiels
+- Rapports CSV et JSON avec état et couverture de l’analyse
 - Dossiers récents et préférences enregistrées
-- Hors ligne ; anglais, français, espagnol et suédois
+- Hors ligne ; quatre langues ; thèmes clair et sombre
+
+### Search keywords
+
+analyse stockage; taille dossiers; fichiers volumineux; espace disque; carte stockage; hors ligne; export CSV
+
+### What's new
+
+Version 1.1.2
+• Totaux et chemins des dossiers plus précis lors du suivi des liens.
+• Dates des dossiers et tailles des fichiers liés corrigées.
+• Les rapports CSV commencent par l’état, les totaux et la couverture de l’analyse.
+• Enregistrement des paramètres et stabilité de la carte améliorés.
+
+### Screenshot captions
+
+- Repérez les fichiers et dossiers volumineux. Données de démonstration fictives.
+- Explorez le stockage avec le thème sombre. Données de démonstration fictives.
+- Explorez un dossier pour comparer les fichiers dans la carte. Données fictives.
+- Adaptez la taille minimale, les exclusions et la profondeur. Données fictives.
 
 ## Spanish (es)
 
 ### Short description
 
-Descubre qué ocupa tu almacenamiento. Explora archivos y carpetas grandes, navega por un mapa y exporta informes. Gratis, de código abierto y sin conexión.
+Descubre qué ocupa tu almacenamiento. Encuentra archivos grandes, explora un mapa interactivo y exporta informes. Gratis, de código abierto y sin conexión.
 
 ### Description
 
-File Strider te ayuda a entender qué ocupa tu espacio de almacenamiento. Elige una carpeta o unidad, analiza los metadatos y explora los archivos y carpetas más grandes en una lista ordenable y un mapa interactivo.
+Encuentra los archivos y carpetas que ocupan más espacio.
 
-• Explora carpetas en el mapa y vuelve a la carpeta superior.
-• Consulta el desglose por tipo: vídeos, imágenes, documentos, archivos comprimidos, código y más.
-• Ajusta archivos ocultos, exclusiones, profundidad y tamaño mínimo en B, KiB, MiB o GiB.
-• Cancela un análisis y conserva los resultados parciales. Los detalles indican ubicaciones excluidas, inaccesibles, sin conexión o limitadas por la profundidad.
-• Vuelve a carpetas recientes con tu idioma y preferencias guardados.
-• Exporta informes CSV o JSON y abre ubicaciones en el Explorador de archivos.
-• Elige inglés, francés, español o sueco, con temas claro y oscuro.
+File Strider analiza una carpeta o unidad y muestra los elementos más grandes en listas ordenadas por tamaño y un mapa interactivo. Explora carpetas, compara tipos de archivo y abre un resultado en el Explorador de archivos para decidir qué conservar.
 
-Gratis y de código abierto. Los análisis se ejecutan en tu dispositivo, sin telemetría, anuncios ni envíos de datos. File Strider lee metadatos; no inspecciona el contenido ni elimina o modifica automáticamente los archivos analizados. Los ajustes y las rutas recientes se guardan localmente.
+Personaliza el análisis con opciones de archivos ocultos, exclusiones, profundidad y tamaño mínimo. Cancela un análisis y conserva los resultados parciales. Los detalles de cobertura muestran los elementos excluidos o que no se pudieron analizar.
 
-Los tamaños son lógicos, no el espacio asignado en disco. Se omiten los archivos de la nube que solo están disponibles en línea. Los informes exportados pueden contener rutas: revísalos antes de compartirlos.
+Exporta informes CSV o JSON con el estado del análisis, los totales y los detalles de cobertura. Guarda tus preferencias y vuelve a carpetas recientes. Disponible en inglés, francés, español y sueco, con temas claro y oscuro.
+
+Gratis y de código abierto. Funciona localmente, sin anuncios, telemetría ni envío de datos del análisis. Lee los metadatos, no el contenido, y no elimina ni modifica automáticamente los archivos analizados. Los ajustes y las rutas recientes se guardan localmente.
+
+Los tamaños son lógicos; el espacio asignado en disco puede variar. Se omiten los archivos de la nube disponibles solo en línea. Los informes incluyen rutas: revísalos antes de compartirlos.
 
 ### Product features
 
-- Encuentra archivos y carpetas grandes
+- Encuentra los archivos y carpetas más grandes
 - Mapa interactivo con navegación por carpetas
 - Desglose del almacenamiento por tipo de archivo
-- Filtros, exclusiones y profundidad ajustables
-- Cancela y conserva los resultados parciales
-- Informes CSV y JSON
+- Filtros de tamaño, exclusiones y profundidad ajustables
+- Cancela análisis y conserva los resultados parciales
+- Informes CSV y JSON con estado y cobertura del análisis
 - Carpetas recientes y preferencias guardadas
-- Sin conexión; inglés, francés, español y sueco
+- Sin conexión; cuatro idiomas; temas claro y oscuro
+
+### Search keywords
+
+uso de disco; analizar almacenamiento; archivos grandes; tamaño carpetas; mapa almacenamiento; sin conexión; exportar CSV
+
+### What's new
+
+Versión 1.1.2
+• Totales y rutas de carpetas más precisos al seguir enlaces.
+• Fechas de carpetas y tamaños de archivos enlazados corregidos.
+• Los informes CSV comienzan con el estado, los totales y la cobertura del análisis.
+• Mejor recuperación al guardar ajustes y mayor estabilidad del mapa.
+
+### Screenshot captions
+
+- Encuentra los archivos y carpetas más grandes. Datos de demostración ficticios.
+- Explora el almacenamiento con el tema oscuro. Datos de demostración ficticios.
+- Explora una carpeta y compara sus archivos en el mapa. Datos ficticios.
+- Ajusta el tamaño mínimo, las exclusiones y la profundidad. Datos ficticios.
 
 ## Swedish (sv)
 
 ### Short description
 
-Se vad som tar upp lagringsutrymme. Utforska stora filer och mappar, navigera i en trädkarta och exportera rapporter. Gratis, öppen källkod och offline.
+Se vad som tar upp lagringsutrymme. Hitta stora filer, utforska en interaktiv trädkarta och exportera rapporter. Gratis, öppen källkod och offline.
 
 ### Description
 
-File Strider hjälper dig att förstå vad som tar upp lagringsutrymme. Välj en mapp eller enhet, skanna filernas metadata och utforska de största filerna och mapparna i en sorterbar lista och en interaktiv trädkarta.
+Hitta filerna och mapparna som tar upp mest utrymme.
 
-• Utforska mappar i trädkartan och gå tillbaka till den överordnade mappen.
-• Se fördelningen efter filtyp: videor, bilder, dokument, arkiv, kod och annat.
-• Anpassa dolda filer, undantag, skanningsdjup och minsta storlek i B, KiB, MiB eller GiB.
-• Avbryt en skanning och behåll delresultaten. Detaljer visar undantagna, otillgängliga och offlineplatser samt platser som begränsats av skanningsdjupet.
-• Återvänd till senaste mappar med sparat språk och sparade inställningar.
-• Exportera CSV- eller JSON-rapporter och öppna platser i Utforskaren.
-• Välj engelska, franska, spanska eller svenska, med ljust eller mörkt tema.
+File Strider skannar en mapp eller enhet och visar de största objekten i listor sorterade efter storlek och en interaktiv trädkarta. Utforska mappar, jämför filtyper och öppna ett resultat i Utforskaren för att bestämma vad du vill behålla.
 
-Gratis och öppen källkod. Skanningar sker på din enhet utan telemetri, annonser eller uppladdningar. File Strider läser metadata; appen granskar inte filinnehåll och tar inte automatiskt bort eller ändrar skannade filer. Inställningar och senaste mappsökvägar sparas lokalt.
+Anpassa skanningen med inställningar för dolda filer, undantag, djup och minsta storlek. Avbryt en skanning och behåll delresultaten. Täckningsdetaljer visar vad som undantogs eller inte kunde skannas.
 
-Storlekar avser logisk filstorlek, inte tilldelat diskutrymme. Molnfiler som bara finns online hoppas över. Exporterade rapporter kan innehålla sökvägar; granska dem innan du delar dem.
+Exportera CSV- eller JSON-rapporter med skanningsstatus, totalsummor och täckningsdetaljer. Spara inställningar och återvänd till senaste mappar. Finns på engelska, franska, spanska och svenska, med ljust och mörkt tema.
+
+Gratis och öppen källkod. Körs lokalt utan annonser, telemetri eller uppladdning av skanningsdata. Appen läser metadata, inte filinnehåll, och tar inte automatiskt bort eller ändrar skannade filer. Inställningar och senaste mappsökvägar sparas lokalt.
+
+Storlekarna är logiska; tilldelat diskutrymme kan skilja sig. Molnfiler som bara finns online hoppas över. Rapporterna innehåller sökvägar, så granska dem innan du delar dem.
 
 ### Product features
 
-- Hitta stora filer och mappar
+- Hitta de största filerna och mapparna
 - Interaktiv trädkarta med mappnavigering
 - Lagringsfördelning efter filtyp
-- Filter, undantag och justerbart skanningsdjup
-- Avbryt och behåll delresultaten
-- CSV- och JSON-rapporter
+- Storleksfilter, undantag och justerbart skanningsdjup
+- Avbryt skanningar och behåll delresultaten
+- CSV- och JSON-rapporter med status och täckningsdetaljer
 - Senaste mappar och sparade inställningar
-- Offline; engelska, franska, spanska och svenska
+- Offline; fyra språk; ljust och mörkt tema
+
+### Search keywords
+
+diskutrymme; lagringsanalys; stora filer; mappstorlek; trädkarta; offline; CSV-export
+
+### What's new
+
+Version 1.1.2
+• Mer korrekta mapptotaler och sökvägar när länkar följs.
+• Rättade mapptidsstämplar och storlekar för länkade filer.
+• CSV-rapporter börjar nu med status, totalsummor och täckningsdetaljer.
+• Bättre återhämtning när inställningar sparas och stabilare trädkarta.
+
+### Screenshot captions
+
+- Hitta de största filerna och mapparna. Fiktiva exempeldata.
+- Utforska lagringen med mörkt tema. Fiktiva exempeldata.
+- Utforska en mapp och jämför filerna i trädkartan. Fiktiva exempeldata.
+- Anpassa minsta storlek, undantag och skanningsdjup. Fiktiva exempeldata.
+
