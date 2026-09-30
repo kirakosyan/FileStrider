@@ -211,4 +211,3 @@ Version 1.1.2
 - Utforska lagringen med mörkt tema. Fiktiva exempeldata.
 - Utforska en mapp och jämför filerna i trädkartan. Fiktiva exempeldata.
 - Anpassa minsta storlek, undantag och skanningsdjup. Fiktiva exempeldata.
-
