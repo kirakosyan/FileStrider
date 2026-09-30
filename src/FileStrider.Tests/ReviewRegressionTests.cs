@@ -98,6 +98,28 @@ public class ReviewRegressionTests
         Assert.True(results.Progress.HasIncompleteCoverage);
     }
 
+    [UnixFact]
+    public async Task FollowingAFileLinkUsesTheTargetsSizeAndTimestamp()
+    {
+        using var fixture = new TestDirectory();
+        var target = fixture.File("target/file.txt", 19);
+        var modified = new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(target, modified);
+        var root = Directory.CreateDirectory(Path.Combine(fixture.Path, "scan")).FullName;
+        var link = Path.Combine(root, "link.txt");
+        File.CreateSymbolicLink(link, target);
+        var results = await ScanLinksAsync(root);
+
+        var file = Assert.Single(results.TopFiles);
+        Assert.Equal(link, file.FullPath);
+        Assert.Equal(19, file.Size);
+        Assert.Equal(modified, file.LastModified.ToUniversalTime());
+        Assert.Equal(19, results.Progress.BytesProcessed);
+        var withoutLinks = await ScanLinksAsync(root, follow: false);
+        Assert.Empty(withoutLinks.TopFiles);
+        Assert.Equal(1, withoutLinks.Progress.ExcludedItems);
+    }
+
     [Fact]
     public async Task SelectedRootThroughALinkedAncestorWorksWithoutFollowingChildLinks()
     {
@@ -366,8 +388,13 @@ public class ReviewRegressionTests
     private sealed class DirectoryLink(string path) : IDisposable
     {
         public string Path { get; } = path;
-        // Remove links before their targets; Windows cannot always delete dangling junctions recursively.
-        public void Dispose() => new DirectoryInfo(Path).Delete();
+        // Unix unlinks the symlink itself, including when its target is missing or cyclic.
+        // Windows directory junctions need non-recursive directory deletion.
+        public void Dispose()
+        {
+            if (OperatingSystem.IsWindows()) new DirectoryInfo(Path).Delete();
+            else File.Delete(Path);
+        }
     }
 
 }
@@ -375,4 +402,9 @@ public class ReviewRegressionTests
 public sealed class WindowsFactAttribute : FactAttribute
 {
     public WindowsFactAttribute() { if (!OperatingSystem.IsWindows()) Skip = "Requires Windows filesystem semantics; exercised by the Windows CI job."; }
+}
+
+public sealed class UnixFactAttribute : FactAttribute
+{
+    public UnixFactAttribute() { if (OperatingSystem.IsWindows()) Skip = "Requires Unix symlinks; exercised by the Linux and macOS CI jobs."; }
 }

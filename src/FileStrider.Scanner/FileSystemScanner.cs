@@ -203,7 +203,11 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                     }
                     else
                     {
-                        entry = new Entry(info.Name, info.FullName, ((FileInfo)info).Length, false, info.LastWriteTime);
+                        // Unix reports a broken directory link as a file and Length as
+                        // the link text's length. Read the final target's metadata instead.
+                        var file = (attributes & FileAttributes.ReparsePoint) != 0 && info.ResolveLinkTarget(true) is FileInfo target
+                            ? target : (FileInfo)info;
+                        entry = new Entry(info.Name, info.FullName, file.Length, false, file.LastWriteTime);
                     }
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
