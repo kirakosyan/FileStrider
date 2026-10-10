@@ -31,7 +31,21 @@ public static class ScanComparison
     }
 
     private static bool Complete(ScanResults scan) => scan.IsCompleted && !scan.WasCancelled &&
-        scan.ErrorMessage is null && !scan.Progress.HasIncompleteCoverage;
+        scan.ErrorMessage is null;
+
+    public static string? CoverageWarning(ScanResults before, ScanResults after)
+    {
+        if (before.OmittedCoverageIssues > 0 || after.OmittedCoverageIssues > 0 ||
+            before.CoverageIssues.Count != before.Progress.SkippedItems || after.CoverageIssues.Count != after.Progress.SkippedItems)
+            return "CompareCoverageUnknown";
+        var issues = before.CoverageIssues.GroupBy(i => i.FullPath, Paths).ToDictionary(g => g.Key,
+            g => g.Select(i => (i.Reason, i.IsDirectory)).OrderBy(i => i.Reason).ThenBy(i => i.IsDirectory).ToArray(), Paths);
+        var current = after.CoverageIssues.GroupBy(i => i.FullPath, Paths).ToList();
+        if (issues.Count != current.Count || current.Any(g => !issues.TryGetValue(g.Key, out var previous) ||
+            !previous.SequenceEqual(g.Select(i => (i.Reason, i.IsDirectory)).OrderBy(i => i.Reason).ThenBy(i => i.IsDirectory))))
+            return "CompareCoverageChanged";
+        return before.Progress.HasIncompleteCoverage || after.Progress.HasIncompleteCoverage ? "CompareCoveragePartial" : null;
+    }
 }
 
 public static class DeveloperStorageAnalysis
@@ -46,7 +60,12 @@ public static class DeveloperStorageAnalysis
     public static IReadOnlyList<StorageInsight> Analyze(ScanResults results)
     {
         var paths = new HashSet<string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-        var candidates = results.Folders.Where(f => f.RecursiveSize > 0).Select(f => new
+        var projects = new HashSet<string>(results.ProjectDirectories, paths.Comparer);
+        // Only suggest folders backed by project-marker metadata captured during the scan.
+        // In particular, OS bin directories and AppData/Local/Packages are not project dependencies.
+        var candidates = results.Folders.Where(f => f.RecursiveSize > 0 &&
+            (projects.Contains(Path.GetDirectoryName(f.FullPath) ?? "") ||
+             (f.Name is ".venv" or "venv" && projects.Contains(f.FullPath)))).Select(f => new
         {
             Folder = f,
             Kind = Dependencies.Contains(f.Name) ? "InsightDependencies" : Builds.Contains(f.Name) ? "InsightBuilds" :

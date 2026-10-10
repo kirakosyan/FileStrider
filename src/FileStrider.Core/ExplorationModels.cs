@@ -35,9 +35,25 @@ public sealed class SavedScan
     public ScanResults Results { get; init; } = new();
 }
 
-public sealed record SavedScanInfo(string Id, DateTimeOffset ScannedAt, string RootPath, long Bytes)
+public enum ScanStatus { Complete, Partial, Cancelled, Failed }
+
+public sealed record SavedScanInfo(string Id, DateTimeOffset ScannedAt, string RootPath, long Bytes, ScanStatus Status = ScanStatus.Complete)
 {
-    public string DisplayName => $"{ScannedAt.ToLocalTime():g} · {ByteSize.Format(Bytes)} · {RootPath}";
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? StatusLabel { get; init; }
+    public string DisplayName => $"{ScannedAt.ToLocalTime():g} · {StatusLabel ?? Status.ToString()} · {ByteSize.Format(Bytes)} · {RootPath}";
+    public static ScanStatus StatusOf(ScanResults results) => results.ErrorMessage is not null ? ScanStatus.Failed :
+        results.WasCancelled ? ScanStatus.Cancelled : !results.IsCompleted || results.Progress.HasIncompleteCoverage ? ScanStatus.Partial : ScanStatus.Complete;
+}
+
+public static class ProjectMarkers
+{
+    private static readonly HashSet<string> Names = new(StringComparer.OrdinalIgnoreCase)
+        { "package.json", "Cargo.toml", "pyproject.toml", "setup.py", "pyvenv.cfg", "composer.json", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts", "CMakeLists.txt" };
+    private static readonly HashSet<string> Extensions = new(StringComparer.OrdinalIgnoreCase)
+        { ".csproj", ".fsproj", ".vbproj", ".sln", ".slnx" };
+    public static bool IsMarker(string name) => Names.Contains(name) ||
+        Extensions.Contains(Path.GetExtension(name));
 }
 
 public sealed record FolderChange(string FullPath, long Before, long After)

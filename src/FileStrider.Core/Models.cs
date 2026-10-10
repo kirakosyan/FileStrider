@@ -237,6 +237,7 @@ public class ScanProgress
 public class ScanResults
 {
     public DateTimeOffset ScannedAt { get; init; } = DateTimeOffset.UtcNow;
+    public List<string> ProjectDirectories { get; init; } = new();
     public ScanOptions? Options { get; init; }
     public List<CoverageIssue> CoverageIssues { get; init; } = new();
     public int OmittedCoverageIssues { get; set; }

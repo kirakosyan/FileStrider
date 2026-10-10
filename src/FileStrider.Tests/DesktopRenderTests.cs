@@ -149,6 +149,7 @@ public class DesktopRenderTests
         using var fixture = new TestDirectory();
         var result = DemoResults();
         result.CoverageIssues.Add(new(Path.Combine(result.RootPath, "Restricted"), FileStrider.Core.Models.CoverageReason.Inaccessible, true));
+        result.ProjectDirectories.Add(result.RootPath);
         result.Folders.Add(new FileStrider.Core.Models.FolderItem { Name = "node_modules", FullPath = Path.Combine(result.RootPath, "node_modules"), RecursiveSize = 1000000 });
         using var vm = TestModels.Create(new DemoScanner(result), new ScanOptions { RootPath = fixture.Path });
         await vm.Initialization;
@@ -168,6 +169,7 @@ public class DesktopRenderTests
             for (var tab = 0; tab < 5; tab++)
             {
                 vm.ResultsTabIndex = tab;
+                await vm.ExplorerLoading;
                 Dispatcher.UIThread.RunJobs();
                 AvaloniaHeadlessPlatform.ForceRenderTimerTick();
                 Assert.Equal(vm[new[] { "Overview", "Explorer", "History", "Insights", "Coverage" }[tab]],
@@ -202,13 +204,53 @@ public class DesktopRenderTests
         try
         {
             window.Show(); map.Focus();
-            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.ArrowRight, Avalonia.Input.RawInputModifiers.None);
             Assert.Same(first, map.SelectedItem);
             window.KeyPressQwerty(Avalonia.Input.PhysicalKey.ArrowRight, Avalonia.Input.RawInputModifiers.None);
             window.KeyPressQwerty(Avalonia.Input.PhysicalKey.Enter, Avalonia.Input.RawInputModifiers.None);
             Assert.Same(second, activated);
             window.KeyPressQwerty(Avalonia.Input.PhysicalKey.Backspace, Avalonia.Input.RawInputModifiers.None);
             Assert.True(up);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public void TreemapKeepsHintsAndRepaintsWhenFocusChanges()
+    {
+        var first = new FileStrider.MauiApp.Models.TreemapItem { Name = "folder", Size = 50 };
+        var map = new TreemapControl { Width = 300, Height = 200, Items = [first], HintText = "Arrow keys select tiles" };
+        var button = new Button { Content = "Other control" };
+        var window = new Window { Content = new StackPanel { Children = { map, button } } };
+        byte[] Frame()
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            using var frame = window.CaptureRenderedFrame();
+            using var stream = new MemoryStream();
+            frame!.Save(stream);
+            return stream.ToArray();
+        }
+        try
+        {
+            window.Show(); map.Focus();
+            Assert.Same(first, map.SelectedItem);
+            Frame();
+            var position = map.TranslatePoint(new Point(100, 100), window)!.Value;
+            window.MouseMove(position);
+            Assert.Contains(map.HintText, ToolTip.GetTip(map)!.ToString());
+            Assert.Contains("folder", ToolTip.GetTip(map)!.ToString());
+            window.MouseMove(new Point(400, 400));
+            Assert.Equal(map.HintText, ToolTip.GetTip(map));
+            map.Items.Clear(); map.Items.Add(first);
+            map.HintText = "Les flèches sélectionnent";
+            Assert.Equal(map.HintText, ToolTip.GetTip(map));
+            button.Focus();
+            var unfocused = Frame();
+            map.Focus();
+            var focused = Frame();
+            Assert.False(unfocused.SequenceEqual(focused));
+            button.Focus();
+            Assert.True(unfocused.SequenceEqual(Frame()));
         }
         finally { window.Close(); }
     }

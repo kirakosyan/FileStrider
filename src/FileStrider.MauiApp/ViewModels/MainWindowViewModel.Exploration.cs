@@ -11,16 +11,23 @@ public partial class MainWindowViewModel
 {
     private readonly IFolderContentService? _folderContentService;
     private readonly IScanHistoryService? _historyService;
+    private readonly SemaphoreSlim _historyRefresh = new(1, 1);
     private CancellationTokenSource? _explorerCancellation;
+    private CancellationTokenSource? _filterCancellation;
+    private string? _explorerPath;
+    private ScanResults? _explorerResults;
+    private (int Files, int Issues)? _explorerCounts;
     private List<ExplorerRow> _explorerRows = [];
+    private List<ExplorerRow> _sortedExplorerRows = [];
     public Task ExplorerLoading { get; private set; } = Task.CompletedTask;
+    public Task ExplorerFiltering { get; private set; } = Task.CompletedTask;
     public string this[string key] => _localizationService.GetString(key);
-    public ObservableCollection<ExplorerRow> ExplorerItems { get; } = [];
+    public ResultCollection<ExplorerRow> ExplorerItems { get; } = [];
     public ObservableCollection<Breadcrumb> Breadcrumbs { get; } = [];
     public ObservableCollection<SavedScanInfo> SavedScans { get; } = [];
-    public ObservableCollection<FolderChange> FolderChanges { get; } = [];
-    public ObservableCollection<InsightRow> Insights { get; } = [];
-    public ObservableCollection<CoverageRow> CoverageItems { get; } = [];
+    public ResultCollection<FolderChange> FolderChanges { get; } = [];
+    public ResultCollection<InsightRow> Insights { get; } = [];
+    public ResultCollection<CoverageRow> CoverageItems { get; } = [];
     public ObservableCollection<Choice> SortChoices { get; } = [];
     [ObservableProperty] private int resultsTabIndex;
     [ObservableProperty] private string explorerSearch = "";
@@ -50,9 +57,14 @@ public partial class MainWindowViewModel
     partial void OnFollowSymlinksChanged(bool value) => OnPropertyChanged(nameof(ActiveFilters));
     partial void OnIsScanningChanged(bool value) => OnPropertyChanged(nameof(CanSaveSnapshot));
     partial void OnCanScanChanged(bool value) => OnPropertyChanged(nameof(CanSaveSnapshot));
-    partial void OnExplorerSearchChanged(string value) => FilterExplorer();
-    partial void OnExtensionFilterChanged(string value) => FilterExplorer();
-    partial void OnExplorerSortChanged(Choice? value) => FilterExplorer();
+    partial void OnExplorerSearchChanged(string value) => QueueExplorerFilter();
+    partial void OnExtensionFilterChanged(string value) => QueueExplorerFilter();
+    partial void OnExplorerSortChanged(Choice? value) => SortExplorer();
+    partial void OnResultsTabIndexChanged(int value)
+    {
+        if (value == 1) EnsureExplorerLoaded();
+        else if (IsExplorerLoading) { _explorerCancellation?.Cancel(); _explorerPath = null; }
+    }
 
     [RelayCommand(CanExecute = nameof(CanScan))]
     private void ApplyFullPreset() => ApplyPreset(ScanPresets.Full(_loadedOptions));
@@ -76,22 +88,37 @@ public partial class MainWindowViewModel
         foreach (var key in new[] { "SizeDescending", "SizeAscending", "NameAscending", "NewestFirst" })
             SortChoices.Add(new(key, this[key]));
         ExplorerSort = SortChoices.First(c => c.Id == sort);
+        var selected = SelectedSavedScan?.Id;
+        for (var i = 0; i < SavedScans.Count; i++) SavedScans[i] = LocalizeSavedScan(SavedScans[i]);
+        SelectedSavedScan = SavedScans.FirstOrDefault(s => s.Id == selected);
+        if (_explorerCounts is { } counts) ExplorerStatus = string.Format(this["LiveFolderNotice"], counts.Files, counts.Issues);
+        else if (IsExplorerLoading) ExplorerStatus = this["LoadingFolder"];
         if (LastResults is not null) PopulateAnalysis(LastResults);
     }
 
     private void ClearExploration()
     {
         _explorerCancellation?.Cancel();
-        _explorerRows.Clear(); ExplorerItems.Clear(); Breadcrumbs.Clear(); FolderChanges.Clear();
+        _filterCancellation?.Cancel();
+        _explorerPath = null; _explorerResults = null; _explorerCounts = null;
+        _explorerRows.Clear(); _sortedExplorerRows.Clear(); ExplorerItems.Clear(); Breadcrumbs.Clear(); FolderChanges.Clear();
         Insights.Clear(); CoverageItems.Clear(); ExplorerStatus = ComparisonStatus = InsightsStatus = CoverageStatus = "";
         SelectedExplorerItem = null; SelectedCoverageItem = null; SelectedInsight = null;
         IsExplorerLoading = false;
         OnPropertyChanged(nameof(CanSaveSnapshot));
     }
 
+    private void EnsureExplorerLoaded(bool refresh = false)
+    {
+        if (ResultsTabIndex != 1 || LastResults is null || string.IsNullOrEmpty(TreemapPath)) return;
+        if (!refresh && PathComparer.Equals(_explorerPath, TreemapPath) && ReferenceEquals(_explorerResults, LastResults)) return;
+        StartExplorerNavigation(TreemapPath);
+    }
+
     private void StartExplorerNavigation(string path)
     {
         _explorerCancellation?.Cancel();
+        _explorerPath = path; _explorerResults = LastResults;
         var cancellation = new CancellationTokenSource();
         _explorerCancellation = cancellation;
         ExplorerLoading = LoadExplorerAsync(path, cancellation);
@@ -102,10 +129,11 @@ public partial class MainWindowViewModel
         var results = LastResults;
         if (results is null) { cancellation.Dispose(); return; }
         IsExplorerLoading = true;
+        _explorerCounts = null;
         SelectedExplorerItem = null;
         _explorerRows = (_children?[path] ?? []).Select(f => new ExplorerRow(f.Name, f.FullPath,
             f.RecursiveSize, "", f.LastModified, true)).ToList();
-        FilterExplorer();
+        SortExplorer();
         Breadcrumbs.Clear();
         var crumbs = new Stack<Breadcrumb>();
         for (string? current = path; current is not null && _folderIndex.ContainsKey(current); current = Path.GetDirectoryName(current))
@@ -123,7 +151,8 @@ public partial class MainWindowViewModel
             cancellation.Token.ThrowIfCancellationRequested();
             if (!ReferenceEquals(_explorerCancellation, cancellation) || !ReferenceEquals(LastResults, results)) return;
             _explorerRows.AddRange(contents.Files.Select(f => new ExplorerRow(f.Name, f.FullPath, f.Size, f.Type, f.LastModified, false)));
-            FilterExplorer();
+            SortExplorer();
+            _explorerCounts = (contents.Files.Count, contents.Issues.Count + contents.OmittedIssues);
             ExplorerStatus = string.Format(this["LiveFolderNotice"], contents.Files.Count, contents.Issues.Count + contents.OmittedIssues);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
@@ -135,22 +164,46 @@ public partial class MainWindowViewModel
         }
     }
 
-    private void FilterExplorer()
+    private void QueueExplorerFilter()
     {
-        var query = ExplorerSearch.Trim();
-        var extensions = ExtensionFilter.Split(new[] { ',', ';', ' ' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(e => e.StartsWith('.') ? e : "." + e).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var items = _explorerRows.Where(i => i.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) &&
-            (extensions.Count == 0 || !i.IsDirectory && extensions.Contains(i.Extension)));
-        items = ExplorerSort?.Id switch
+        _filterCancellation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        _filterCancellation = cancellation;
+        ExplorerFiltering = DebounceFilterAsync(cancellation);
+    }
+
+    private async Task DebounceFilterAsync(CancellationTokenSource cancellation)
+    {
+        try { await Task.Delay(175, cancellation.Token); FilterExplorer(); }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        finally
+        {
+            if (ReferenceEquals(_filterCancellation, cancellation)) _filterCancellation = null;
+            cancellation.Dispose();
+        }
+    }
+
+    private void SortExplorer()
+    {
+        IEnumerable<ExplorerRow> items = _explorerRows;
+        _sortedExplorerRows = (ExplorerSort?.Id switch
         {
             "SizeAscending" => items.OrderBy(i => i.Size).ThenBy(i => i.Name),
             "NameAscending" => items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase),
             "NewestFirst" => items.OrderByDescending(i => i.LastModified).ThenBy(i => i.Name),
             _ => items.OrderByDescending(i => i.Size).ThenBy(i => i.Name)
-        };
-        ExplorerItems.Clear();
-        foreach (var item in items) ExplorerItems.Add(item);
+        }).ToList();
+        FilterExplorer();
+    }
+
+    private void FilterExplorer()
+    {
+        var query = ExplorerSearch.Trim();
+        var extensions = ExtensionFilter.Split(new[] { ',', ';', ' ' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(e => "." + e.TrimStart('*', '.')).Where(e => e.Length > 1).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var items = _sortedExplorerRows.Where(i => i.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase) &&
+            (extensions.Count == 0 || !i.IsDirectory && extensions.Contains(i.Extension)));
+        ExplorerItems.ReplaceAll(items);
     }
 
     [RelayCommand]
@@ -162,13 +215,10 @@ public partial class MainWindowViewModel
     }
 
     [RelayCommand]
-    private void NavigateBreadcrumb(Breadcrumb? crumb) { if (crumb is not null) NavigateTreemap(crumb.FullPath); }
-
-    [RelayCommand]
     private async Task RefreshExplorer()
     {
         if (LastResults is null || string.IsNullOrEmpty(TreemapPath)) return;
-        StartExplorerNavigation(TreemapPath);
+        EnsureExplorerLoaded(refresh: true);
         await ExplorerLoading;
     }
 
@@ -188,14 +238,35 @@ public partial class MainWindowViewModel
         catch (Exception ex) { StatusMessage = ex.Message; }
     }
 
+    private async Task InitializeHistoryAsync()
+    {
+        try { await RefreshHistoryAsync(); }
+        catch (Exception ex) { StatusMessage = ex.Message; }
+    }
+
+    private SavedScanInfo LocalizeSavedScan(SavedScanInfo info) => info with { StatusLabel = this["ScanStatus" + info.Status] };
+
+    private string ScanStatusNotice(ScanResults results) => SavedScanInfo.StatusOf(results) switch
+    {
+        ScanStatus.Failed => string.Format(this["ScanFailedMessage"], results.ErrorMessage),
+        ScanStatus.Cancelled => this["ScanCancelledMessage"],
+        ScanStatus.Partial => this["IncompleteCoverage"],
+        _ => ""
+    };
+
     private async Task RefreshHistoryAsync()
     {
         if (_historyService is null) return;
-        var selected = SelectedSavedScan?.Id;
-        var scans = await _historyService.ListAsync();
-        SavedScans.Clear();
-        foreach (var scan in scans) SavedScans.Add(scan);
-        SelectedSavedScan = SavedScans.FirstOrDefault(s => s.Id == selected) ?? SavedScans.FirstOrDefault();
+        await _historyRefresh.WaitAsync();
+        try
+        {
+            var scans = await _historyService.ListAsync();
+            var selected = SelectedSavedScan?.Id;
+            SavedScans.Clear();
+            foreach (var scan in scans) SavedScans.Add(LocalizeSavedScan(scan));
+            SelectedSavedScan = SavedScans.FirstOrDefault(s => s.Id == selected) ?? SavedScans.FirstOrDefault();
+        }
+        finally { _historyRefresh.Release(); }
     }
 
     [RelayCommand]
@@ -237,6 +308,7 @@ public partial class MainWindowViewModel
             HasResults = true;
             SetCompletedScanStats(LastResults.Progress.FilesScanned, LastResults.Progress.FoldersScanned);
             StatusMessage = string.Format(this["SnapshotLoaded"], LastResults.ScannedAt.ToLocalTime());
+            if (ScanStatusNotice(LastResults) is { Length: > 0 } notice) StatusMessage += " " + notice;
             OnPropertyChanged(nameof(CoverageSummary));
         }
         catch (Exception ex) { StatusMessage = ex.Message; }
@@ -254,8 +326,9 @@ public partial class MainWindowViewModel
             if (!ReferenceEquals(current, LastResults)) return;
             FolderChanges.Clear();
             if (ScanComparison.Validate(previous, current) is { } error) { ComparisonStatus = this[error]; return; }
-            foreach (var change in ScanComparison.Compare(previous, current)) FolderChanges.Add(change);
+            FolderChanges.ReplaceAll(ScanComparison.Compare(previous, current));
             ComparisonStatus = string.Format(this["ComparisonSummary"], previous.ScannedAt.ToLocalTime(), current.ScannedAt.ToLocalTime(), FolderChanges.Count);
+            if (ScanComparison.CoverageWarning(previous, current) is { } warning) ComparisonStatus += " " + this[warning];
         }
         catch (Exception ex) { ComparisonStatus = ex.Message; }
     }
@@ -270,14 +343,11 @@ public partial class MainWindowViewModel
 
     private void PopulateAnalysis(ScanResults results)
     {
-        Insights.Clear();
-        foreach (var insight in DeveloperStorageAnalysis.Analyze(results))
-            Insights.Add(new(insight.FullPath, this[insight.Kind], insight.Size, insight.LastModified,
-                insight.IsOld ? this["OlderArtifact"] : ""));
+        Insights.ReplaceAll(DeveloperStorageAnalysis.Analyze(results).Select(insight =>
+            new InsightRow(insight.FullPath, this[insight.Kind], insight.Size, insight.LastModified,
+                insight.IsOld ? this["OlderArtifact"] : "")));
         InsightsStatus = string.Format(this["InsightsSummary"], Insights.Count, ByteSize.Format(Insights.Sum(i => i.Size)));
-        CoverageItems.Clear();
-        foreach (var issue in results.CoverageIssues)
-            CoverageItems.Add(new(issue.FullPath, this["Coverage" + issue.Reason], issue));
+        CoverageItems.ReplaceAll(results.CoverageIssues.Select(issue => new CoverageRow(issue.FullPath, this["Coverage" + issue.Reason], issue)));
         CoverageStatus = string.Format(this["CoverageCount"], CoverageItems.Count, results.OmittedCoverageIssues);
         OnPropertyChanged(nameof(CanSaveSnapshot));
     }
@@ -290,10 +360,9 @@ public partial class MainWindowViewModel
         // Offline directories are retried through their parent so their Offline attribute is checked.
         var path = issue.IsDirectory && issue.Reason != CoverageReason.Offline ? issue.FullPath : Path.GetDirectoryName(issue.FullPath);
         if (path is null) return;
-        SelectedPath = path;
-        ApplyPreset(ScanPresets.Full(LastResults.Options ?? _loadedOptions));
+        var options = ScanPresets.Full(LastResults.Options ?? _loadedOptions) with { RootPath = path };
         ResultsTabIndex = 0;
-        await StartScan();
+        await RunScanAsync(options);
     }
 }
 

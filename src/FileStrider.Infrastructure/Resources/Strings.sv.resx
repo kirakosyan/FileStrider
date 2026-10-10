@@ -350,14 +350,14 @@
   <data name="SnapshotLoaded" xml:space="preserve"><value>Visar sparad skanning från {0:g}. Filvyn använder aktuella metadata från disken.</value></data>
   <data name="CompareDifferentRoot" xml:space="preserve"><value>Välj en sparad skanning av samma rotmapp.</value></data>
   <data name="CompareDifferentFilters" xml:space="preserve"><value>Skanningarna använder olika filter eller djupgränser. Skanna med samma inställningar före jämförelsen.</value></data>
-  <data name="CompareIncomplete" xml:space="preserve"><value>En skanning är ofullständig eller avbruten. Slutför båda före jämförelsen.</value></data>
+  <data name="CompareIncomplete" xml:space="preserve"><value>En skanning är oavslutad, avbruten eller misslyckad. Slutför båda utan fel före jämförelsen.</value></data>
   <data name="ComparisonSummary" xml:space="preserve"><value>Baslinje {0:g} → visad skanning {1:g} · {2:N0} ändrade mappar</value></data>
   <data name="InsightDependencies" xml:space="preserve"><value>Beroenden</value></data>
   <data name="InsightBuilds" xml:space="preserve"><value>Byggresultat</value></data>
   <data name="InsightCaches" xml:space="preserve"><value>Cachemappar</value></data>
   <data name="OlderArtifact" xml:space="preserve"><value>Mappdatum äldre än 180 dagar</value></data>
   <data name="InsightsSummary" xml:space="preserve"><value>{0:N0} utvecklarmappar · {1} utan dubbelräknade undermappar</value></data>
-  <data name="InsightsHint" xml:space="preserve"><value>Kandidater identifieras efter mappnamn inom skanningen. Mappdatum visar inte när innehållet senast användes. Granska före rensning; File Strider tar inte bort filer.</value></data>
+  <data name="InsightsHint" xml:space="preserve"><value>Kandidater kräver närliggande projektmarkörer, som package.json eller en projektfil, registrerade under skanningen. Mappdatum visar inte när innehållet senast användes. Granska före rensning; File Strider tar inte bort filer.</value></data>
   <data name="CoverageCount" xml:space="preserve"><value>{0:N0} registrerade problem · {1:N0} utelämnade (gräns: 5 000)</value></data>
   <data name="CoverageFiltered" xml:space="preserve"><value>Undantaget av filter</value></data>
   <data name="CoverageInaccessible" xml:space="preserve"><value>Oåtkomligt eller borttaget</value></data>
@@ -366,6 +366,13 @@
   <data name="CoverageDuplicate" xml:space="preserve"><value>Redan besökt (länk eller alias)</value></data>
   <data name="CoverageIdentityUnavailable" xml:space="preserve"><value>Mappidentitet saknas</value></data>
   <data name="RetryCoverage" xml:space="preserve"><value>Skanna vald plats</value></data>
-  <data name="RetryHint" xml:space="preserve"><value>Ett nytt försök startar en fullständig skanning av vald mapp (eller filens överordnade mapp). Aktuella resultat ersätts; spara dem först om du vill behålla dem. Offlineobjekt hoppas fortfarande över.</value></data>
+  <data name="RetryHint" xml:space="preserve"><value>Ett nytt försök startar en fullständig skanning av vald mapp (eller filens överordnade mapp) utan att ändra dina inställningar. Aktuella resultat ersätts; spara dem först om du vill behålla dem. Offlineobjekt hoppas fortfarande över.</value></data>
   <data name="TreemapKeyboardHint" xml:space="preserve"><value>Piltangenter väljer; Enter öppnar; Backsteg går upp. Grupper öppnar mappvyn.</value></data>
+  <data name="ScanStatusComplete" xml:space="preserve"><value>Slutförd</value></data>
+  <data name="ScanStatusPartial" xml:space="preserve"><value>Ofullständig</value></data>
+  <data name="ScanStatusCancelled" xml:space="preserve"><value>Avbruten</value></data>
+  <data name="ScanStatusFailed" xml:space="preserve"><value>Misslyckad</value></data>
+  <data name="CompareCoverageUnknown" xml:space="preserve"><value>Detaljerna om överhoppade objekt är ofullständiga, så täckningen kan inte jämföras helt. Storleksändringar kan bero på skillnader i täckning.</value></data>
+  <data name="CompareCoverageChanged" xml:space="preserve"><value>Överhoppade sökvägar eller orsaker skiljer sig mellan skanningarna. Storleksändringar kan bero på skillnader i täckning.</value></data>
+  <data name="CompareCoveragePartial" xml:space="preserve"><value>Båda skanningarna hoppade över samma platser. Ändringar gäller endast den lagring som skannades.</value></data>
 </root>

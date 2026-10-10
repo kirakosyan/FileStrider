@@ -50,7 +50,7 @@ public partial class MainWindow : Window
 
     private async void ResultList_KeyDown(object? sender, KeyEventArgs e)
     {
-        var list = sender as ListBox ?? e.Source as ListBox ??
+        var list = e.Source as ListBox ??
             (e.Source as Control)?.GetVisualAncestors().OfType<ListBox>().FirstOrDefault();
         if (list is null || DataContext is not MainWindowViewModel model) return;
         if (e.Key == Key.Back && ReferenceEquals(list.ItemsSource, model.ExplorerItems))

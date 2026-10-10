@@ -350,14 +350,14 @@
   <data name="SnapshotLoaded" xml:space="preserve"><value>Mostrando análisis del {0:g}. La exploración usa metadatos actuales del disco.</value></data>
   <data name="CompareDifferentRoot" xml:space="preserve"><value>Elija un análisis de la misma carpeta raíz.</value></data>
   <data name="CompareDifferentFilters" xml:space="preserve"><value>Los filtros o límites de profundidad difieren. Repita con los mismos ajustes antes de comparar.</value></data>
-  <data name="CompareIncomplete" xml:space="preserve"><value>Un análisis está incompleto o cancelado. Complete ambos antes de comparar.</value></data>
+  <data name="CompareIncomplete" xml:space="preserve"><value>Un análisis está sin terminar, cancelado o ha fallado. Termine ambos correctamente antes de comparar.</value></data>
   <data name="ComparisonSummary" xml:space="preserve"><value>Referencia {0:g} → análisis mostrado {1:g} · {2:N0} carpetas cambiadas</value></data>
   <data name="InsightDependencies" xml:space="preserve"><value>Dependencias</value></data>
   <data name="InsightBuilds" xml:space="preserve"><value>Resultados de compilación</value></data>
   <data name="InsightCaches" xml:space="preserve"><value>Cachés</value></data>
   <data name="OlderArtifact" xml:space="preserve"><value>Fecha de carpeta anterior a 180 días</value></data>
   <data name="InsightsSummary" xml:space="preserve"><value>{0:N0} carpetas de desarrollo · {1} sin duplicados anidados</value></data>
-  <data name="InsightsHint" xml:space="preserve"><value>Los candidatos se identifican por nombre dentro de la cobertura. La fecha de una carpeta no indica el último uso de su contenido. Revise antes de limpiar; File Strider no elimina archivos.</value></data>
+  <data name="InsightsHint" xml:space="preserve"><value>Los candidatos requieren indicadores de proyecto cercanos, como package.json o un archivo de proyecto, registrados durante el análisis. La fecha de una carpeta no indica el último uso de su contenido. Revise antes de limpiar; File Strider no elimina archivos.</value></data>
   <data name="CoverageCount" xml:space="preserve"><value>{0:N0} incidencias registradas · {1:N0} omitidas (límite de 5000)</value></data>
   <data name="CoverageFiltered" xml:space="preserve"><value>Excluido por filtros</value></data>
   <data name="CoverageInaccessible" xml:space="preserve"><value>Inaccesible o eliminado</value></data>
@@ -366,6 +366,13 @@
   <data name="CoverageDuplicate" xml:space="preserve"><value>Ya visitado (enlace o alias)</value></data>
   <data name="CoverageIdentityUnavailable" xml:space="preserve"><value>Identidad de carpeta no disponible</value></data>
   <data name="RetryCoverage" xml:space="preserve"><value>Analizar ubicación elegida</value></data>
-  <data name="RetryHint" xml:space="preserve"><value>Reintentar inicia un análisis completo de la carpeta elegida (o la carpeta del archivo). Sustituye los resultados actuales; guárdelos para conservarlos. Los elementos sin conexión siguen omitiéndose.</value></data>
+  <data name="RetryHint" xml:space="preserve"><value>Reintentar inicia un análisis completo de la carpeta elegida (o la carpeta del archivo), sin cambiar sus ajustes. Sustituye los resultados actuales; guárdelos para conservarlos. Los elementos sin conexión siguen omitiéndose.</value></data>
   <data name="TreemapKeyboardHint" xml:space="preserve"><value>Flechas seleccionan; Intro abre; Retroceso sube. Los grupos abren el explorador.</value></data>
+  <data name="ScanStatusComplete" xml:space="preserve"><value>Completo</value></data>
+  <data name="ScanStatusPartial" xml:space="preserve"><value>Parcial</value></data>
+  <data name="ScanStatusCancelled" xml:space="preserve"><value>Cancelado</value></data>
+  <data name="ScanStatusFailed" xml:space="preserve"><value>Fallido</value></data>
+  <data name="CompareCoverageUnknown" xml:space="preserve"><value>Los detalles de los elementos omitidos están incompletos; no se puede comparar toda la cobertura. Los cambios de tamaño pueden deberse a diferencias de cobertura.</value></data>
+  <data name="CompareCoverageChanged" xml:space="preserve"><value>Las rutas omitidas o sus motivos difieren entre los análisis. Los cambios de tamaño pueden deberse a diferencias de cobertura.</value></data>
+  <data name="CompareCoveragePartial" xml:space="preserve"><value>Ambos análisis omitieron las mismas ubicaciones. Los cambios solo se aplican al almacenamiento analizado.</value></data>
 </root>

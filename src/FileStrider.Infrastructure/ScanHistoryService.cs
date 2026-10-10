@@ -30,20 +30,71 @@ public sealed class ScanHistoryService : IScanHistoryService
             File.Move(temporary, destination);
         }
         finally { Configuration.ConfigurationService.DeleteTemporaryFile(temporary); }
-        return Info(saved);
+        var info = Info(saved);
+        await CacheInfoAsync(destination, info);
+        return info;
     }
 
-    public async Task<IReadOnlyList<SavedScanInfo>> ListAsync()
+    public Task<IReadOnlyList<SavedScanInfo>> ListAsync() => Task.Run(ListCoreAsync);
+
+    private async Task<IReadOnlyList<SavedScanInfo>> ListCoreAsync()
     {
         if (!Directory.Exists(_directory)) return [];
         var scans = new List<SavedScanInfo>();
         foreach (var file in Directory.EnumerateFiles(_directory, "*.json"))
         {
-            try { scans.Add(Info(await LoadAsync(Path.GetFileNameWithoutExtension(file)))); }
-            catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or ArgumentException)
+            if (file.EndsWith(".meta.json", StringComparison.OrdinalIgnoreCase)) continue;
+            try
+            {
+                var id = Path.GetFileNameWithoutExtension(file);
+                if (await ReadCachedInfoAsync(file, id) is { } cached) { scans.Add(cached); continue; }
+                // Older snapshots migrate once. Subsequent listing reads only the small sidecar.
+                var info = Info(await LoadAsync(id));
+                scans.Add(info);
+                await CacheInfoAsync(file, info);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException or ArgumentException)
             { System.Diagnostics.Trace.TraceWarning($"Cannot read saved scan {file}: {ex.Message}"); }
         }
         return scans.OrderByDescending(s => s.ScannedAt).ToList();
+    }
+
+    private sealed record HistoryMetadata(int Version, long Length, DateTime LastWriteTimeUtc, SavedScanInfo Info);
+
+    private static async Task<SavedScanInfo?> ReadCachedInfoAsync(string snapshotPath, string id)
+    {
+        var metadataPath = Path.ChangeExtension(snapshotPath, ".meta.json");
+        try
+        {
+            if (!File.Exists(metadataPath) || new FileInfo(metadataPath).Length > 65536) return null;
+            await using var metadataStream = File.OpenRead(metadataPath);
+            var metadata = await JsonSerializer.DeserializeAsync<HistoryMetadata>(metadataStream, JsonOptions);
+            var file = new FileInfo(snapshotPath);
+            if (metadata?.Version != 1 || metadata.Info?.Id != id || metadata.Length != file.Length ||
+                metadata.LastWriteTimeUtc != file.LastWriteTimeUtc) return null;
+            // Check accessibility without parsing or reading the large snapshot payload.
+            using var snapshotStream = File.OpenRead(snapshotPath);
+            return metadata.Info;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        { return null; }
+    }
+
+    private static async Task CacheInfoAsync(string snapshotPath, SavedScanInfo info)
+    {
+        var metadataPath = Path.ChangeExtension(snapshotPath, ".meta.json");
+        var temporary = metadataPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            var file = new FileInfo(snapshotPath);
+            var metadata = new HistoryMetadata(1, file.Length, file.LastWriteTimeUtc, info);
+            await using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true))
+                await JsonSerializer.SerializeAsync(stream, metadata, JsonOptions);
+            File.Move(temporary, metadataPath, true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        { System.Diagnostics.Trace.TraceWarning($"Cannot cache scan summary: {ex.Message}"); }
+        finally { Configuration.ConfigurationService.DeleteTemporaryFile(temporary); }
     }
 
     public async Task<SavedScan> LoadAsync(string id)
@@ -62,7 +113,7 @@ public sealed class ScanHistoryService : IScanHistoryService
         if (saved.SchemaVersion != 1 || saved.Id != id || r?.Options is null ||
             r.Options.ExcludePatterns is null || r.Options.ExcludeDirectories is null ||
             r.Progress is null || r.Folders is null || r.TopFolders is null || r.TopFiles is null ||
-            r.CoverageIssues is null || r.FileTypeStatistics is null ||
+            r.CoverageIssues is null || r.FileTypeStatistics is null || r.ProjectDirectories is null ||
             string.IsNullOrWhiteSpace(r.RootPath) || !Path.IsPathFullyQualified(r.RootPath)) return false;
         var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
@@ -77,7 +128,13 @@ public sealed class ScanHistoryService : IScanHistoryService
             r.FileTypeStatistics.All(s => s is not null);
     }
 
-    public Task DeleteAsync(string id) { File.Delete(FilePath(id)); return Task.CompletedTask; }
+    public Task DeleteAsync(string id)
+    {
+        var path = FilePath(id);
+        File.Delete(path);
+        Configuration.ConfigurationService.DeleteTemporaryFile(Path.ChangeExtension(path, ".meta.json"));
+        return Task.CompletedTask;
+    }
 
     private string FilePath(string id)
     {
@@ -86,5 +143,5 @@ public sealed class ScanHistoryService : IScanHistoryService
     }
 
     private static SavedScanInfo Info(SavedScan saved) => new(saved.Id, saved.Results.ScannedAt,
-        saved.Results.RootPath, saved.Results.Progress.BytesProcessed);
+        saved.Results.RootPath, saved.Results.Progress.BytesProcessed, SavedScanInfo.StatusOf(saved.Results));
 }

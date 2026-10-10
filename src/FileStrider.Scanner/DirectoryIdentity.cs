@@ -3,6 +3,8 @@ using Microsoft.Win32.SafeHandles;
 
 namespace FileStrider.Scanner;
 
+internal delegate bool DirectoryIdentityReader(string path, out DirectoryIdentity identity);
+
 internal readonly record struct DirectoryIdentity(ulong Device, ulong FileIdLow, ulong FileIdHigh = 0)
 {
     // Query only the selected directory. The OS follows aliases, including linked

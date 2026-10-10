@@ -211,6 +211,8 @@ public class ExplorationRegressionTests
     public async Task DeveloperInsightsAvoidNestedDoubleCountingAndMarkOldFolderTimestamps()
     {
         using var directory = new TestDirectory();
+        directory.File("project/package.json", 0);
+        directory.File("project/node_modules/package/package.json", 0);
         directory.File("project/node_modules/package/build/file.txt", 101);
         directory.File("project/bin/app.exe", 37);
         directory.File("project/.cache/entry", 11);
@@ -237,8 +239,10 @@ public class ExplorationRegressionTests
         Assert.Equal(2, model.ExplorerItems.Count);
         Assert.Equal(2, model.Breadcrumbs.Count);
         model.ExtensionFilter = "log";
+        await model.ExplorerFiltering;
         Assert.Equal("alpha.log", Assert.Single(model.ExplorerItems).Name);
         model.ExtensionFilter = ""; model.ExplorerSearch = "BETA";
+        await model.ExplorerFiltering;
         Assert.Equal("beta.zip", Assert.Single(model.ExplorerItems).Name);
         model.ExplorerSearch = ""; model.ExplorerSort = model.SortChoices.Single(c => c.Id == "SizeAscending");
         Assert.Equal("alpha.log", model.ExplorerItems[0].Name);
@@ -265,16 +269,23 @@ public class ExplorationRegressionTests
         using var directory = new TestDirectory();
         using var storage = new TestDirectory();
         directory.File("bin/app.exe", 200);
+        var configuration = new MemoryConfiguration(ScanPresets.SourceFiles(Options(directory)));
         using var model = new MainWindowViewModel(Scanner(), new NullPicker(), new ExportService(), new RecordingShell(),
-            new MemoryConfiguration(ScanPresets.SourceFiles(Options(directory))), new LocalizationService(), new FileTypeAnalyzer(),
+            configuration, new LocalizationService(), new FileTypeAnalyzer(),
             historyService: new ScanHistoryService(storage.Path));
         await model.Initialization; await model.StartScanCommand.ExecuteAsync(null); await model.ExplorerLoading;
         await model.SaveSnapshotCommand.ExecuteAsync(null);
         Assert.Single(model.SavedScans);
+        var savedSettings = configuration.Saved;
+        var controls = JsonSerializer.Serialize(model.BuildScanOptions());
+        var recentPaths = model.RecentPaths.ToArray();
         model.SelectedCoverageItem = Assert.Single(model.CoverageItems);
         await model.RetryCoverageCommand.ExecuteAsync(null); await model.ExplorerLoading;
         Assert.Equal(Path.Combine(directory.Path, "bin"), model.LastResults!.RootPath);
         Assert.Equal(200, model.LastResults.Progress.BytesProcessed);
+        Assert.Same(savedSettings, configuration.Saved);
+        Assert.Equal(controls, JsonSerializer.Serialize(model.BuildScanOptions()));
+        Assert.Equal(recentPaths, model.RecentPaths);
         await model.LoadSnapshotCommand.ExecuteAsync(null); await model.ExplorerLoading;
         Assert.Equal(directory.Path, model.LastResults.RootPath);
         Assert.Equal(directory.Path, model.SelectedPath);

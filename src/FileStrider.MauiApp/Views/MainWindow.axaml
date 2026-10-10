@@ -102,7 +102,7 @@
                     <Grid RowDefinitions="Auto,*" RowSpacing="8">
                         <TextBlock Text="{Binding LargestFilesLabel}" FontSize="15" FontWeight="SemiBold"/>
                         <ListBox Grid.Row="1" ItemsSource="{Binding TopFiles}" SelectedItem="{Binding SelectedTopFile}"
-                                 DoubleTapped="TopFilesList_DoubleTapped" KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                                 DoubleTapped="TopFilesList_DoubleTapped" ContextRequested="ResultList_ContextRequested">
                             <ListBox.ContextMenu><ContextMenu>
                                 <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedTopFile.FullPath}"/>
                                 <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedTopFile.FullPath}"/>
@@ -127,7 +127,7 @@
                     <Grid RowDefinitions="Auto,*" RowSpacing="8">
                         <TextBlock Text="{Binding LargestFoldersLabel}" FontSize="15" FontWeight="SemiBold"/>
                         <ListBox Grid.Row="1" ItemsSource="{Binding TopFolders}" SelectedItem="{Binding SelectedTopFolder}"
-                                 DoubleTapped="TopFoldersList_DoubleTapped" KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                                 DoubleTapped="TopFoldersList_DoubleTapped" ContextRequested="ResultList_ContextRequested">
                             <ListBox.ContextMenu><ContextMenu>
                                 <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedTopFolder.FullPath}"/>
                                 <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedTopFolder.FullPath}"/>
@@ -184,7 +184,7 @@
                     <controls:TreemapControl Grid.Row="2" Items="{Binding TreemapItems}"
                                              EmptyText="{Binding TreemapEmptyText}" ItemClicked="Treemap_ItemClicked"
                                              NavigateUpRequested="Treemap_NavigateUpRequested"
-                                             ToolTip.Tip="{Binding [TreemapKeyboardHint]}"
+                                             HintText="{Binding [TreemapKeyboardHint]}"
                                              ClipToBounds="True"/>
                 </Grid>
             </Border>
@@ -213,7 +213,7 @@
                 </Grid>
                 <TextBlock Grid.Row="2" Text="{Binding ExplorerStatus}" FontSize="11" TextWrapping="Wrap"/>
                 <ListBox Grid.Row="3" ItemsSource="{Binding ExplorerItems}" SelectedItem="{Binding SelectedExplorerItem}"
-                         DoubleTapped="ExplorerList_DoubleTapped" KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                         DoubleTapped="ExplorerList_DoubleTapped" ContextRequested="ResultList_ContextRequested">
                     <ListBox.ContextMenu><ContextMenu>
                         <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedExplorerItem.FullPath}"/>
                         <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedExplorerItem.FullPath}"/>
@@ -265,7 +265,7 @@
                     <TextBlock Text="{Binding [InsightsHint]}" TextWrapping="Wrap" FontSize="12"/>
                 </StackPanel>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Insights}" SelectedItem="{Binding SelectedInsight}"
-                         KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                         ContextRequested="ResultList_ContextRequested">
                     <ListBox.ContextMenu><ContextMenu>
                         <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedInsight.FullPath}"/>
                         <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedInsight.FullPath}"/>
@@ -292,7 +292,7 @@
                     <TextBlock Text="{Binding [RetryHint]}" TextWrapping="Wrap" FontSize="12"/>
                 </StackPanel>
                 <ListBox Grid.Row="1" ItemsSource="{Binding CoverageItems}" SelectedItem="{Binding SelectedCoverageItem}"
-                         KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                         ContextRequested="ResultList_ContextRequested">
                     <ListBox.ContextMenu><ContextMenu>
                         <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedCoverageItem.FullPath}"/>
                         <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedCoverageItem.FullPath}"/>
