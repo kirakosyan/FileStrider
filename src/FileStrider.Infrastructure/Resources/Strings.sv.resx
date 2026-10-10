@@ -375,4 +375,19 @@
   <data name="CompareCoverageUnknown" xml:space="preserve"><value>Detaljerna om överhoppade objekt är ofullständiga, så täckningen kan inte jämföras helt. Storleksändringar kan bero på skillnader i täckning.</value></data>
   <data name="CompareCoverageChanged" xml:space="preserve"><value>Överhoppade sökvägar eller orsaker skiljer sig mellan skanningarna. Storleksändringar kan bero på skillnader i täckning.</value></data>
   <data name="CompareCoveragePartial" xml:space="preserve"><value>Båda skanningarna hoppade över samma platser. Ändringar gäller endast den lagring som skannades.</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>Sök efter uppdateringar</value></data>
+  <data name="UpgradeAndClose" xml:space="preserve"><value>Uppdatera och stäng</value></data>
+  <data name="UpdateNotChecked" xml:space="preserve"><value>Uppdateringar tillhandahålls av Microsoft Store.</value></data>
+  <data name="UpdateUnsupported" xml:space="preserve"><value>Store-uppdateringar är tillgängliga i Microsoft Store-utgåvan för Windows.</value></data>
+  <data name="UpdateChecking" xml:space="preserve"><value>Söker i Microsoft Store…</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>En uppdatering av File Strider finns i Microsoft Store.</value></data>
+  <data name="UpdateCurrent" xml:space="preserve"><value>Du har den senaste versionen som är tillgänglig för dig i Microsoft Store.</value></data>
+  <data name="UpdateCheckFailed" xml:space="preserve"><value>Kunde inte söka i Microsoft Store. Kontrollera anslutningen och försök igen.</value></data>
+  <data name="UpdateCloseHint" xml:space="preserve"><value>Osparade skanningsresultat sparas innan File Strider stängs. Välj Uppdatera på appens Store-sida. Stäng även andra instanser av File Strider.</value></data>
+  <data name="UpdateScanInProgress" xml:space="preserve"><value>Slutför eller avbryt den pågående skanningen innan du uppdaterar.</value></data>
+  <data name="UpdatePreparing" xml:space="preserve"><value>Sparar ditt arbete och öppnar Microsoft Store…</value></data>
+  <data name="UpdateSaveFailed" xml:space="preserve"><value>Kunde inte spara skanningens ögonblicksbild. File Strider är fortfarande öppet. Kontrollera ledigt diskutrymme och försök igen.</value></data>
+  <data name="UpdateOpenFailed" xml:space="preserve"><value>Kunde inte öppna Microsoft Store. File Strider är fortfarande öppet. Försök igen eller öppna Store manuellt.</value></data>
+  <data name="UpdateCloseFailed" xml:space="preserve"><value>Microsoft Store är öppet, men File Strider kunde inte stängas. Stäng File Strider innan du väljer Uppdatera.</value></data>
+  <data name="DismissUpdateNotice" xml:space="preserve"><value>Stäng meddelandet</value></data>
 </root>

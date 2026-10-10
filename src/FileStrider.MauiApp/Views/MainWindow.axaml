@@ -13,16 +13,38 @@
         </Style>
     </Window.Styles>
     <Grid Margin="18" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
-        <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsEnabled="{Binding !IsPreparingUpgrade}">
             <StackPanel Spacing="3">
                 <TextBlock Text="File Strider" FontSize="25" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding AppSubtitle}" FontSize="13"
                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="{Binding AboutLabel}" Command="{Binding ShowAboutCommand}"
+            <Button Grid.Column="1" Content="{Binding [CheckForUpdates]}" Command="{Binding CheckForUpdatesCommand}"
+                    IsVisible="{Binding SupportsStoreUpdates}" VerticalAlignment="Center"/>
+            <Button Grid.Column="2" Content="{Binding AboutLabel}" Command="{Binding ShowAboutCommand}"
                     VerticalAlignment="Center"/>
         </Grid>
+        <Border x:Name="StoreUpdateNotice" IsVisible="{Binding HasUpdateNotice}" Padding="12" CornerRadius="8" BorderThickness="1"
+                BorderBrush="#137E67">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding UpdateStatus}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding UpgradeHint}" TextWrapping="Wrap" FontSize="12"
+                               IsVisible="{Binding HasStoreUpdate}"/>
+                </StackPanel>
+                <Button x:Name="StoreUpgradeButton" Grid.Column="1" Content="{Binding [UpgradeAndClose]}"
+                        IsVisible="{Binding HasStoreUpdate}" Command="{Binding UpgradeCommand}"
+                        Background="#137E67" Foreground="White" VerticalAlignment="Center"/>
+                <Button x:Name="DismissStoreUpdateNotice" Grid.Column="2" Content="×" Width="32" Height="32"
+                        Padding="0" FontSize="18" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" Command="{Binding DismissUpdateNoticeCommand}"
+                        AutomationProperties.Name="{Binding [DismissUpdateNotice]}" ToolTip.Tip="{Binding [DismissUpdateNotice]}"/>
+            </Grid>
+        </Border>
+        </StackPanel>
         <Border Grid.Row="1" Padding="12" CornerRadius="8" BorderThickness="1"
+                IsEnabled="{Binding !IsPreparingUpgrade}"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
             <ScrollViewer MaxHeight="250" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="10">
@@ -93,7 +115,7 @@
             </StackPanel>
             </ScrollViewer>
         </Border>
-        <TabControl Grid.Row="2" SelectedIndex="{Binding ResultsTabIndex}">
+        <TabControl Grid.Row="2" SelectedIndex="{Binding ResultsTabIndex}" IsEnabled="{Binding !IsPreparingUpgrade}">
         <TabItem Header="{Binding [Overview]}">
         <Grid RowDefinitions="*,1.1*" RowSpacing="12" Margin="0,8,0,0">
             <Grid ColumnDefinitions="*,*,0.9*" ColumnSpacing="10">
@@ -312,7 +334,7 @@
             </Grid>
         </TabItem>
         </TabControl>
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="10" IsEnabled="{Binding !IsPreparingUpgrade}">
             <StackPanel Spacing="3">
                 <TextBlock Text="{Binding ScanStats}" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding CoverageSummary}" FontSize="11" TextWrapping="Wrap"/>

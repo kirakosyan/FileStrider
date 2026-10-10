@@ -5,6 +5,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using FileStrider.MauiApp.ViewModels;
 using FileStrider.MauiApp.Views;
+using FileStrider.MauiApp.Services;
 using FileStrider.Core.Contracts;
 using FileStrider.Scanner;
 using FileStrider.Platform.Services;
@@ -43,7 +44,7 @@ public partial class App : Application
                 DataContext = mainViewModel,
             };
 
-            desktop.ShutdownRequested += (_, _) =>
+            desktop.Exit += (_, _) =>
             {
                 mainViewModel.Dispose();
                 (_host as IDisposable)?.Dispose();
@@ -68,6 +69,8 @@ public partial class App : Application
                 services.AddSingleton<IShellService, ShellService>();
                 services.AddSingleton<ILocalizationService, LocalizationService>();
                 services.AddSingleton<IFileTypeAnalyzer, FileTypeAnalyzer>();
+                services.AddSingleton<IStoreUpdateService, StoreUpdateService>();
+                services.AddSingleton<IApplicationShutdown, ApplicationShutdown>();
 
                 // Register view models
                 services.AddTransient<MainWindowViewModel>();

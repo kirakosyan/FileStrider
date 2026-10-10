@@ -12,6 +12,7 @@ public partial class MainWindowViewModel
     private readonly IFolderContentService? _folderContentService;
     private readonly IScanHistoryService? _historyService;
     private readonly SemaphoreSlim _historyRefresh = new(1, 1);
+    private readonly HashSet<string> _currentSnapshotIds = [];
     private CancellationTokenSource? _explorerCancellation;
     private CancellationTokenSource? _filterCancellation;
     private string? _explorerPath;
@@ -98,6 +99,7 @@ public partial class MainWindowViewModel
 
     private void ClearExploration()
     {
+        _currentSnapshotIds.Clear();
         _explorerCancellation?.Cancel();
         _filterCancellation?.Cancel();
         _explorerPath = null; _explorerResults = null; _explorerCounts = null;
@@ -273,14 +275,22 @@ public partial class MainWindowViewModel
     private async Task SaveSnapshot()
     {
         if (!CanSaveSnapshot || LastResults is null || _historyService is null) return;
+        var results = LastResults;
         try
         {
-            var info = await _historyService.SaveAsync(LastResults);
+            var info = await _historyService.SaveAsync(results);
+            RememberSnapshot(results, info.Id);
             await RefreshHistoryAsync();
             SelectedSavedScan = SavedScans.First(s => s.Id == info.Id);
             StatusMessage = this["SnapshotSaved"];
         }
         catch (Exception ex) { StatusMessage = ex.Message; }
+    }
+
+    private void RememberSnapshot(ScanResults results, string id)
+    {
+        // A save can finish after another scan has replaced its results.
+        if (ReferenceEquals(LastResults, results)) _currentSnapshotIds.Add(id);
     }
 
     [RelayCommand(CanExecute = nameof(CanScan))]
@@ -295,6 +305,7 @@ public partial class MainWindowViewModel
             var saved = await _historyService.LoadAsync(SelectedSavedScan.Id);
             ClearExploration();
             LastResults = saved.Results;
+            RememberSnapshot(LastResults, saved.Id);
             SelectedPath = LastResults.RootPath;
             ApplyPreset(LastResults.Options!);
             TopN = Math.Clamp(LastResults.Options!.TopN, 1, 200);
@@ -337,7 +348,13 @@ public partial class MainWindowViewModel
     private async Task DeleteSnapshot()
     {
         if (_historyService is null || SelectedSavedScan is null) return;
-        try { await _historyService.DeleteAsync(SelectedSavedScan.Id); await RefreshHistoryAsync(); }
+        var id = SelectedSavedScan.Id;
+        try
+        {
+            await _historyService.DeleteAsync(id);
+            _currentSnapshotIds.Remove(id);
+            await RefreshHistoryAsync();
+        }
         catch (Exception ex) { StatusMessage = ex.Message; }
     }
 

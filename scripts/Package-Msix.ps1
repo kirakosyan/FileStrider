@@ -93,6 +93,7 @@ foreach ($arch in $Architecture) {
     Write-Host "=== Publishing FileStrider ($rid, self-contained) ===" -ForegroundColor Cyan
     dotnet publish $appProject `
         -c Release `
+        -f net10.0-windows10.0.19041.0 `
         -r $rid `
         --self-contained true `
         -p:NuGetAuditMode=all `

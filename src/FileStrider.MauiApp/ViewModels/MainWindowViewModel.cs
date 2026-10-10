@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -10,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using FileStrider.Core.Contracts;
 using FileStrider.Core.Models;
 using FileStrider.MauiApp.Models;
+using FileStrider.MauiApp.Services;
 using System.Collections.ObjectModel;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -71,10 +73,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string title = "";
 
-    [ObservableProperty]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(UpgradeCommand)), NotifyPropertyChangedFor(nameof(UpgradeHint))]
     private bool isScanning = false;
 
-    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(StartScanCommand), nameof(QuickScanCommand), nameof(SelectFolderCommand), nameof(SaveSettingsCommand), nameof(ApplyFullPresetCommand), nameof(ApplySourcePresetCommand), nameof(LoadSnapshotCommand), nameof(RetryCoverageCommand))]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(StartScanCommand), nameof(QuickScanCommand), nameof(SelectFolderCommand), nameof(SaveSettingsCommand), nameof(ApplyFullPresetCommand), nameof(ApplySourcePresetCommand), nameof(LoadSnapshotCommand), nameof(RetryCoverageCommand), nameof(UpgradeCommand))]
     private bool canScan = false;
 
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(CancelScanCommand))]
@@ -118,7 +120,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         ILocalizationService localizationService,
         IFileTypeAnalyzer fileTypeAnalyzer,
         IFolderContentService? folderContentService = null,
-        IScanHistoryService? historyService = null)
+        IScanHistoryService? historyService = null,
+        IStoreUpdateService? storeUpdates = null,
+        IApplicationShutdown? applicationShutdown = null)
     {
         _scanner = scanner;
         _folderPicker = folderPicker;
@@ -129,6 +133,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         _fileTypeAnalyzer = fileTypeAnalyzer;
         _folderContentService = folderContentService ?? scanner as IFolderContentService;
         _historyService = historyService;
+        _storeUpdates = storeUpdates;
+        _applicationShutdown = applicationShutdown ?? new ApplicationShutdown();
+        SupportsStoreUpdates = storeUpdates?.IsSupported == true;
 
         // Subscribe to localization changes
         _localizationService.PropertyChanged += OnLanguageChanged;
@@ -141,6 +148,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLocalizedProperties();
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        _updateLifetime.Cancel();
         _localizationService.PropertyChanged -= OnLanguageChanged;
         _cancellationTokenSource?.Cancel();
         _explorerCancellation?.Cancel();
@@ -159,6 +169,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private void UpdateLocalizedProperties()
     {
         RefreshFeatureLabels();
+        RefreshUpdateLabels();
         Title = _localizationService.GetString("AppTitle");
         RefreshLocalizedScanStats();
         RefreshLocalizedFileTypeStatistics();
@@ -615,8 +626,20 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             MinWidth = 90
         };
 
+        var updateStatus = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        updateStatus.Bind(TextBlock.TextProperty, new Binding(nameof(UpdateStatus)));
+        var updateHint = new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 12 };
+        updateHint.Bind(TextBlock.TextProperty, new Binding(nameof(UpgradeHint)));
+        updateHint.Bind(Visual.IsVisibleProperty, new Binding(nameof(HasStoreUpdate)));
+        var checkButton = new Button { Command = CheckForUpdatesCommand, IsVisible = SupportsStoreUpdates, Margin = new Thickness(0, 0, 8, 0) };
+        checkButton.Bind(ContentControl.ContentProperty, new Binding("[CheckForUpdates]"));
+        var upgradeButton = new Button { Command = UpgradeCommand };
+        upgradeButton.Bind(ContentControl.ContentProperty, new Binding("[UpgradeAndClose]"));
+        upgradeButton.Bind(Visual.IsVisibleProperty, new Binding(nameof(HasStoreUpdate)));
+
         var aboutWindow = new Window
         {
+            DataContext = this,
             Title = _localizationService.GetString("AboutTitle"),
             Width = 620,
             SizeToContent = SizeToContent.Height,
@@ -654,6 +677,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                                     VerticalAlignment = VerticalAlignment.Center
                                 },
                                 sourceLinkButton
+                            }
+                        },
+                        new StackPanel
+                        {
+                            Spacing = 8,
+                            Children =
+                            {
+                                updateStatus,
+                                updateHint,
+                                new WrapPanel { Children = { checkButton, upgradeButton } }
                             }
                         },
                         new StackPanel
