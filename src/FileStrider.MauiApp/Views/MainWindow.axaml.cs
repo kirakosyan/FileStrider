@@ -14,6 +14,11 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, ResultList_KeyDown, RoutingStrategies.Tunnel);
+        Opened += async (_, _) =>
+        {
+            if (DataContext is MainWindowViewModel model)
+                await model.CheckForUpdatesOnStartupAsync();
+        };
     }
 
     private async void Treemap_ItemClicked(object? sender, FileStrider.MauiApp.Models.TreemapItem item)

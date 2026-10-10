@@ -11,7 +11,7 @@
 
 FileStrider is a free, open-source disk space analysis tool that helps you find the largest files and folders on your system. We are committed to protecting your privacy. This policy explains what data the app accesses, how it is used, and what is never collected.
 
-**Short version:** The app does not collect, store, share, or transmit any personal information to us or any third party.
+**Short version:** FileStrider keeps scan data and preferences on your device and does not send them to us or any third party. The Microsoft Store edition uses Microsoft's Store service to check for app updates.
 
 ---
 
@@ -37,10 +37,10 @@ All application data is stored exclusively on your device and is never sent anyw
 |---|---|---|
 | App settings (language, scan preferences, up to eight recent folder paths, recovery copy) | Local app data directory | Restore preferences and recently scanned locations |
 | Scan results (file/folder sizes, paths) | In-memory only | Display analysis results during the current session |
-| Saved scans (folder tree, top files, sizes, timestamps, scan filters and coverage paths) | `FileStrider/history` under the local app data directory | Reopen or compare scans when you explicitly select Save current scan |
+| Saved scans (folder tree, top files, sizes, timestamps, scan filters and coverage paths) | `FileStrider/history` under the local app data directory | Reopen or compare scans saved with Save current scan or before closing through Upgrade and close |
 | Export files (CSV/JSON) | User-chosen location | Save scan results when you explicitly export them |
 
-Scan results are **not** persisted between sessions unless you explicitly save a scan or export a report. Saved scans can be removed individually from the Saved scans tab. Their filenames and paths may contain personal information. Settings and saved scans can also be removed by clearing the FileStrider directory in local application data.
+Scan results are **not** persisted between sessions unless you save a scan, export a report, or choose Upgrade and close (which saves the current scan before exiting). Saved scans can be removed individually from the Saved scans tab. Their filenames and paths may contain personal information. Settings and saved scans can also be removed by clearing the FileStrider directory in local application data.
 
 ---
 
@@ -59,7 +59,7 @@ All scanning is performed entirely on your local device.
 
 ## 5. Internet Access
 
-FileStrider does **not** require internet access to function and does **not** contact any server owned or operated by the developers. Opening the source-code or support link launches your default browser only when you request it. Version 1.1 removes the unused `internetClient` manifest capability.
+Scanning and local reports work without internet access. FileStrider does **not** contact any server owned or operated by the developers. Starting with version 1.2.1, the Microsoft Store edition asks the Windows Store API for available app updates on startup and when you select Check for updates. This requires an internet connection and uses Microsoft's Store services; no scanned paths, filenames, file contents, reports or settings are supplied to those services. Selecting Upgrade and close opens the app's Microsoft Store page so you can install the update. Microsoft's handling of Store service data is governed by its privacy statement. Opening the source-code or support link launches your default browser only when you request it.
 
 ---
 

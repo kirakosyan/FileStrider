@@ -4,6 +4,10 @@ Find large files and folders, understand storage use, and decide what to keep. F
 
 [Get File Strider from the Microsoft Store](https://apps.microsoft.com/detail/9PD3M0MHZ8TC)
 
+## Version 1.2.1 (unreleased)
+
+The Microsoft Store edition checks for updates when its window opens. **Check for updates** is also available in the header and About. When an update is available, **Upgrade and close** saves settings and a snapshot of the current scan, opens File Strider's Store page, and closes all windows in this instance. Select **Update** in the Store to complete installation; close any other running File Strider instances too. Upgrades are unavailable during a scan, and failed saves or Store launches leave the app open. Offline checks do not interrupt scanning. Source builds and non-Store installations do not offer this flow.
+
 ## Version 1.2
 
 Version 1.2 adds:
@@ -40,7 +44,7 @@ Install the .NET 10 SDK, then run:
 ~~~powershell
 dotnet build FileStrider.sln -c Release
 dotnet test FileStrider.sln -c Release
-dotnet run --project src/FileStrider.MauiApp
+dotnet run --project src/FileStrider.MauiApp -f net10.0
 ~~~
 
 The UI project retains its historical MauiApp directory name; the application uses Avalonia, not MAUI. The solution separates core models, scanning, infrastructure, platform integration, UI and tests.
@@ -58,6 +62,8 @@ On Windows with the Windows 10/11 SDK installed:
 This publishes self-contained x64 and ARM64 applications into fresh staging directories and generates FileStrider_&lt;version&gt;_&lt;architecture&gt;.msix. The [Store manifest](src/FileStrider.MauiApp/Package.appxmanifest) supplies the application identity and version. Optional certificate parameters are available for signed sideloading; Store submission packages are unsigned.
 
 Source builds run as ordinary desktop applications and do not register a development MSIX over the installed Store application.
+
+The packaging script selects `net10.0-windows10.0.19041.0` to include the Windows Store API integration (minimum Windows version remains 10.0.17763.0). The `net10.0` target remains portable. A real Store update check requires a Store-signed installation and a newer package available to that user; source-build tests use a simulated Store service and never install or close the user's installed app.
 
 ## Support
 

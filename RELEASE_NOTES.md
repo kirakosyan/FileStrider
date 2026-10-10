@@ -1,3 +1,11 @@
+File Strider 1.2.1 — Unreleased
+
+- Check Microsoft Store on startup or on demand from the header and About.
+- Show an upgrade button when the Store reports a new version for the installed app.
+- Save settings and the current scan snapshot before opening the Store and closing File Strider. Finish or cancel active scans first; failed saves and Store launches keep the app open.
+- Select Update on the Store page to finish installation with File Strider closed. Other running instances must also be closed.
+- Localized update states and errors in English, French, Spanish and Swedish. Portable and non-Store builds remain supported.
+
 File Strider 1.2.0 — 10 October 2026
 
 - Full-storage and source-only presets with visible active filters; existing settings are preserved.

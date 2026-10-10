@@ -375,4 +375,18 @@
   <data name="CompareCoverageUnknown" xml:space="preserve"><value>Los detalles de los elementos omitidos están incompletos; no se puede comparar toda la cobertura. Los cambios de tamaño pueden deberse a diferencias de cobertura.</value></data>
   <data name="CompareCoverageChanged" xml:space="preserve"><value>Las rutas omitidas o sus motivos difieren entre los análisis. Los cambios de tamaño pueden deberse a diferencias de cobertura.</value></data>
   <data name="CompareCoveragePartial" xml:space="preserve"><value>Ambos análisis omitieron las mismas ubicaciones. Los cambios solo se aplican al almacenamiento analizado.</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="UpgradeAndClose" xml:space="preserve"><value>Actualizar y cerrar</value></data>
+  <data name="UpdateNotChecked" xml:space="preserve"><value>Microsoft Store proporciona las actualizaciones.</value></data>
+  <data name="UpdateUnsupported" xml:space="preserve"><value>Las actualizaciones de la Store están disponibles en la edición de Microsoft Store para Windows.</value></data>
+  <data name="UpdateChecking" xml:space="preserve"><value>Buscando en Microsoft Store…</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>Hay una actualización de File Strider disponible en Microsoft Store.</value></data>
+  <data name="UpdateCurrent" xml:space="preserve"><value>Tienes la última versión disponible para ti en Microsoft Store.</value></data>
+  <data name="UpdateCheckFailed" xml:space="preserve"><value>No se pudo consultar Microsoft Store. Comprueba tu conexión e inténtalo de nuevo.</value></data>
+  <data name="UpdateCloseHint" xml:space="preserve"><value>Se guardarán los ajustes y una instantánea del análisis; después se cerrará File Strider. Selecciona Actualizar en su página de la Store. Cierra también las demás instancias de File Strider.</value></data>
+  <data name="UpdateScanInProgress" xml:space="preserve"><value>Termina o cancela el análisis actual antes de actualizar.</value></data>
+  <data name="UpdatePreparing" xml:space="preserve"><value>Guardando y abriendo Microsoft Store…</value></data>
+  <data name="UpdateSaveFailed" xml:space="preserve"><value>No se pudieron guardar los ajustes o la instantánea. File Strider sigue abierto. Revisa los ajustes del análisis y el espacio en disco e inténtalo de nuevo.</value></data>
+  <data name="UpdateOpenFailed" xml:space="preserve"><value>No se pudo abrir Microsoft Store. File Strider sigue abierto. Reinténtalo o abre la Store manualmente.</value></data>
+  <data name="UpdateCloseFailed" xml:space="preserve"><value>Microsoft Store está abierta, pero File Strider no pudo cerrarse. Cierra File Strider antes de seleccionar Actualizar.</value></data>
 </root>
