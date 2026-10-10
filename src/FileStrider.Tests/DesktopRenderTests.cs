@@ -141,8 +141,12 @@ public class DesktopRenderTests
 
     [AvaloniaTheory]
     [InlineData("en", false, 1280, 860)]
+    [InlineData("en", true, 1040, 700)]
+    [InlineData("fr", false, 1040, 700)]
     [InlineData("fr", true, 1040, 700)]
     [InlineData("es", false, 1040, 700)]
+    [InlineData("es", true, 1040, 700)]
+    [InlineData("sv", false, 1040, 700)]
     [InlineData("sv", true, 1040, 700)]
     public async Task FeatureTabsRenderAndRelocalizeWithoutClipping(string language, bool dark, int width, int height)
     {
@@ -163,7 +167,8 @@ public class DesktopRenderTests
             vm.SelectedPath = result.RootPath; vm.RecentPaths.Clear();
             vm.NavigateTreemap(Path.Combine(result.RootPath, "Videos"));
             await vm.ExplorerLoading;
-            vm.SavedScans.Add(new("sample", result.ScannedAt, result.RootPath, result.Progress.BytesProcessed));
+            vm.SavedScans.Add(new("sample", result.ScannedAt, result.RootPath, result.Progress.BytesProcessed)
+                { StatusLabel = vm["ScanStatusComplete"] });
             vm.SelectedSavedScan = vm.SavedScans[0];
             vm.FolderChanges.Add(new(Path.Combine(result.RootPath, "Videos"), 1000000, 3000000));
             for (var tab = 0; tab < 5; tab++)
@@ -183,7 +188,7 @@ public class DesktopRenderTests
                 if (Environment.GetEnvironmentVariable("FILESTRIDER_SCREENSHOT_DIR") is { Length: > 0 } output)
                 {
                     Directory.CreateDirectory(output);
-                    SaveStoreFrame(window, Path.Combine(output, $"feature-{language}-{tab}.png"));
+                    SaveStoreFrame(window, Path.Combine(output, $"feature-{language}-{(dark ? "dark" : "light")}-{tab}.png"));
                 }
             }
         }

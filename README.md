@@ -4,9 +4,9 @@ Find large files and folders, understand storage use, and decide what to keep. F
 
 [Get File Strider from the Microsoft Store](https://apps.microsoft.com/detail/9PD3M0MHZ8TC)
 
-## Version 1.1
+## Version 1.2
 
-The development branch also includes:
+Version 1.2 adds:
 
 - **Full storage scan** and **Source files only** presets, with active exclusions shown beside the controls. Fresh settings include hidden files, logs, dependencies and build outputs; existing preferences are preserved. Offline placeholders and child symbolic links remain skipped by the full preset.
 - An **Explore** tab with breadcrumbs, search within the current folder, extension filters and sorting. Files are read on demand, beyond the global top-N limit. Folder sizes and the treemap retain the scan's totals; current files can differ after filesystem changes. Aggregate treemap tiles open this complete folder list.

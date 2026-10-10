@@ -1,6 +1,6 @@
-# Microsoft Store description — File Strider 1.1.2
+# Microsoft Store description — File Strider 1.2.0
 
-Updated 1 October 2026 for product `9PD3M0MHZ8TC`.
+Updated 10 October 2026 for product `9PD3M0MHZ8TC`.
 
 Category: Utilities + tools / File managers. Secondary category: Productivity.
 Free, publicly discoverable, Windows desktop on x64 and ARM64.
@@ -8,7 +8,7 @@ Support: https://github.com/kirakosyan/FileStrider/issues
 Privacy: [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
 Release notes: [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
-Descriptions match the application's size-ranked lists; the interface does not offer arbitrary list sorting. Store screenshots render the actual application with synthetic data rooted at `C:\Sample Storage`. No real filesystem, account, recent-folder history or personal identity is shown. Each language has four desktop screenshots: overview, dark theme, folder navigation and scan options.
+Descriptions match the application's size-ranked overview and searchable, sortable Explore tab. Store screenshots render the actual application with synthetic data rooted at `C:\Sample Storage`. No real filesystem, account, recent-folder history or personal identity is shown. Each language has desktop screenshots for the overview, dark theme, folder navigation, scan options and new feature tabs.
 
 Generate the PNG files with `FILESTRIDER_SCREENSHOT_DIR` set while running `WindowRendersWithoutClippedPrimaryControls` in the render test suite. Inspect every image before upload.
 
@@ -23,6 +23,8 @@ See where your storage goes. Find large files and folders, explore an interactiv
 Find the files and folders taking up the most space.
 
 File Strider scans a folder or drive and presents its largest items in size-ranked lists and an interactive treemap. Explore folders, compare file types, and open a result in File Explorer to decide what to keep.
+
+Browse all files in a folder with breadcrumbs, search, extension filters and sorting. Save scans locally, reopen them later and compare folder growth with coverage warnings. Find developer dependencies, build outputs and caches backed by project markers. Inspect skipped locations and retry them without changing your saved preferences.
 
 Make each scan fit your needs with hidden-file controls, exclusion patterns, a depth limit, and size filters. Cancel a scan and retain partial results. Coverage details show what was excluded or could not be scanned.
 
@@ -41,6 +43,9 @@ Reported sizes are logical file sizes; allocated disk space may differ. Offline 
 - Cancel scans and retain partial results
 - CSV and JSON reports with scan status and coverage
 - Recent folders and saved preferences
+- Complete folder browsing with search, filters and sorting
+- Local scan history and folder growth comparisons
+- Project-based developer storage insights and targeted retries
 - Offline; four languages; light and dark themes
 
 ### Search keywords
@@ -49,11 +54,12 @@ disk usage; storage analyzer; large files; folder size; treemap; offline; CSV ex
 
 ### What's new
 
-Version 1.1.2
-• More accurate folder totals and paths when following links.
-• Correct folder timestamps and file-link sizes.
-• CSV reports now start with scan status, totals, and coverage.
-• Improved settings-save recovery and treemap stability.
+Version 1.2.0
+• Explore complete folders with breadcrumbs, search, extension filters and sorting.
+• Save scans locally and compare folder growth with clear coverage warnings.
+• Find developer storage backed by project markers.
+• Inspect skipped locations and retry without changing your preferences.
+• Faster history, responsive filtering and improved keyboard navigation.
 
 ### Screenshot captions
 
@@ -74,6 +80,8 @@ Repérez les fichiers et dossiers qui occupent le plus d’espace.
 
 File Strider analyse un dossier ou un lecteur et présente les éléments les plus volumineux dans des listes classées par taille et une carte interactive. Explorez les dossiers, comparez les types de fichiers et ouvrez un résultat dans l’Explorateur de fichiers pour décider quoi conserver.
 
+Parcourez tous les fichiers d’un dossier avec un fil d’Ariane, la recherche, les filtres d’extension et le tri. Enregistrez vos analyses localement, rouvrez-les et comparez la croissance des dossiers avec des avertissements de couverture. Repérez les dépendances, résultats de compilation et caches associés à des projets. Examinez les emplacements ignorés et relancez leur analyse sans modifier vos préférences.
+
 Adaptez l’analyse avec les options de fichiers cachés, les exclusions, la profondeur et la taille minimale. Annulez une analyse en conservant les résultats partiels. Les détails de couverture indiquent les éléments exclus ou impossibles à analyser.
 
 Exportez des rapports CSV ou JSON avec l’état de l’analyse, les totaux et les détails de couverture. Enregistrez vos préférences et retrouvez vos dossiers récents. Disponible en anglais, français, espagnol et suédois, avec des thèmes clair et sombre.
@@ -91,6 +99,9 @@ Les tailles sont logiques ; l’espace alloué sur le disque peut différer. Les
 - Annulez une analyse et conservez les résultats partiels
 - Rapports CSV et JSON avec état et couverture de l’analyse
 - Dossiers récents et préférences enregistrées
+- Exploration complète avec recherche, filtres et tri
+- Historique local et comparaison de la croissance des dossiers
+- Espace développeur identifié par projet et analyses ciblées
 - Hors ligne ; quatre langues ; thèmes clair et sombre
 
 ### Search keywords
@@ -99,11 +110,12 @@ analyse stockage; taille dossiers; fichiers volumineux; espace disque; carte sto
 
 ### What's new
 
-Version 1.1.2
-• Totaux et chemins des dossiers plus précis lors du suivi des liens.
-• Dates des dossiers et tailles des fichiers liés corrigées.
-• Les rapports CSV commencent par l’état, les totaux et la couverture de l’analyse.
-• Enregistrement des paramètres et stabilité de la carte améliorés.
+Version 1.2.0
+• Exploration complète avec fil d’Ariane, recherche, filtres d’extension et tri.
+• Analyses enregistrées localement et comparaison de la croissance avec avertissements de couverture.
+• Espace développeur identifié grâce aux marqueurs de projet.
+• Analyse ciblée des emplacements ignorés sans modifier vos préférences.
+• Historique plus rapide, filtrage réactif et navigation au clavier améliorée.
 
 ### Screenshot captions
 
@@ -124,6 +136,8 @@ Encuentra los archivos y carpetas que ocupan más espacio.
 
 File Strider analiza una carpeta o unidad y muestra los elementos más grandes en listas ordenadas por tamaño y un mapa interactivo. Explora carpetas, compara tipos de archivo y abre un resultado en el Explorador de archivos para decidir qué conservar.
 
+Explora todos los archivos de una carpeta con navegación por rutas, búsqueda, filtros de extensión y ordenación. Guarda análisis localmente, ábrelos después y compara el crecimiento de carpetas con avisos de cobertura. Identifica dependencias, resultados de compilación y cachés respaldados por indicadores de proyecto. Revisa ubicaciones omitidas y vuelve a analizarlas sin cambiar tus preferencias.
+
 Personaliza el análisis con opciones de archivos ocultos, exclusiones, profundidad y tamaño mínimo. Cancela un análisis y conserva los resultados parciales. Los detalles de cobertura muestran los elementos excluidos o que no se pudieron analizar.
 
 Exporta informes CSV o JSON con el estado del análisis, los totales y los detalles de cobertura. Guarda tus preferencias y vuelve a carpetas recientes. Disponible en inglés, francés, español y sueco, con temas claro y oscuro.
@@ -141,6 +155,9 @@ Los tamaños son lógicos; el espacio asignado en disco puede variar. Se omiten 
 - Cancela análisis y conserva los resultados parciales
 - Informes CSV y JSON con estado y cobertura del análisis
 - Carpetas recientes y preferencias guardadas
+- Exploración completa con búsqueda, filtros y ordenación
+- Historial local y comparación del crecimiento de carpetas
+- Almacenamiento de desarrollo por proyecto y análisis específicos
 - Sin conexión; cuatro idiomas; temas claro y oscuro
 
 ### Search keywords
@@ -149,11 +166,12 @@ uso de disco; analizar almacenamiento; archivos grandes; tamaño carpetas; mapa 
 
 ### What's new
 
-Versión 1.1.2
-• Totales y rutas de carpetas más precisos al seguir enlaces.
-• Fechas de carpetas y tamaños de archivos enlazados corregidos.
-• Los informes CSV comienzan con el estado, los totales y la cobertura del análisis.
-• Mejor recuperación al guardar ajustes y mayor estabilidad del mapa.
+Versión 1.2.0
+• Explora carpetas completas con navegación por rutas, búsqueda, filtros y ordenación.
+• Guarda análisis localmente y compara el crecimiento con avisos de cobertura.
+• Identifica almacenamiento de desarrollo mediante indicadores de proyecto.
+• Analiza ubicaciones omitidas sin cambiar tus preferencias.
+• Historial más rápido, filtrado ágil y mejor navegación con teclado.
 
 ### Screenshot captions
 
@@ -174,6 +192,8 @@ Hitta filerna och mapparna som tar upp mest utrymme.
 
 File Strider skannar en mapp eller enhet och visar de största objekten i listor sorterade efter storlek och en interaktiv trädkarta. Utforska mappar, jämför filtyper och öppna ett resultat i Utforskaren för att bestämma vad du vill behålla.
 
+Bläddra bland alla filer i en mapp med sökvägsnavigering, sökning, filändelsefilter och sortering. Spara skanningar lokalt, öppna dem senare och jämför mapptillväxt med tydliga täckningsvarningar. Hitta beroenden, byggresultat och cachemappar med stöd av projektmarkörer. Granska överhoppade platser och skanna dem igen utan att ändra dina inställningar.
+
 Anpassa skanningen med inställningar för dolda filer, undantag, djup och minsta storlek. Avbryt en skanning och behåll delresultaten. Täckningsdetaljer visar vad som undantogs eller inte kunde skannas.
 
 Exportera CSV- eller JSON-rapporter med skanningsstatus, totalsummor och täckningsdetaljer. Spara inställningar och återvänd till senaste mappar. Finns på engelska, franska, spanska och svenska, med ljust och mörkt tema.
@@ -191,6 +211,9 @@ Storlekarna är logiska; tilldelat diskutrymme kan skilja sig. Molnfiler som bar
 - Avbryt skanningar och behåll delresultaten
 - CSV- och JSON-rapporter med status och täckningsdetaljer
 - Senaste mappar och sparade inställningar
+- Fullständig mappvy med sökning, filter och sortering
+- Lokal skanningshistorik och jämförelse av mapptillväxt
+- Projektbaserad utvecklaröversikt och riktade skanningar
 - Offline; fyra språk; ljust och mörkt tema
 
 ### Search keywords
@@ -199,11 +222,12 @@ diskutrymme; lagringsanalys; stora filer; mappstorlek; trädkarta; offline; CSV-
 
 ### What's new
 
-Version 1.1.2
-• Mer korrekta mapptotaler och sökvägar när länkar följs.
-• Rättade mapptidsstämplar och storlekar för länkade filer.
-• CSV-rapporter börjar nu med status, totalsummor och täckningsdetaljer.
-• Bättre återhämtning när inställningar sparas och stabilare trädkarta.
+Version 1.2.0
+• Utforska hela mappar med sökvägsnavigering, sökning, filändelsefilter och sortering.
+• Spara skanningar lokalt och jämför mapptillväxt med täckningsvarningar.
+• Hitta utvecklarlagring med stöd av projektmarkörer.
+• Skanna överhoppade platser utan att ändra dina inställningar.
+• Snabbare historik, responsiv filtrering och förbättrad tangentbordsnavigering.
 
 ### Screenshot captions
 
