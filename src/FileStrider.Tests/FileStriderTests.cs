@@ -268,7 +268,9 @@ public class ConfigurationServiceTests
         // Assert
         Assert.NotNull(options);
         Assert.Equal(20, options.TopN);
-        Assert.False(options.IncludeHidden);
+        Assert.True(options.IncludeHidden);
+        Assert.Empty(options.ExcludePatterns);
+        Assert.Empty(options.ExcludeDirectories);
     }
 
     /// <summary>

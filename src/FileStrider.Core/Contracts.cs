@@ -3,6 +3,19 @@ using System.ComponentModel;
 
 namespace FileStrider.Core.Contracts;
 
+public interface IFolderContentService
+{
+    Task<FolderContents> ReadFilesAsync(string path, ScanOptions options, CancellationToken cancellationToken = default);
+}
+
+public interface IScanHistoryService
+{
+    Task<IReadOnlyList<SavedScanInfo>> ListAsync();
+    Task<SavedScanInfo> SaveAsync(ScanResults results);
+    Task<SavedScan> LoadAsync(string id);
+    Task DeleteAsync(string id);
+}
+
 /// <summary>
 /// Provides functionality to scan the file system and discover files and folders.
 /// </summary>

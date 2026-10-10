@@ -1,3 +1,14 @@
+Unreleased — Storage exploration and history
+
+- Full-storage and source-only presets with visible active filters; existing settings are preserved.
+- Time-based scan progress, including while file processing is stalled.
+- Complete folder exploration with breadcrumbs, search, extension filters, sorting and expandable aggregate tiles.
+- Local saved scans and folder growth comparisons, with guards for differing roots, filters and incomplete coverage.
+- Developer storage insights for dependencies, build outputs and caches, with nested totals deduplicated.
+- Coverage details with bounded memory and targeted rescans.
+- Result context menus and keyboard actions, plus keyboard treemap navigation.
+- Updated English, French, Spanish and Swedish interfaces and render/regression coverage.
+
 File Strider 1.1.2 — 1 October 2026
 
 - More accurate totals when following directory links, including linked roots, aliases and cycles. Real folders keep their original paths in results.

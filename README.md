@@ -6,6 +6,19 @@ Find large files and folders, understand storage use, and decide what to keep. F
 
 ## Version 1.1
 
+The development branch also includes:
+
+- **Full storage scan** and **Source files only** presets, with active exclusions shown beside the controls. Fresh settings include hidden files, logs, dependencies and build outputs; existing preferences are preserved. Offline placeholders and child symbolic links remain skipped by the full preset.
+- An **Explore** tab with breadcrumbs, search within the current folder, extension filters and sorting. Files are read on demand, beyond the global top-N limit. Folder sizes and the treemap retain the scan's totals; current files can differ after filesystem changes. Aggregate treemap tiles open this complete folder list.
+- **Saved scans** stored locally on request, including the entire folder tree, scan time, options and coverage. Reopen a scan or compare it with a selected baseline to find growing, new and removed folders. Comparisons require the same root and coverage settings and refuse incomplete scans. Nested folder changes are not additive.
+- **Developer insights** for dependency folders, build outputs and caches, without double-counting nested candidates. Old folder timestamps are review hints, not proof that files are unused or safe to remove.
+- A **Coverage** inspector with paths and reasons for skipped items. It retains up to 5,000 details and reports additional omitted entries. Retry starts a new full scan of the selected location; save the current scan first if you need to keep it.
+- Progress every 200 ms, result context menus, Enter to open, Ctrl/Cmd+C to copy paths, and treemap keyboard navigation using arrow keys, Enter and Backspace.
+
+Snapshots live in `FileStrider/history` under the platform's local application data directory. They remain on your device until removed from **Saved scans**. CSV/JSON exports remain reports, separate from saved snapshots.
+
+Released 1.1 features:
+
 - Reliable, cancellable scans with partial results and coverage details.
 - Accurate treemap areas with folder drill-down and an Up button.
 - Top 1–200 files and folders, with readable sizes and file-type statistics.

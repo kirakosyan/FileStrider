@@ -25,6 +25,8 @@ public class ExportService : IExportService
         await writer.WriteLineAsync("Field,Value");
         foreach (var (field, value) in metadata.CsvFields())
             await writer.WriteLineAsync($"{field},{EscapeCsvField(value)}");
+        await writer.WriteLineAsync($"Scanned At (UTC),{results.ScannedAt.UtcDateTime:O}");
+        await writer.WriteLineAsync(FormattableString.Invariant($"Omitted Coverage Issues,{results.OmittedCoverageIssues}"));
         await writer.WriteLineAsync();
         
         // Export top files
@@ -63,6 +65,14 @@ public class ExportService : IExportService
             }
         }
 
+        if (results.CoverageIssues.Count > 0)
+        {
+            await writer.WriteLineAsync();
+            await writer.WriteLineAsync("Coverage Issues");
+            await writer.WriteLineAsync("Full Path,Reason,Is Directory");
+            foreach (var issue in results.CoverageIssues)
+                await writer.WriteLineAsync($"{EscapeCsvField(issue.FullPath)},{issue.Reason},{issue.IsDirectory}");
+        }
     }
 
     /// <summary>
@@ -83,6 +93,15 @@ public class ExportService : IExportService
             metadata.ScanCancelled,
             metadata.ErrorMessage,
             metadata.Progress,
+            results.ScannedAt,
+            ScanOptions = results.Options is { } scanOptions ? new
+            {
+                scanOptions.IncludeHidden, scanOptions.FollowSymlinks, scanOptions.FoldersOnly,
+                scanOptions.MaxDepth, scanOptions.MinFileSize, scanOptions.TopN,
+                scanOptions.ExcludePatterns, scanOptions.ExcludeDirectories
+            } : null,
+            CoverageIssues = results.CoverageIssues.Select(i => new { i.FullPath, Reason = i.Reason.ToString(), i.IsDirectory }),
+            results.OmittedCoverageIssues,
             TopFiles = results.TopFiles.Select(f => new
             {
                 f.Name,

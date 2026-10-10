@@ -3,7 +3,7 @@
 **App name:** FileStrider  
 **App ID:** com.kirakosyan.filestrider  
 **Platforms:** Windows  
-**Last updated:** 2026-09-06
+**Last updated:** 2026-10-10
 
 ---
 
@@ -37,9 +37,10 @@ All application data is stored exclusively on your device and is never sent anyw
 |---|---|---|
 | App settings (language, scan preferences, up to eight recent folder paths, recovery copy) | Local app data directory | Restore preferences and recently scanned locations |
 | Scan results (file/folder sizes, paths) | In-memory only | Display analysis results during the current session |
+| Saved scans (folder tree, top files, sizes, timestamps, scan filters and coverage paths) | `FileStrider/history` under the local app data directory | Reopen or compare scans when you explicitly select Save current scan |
 | Export files (CSV/JSON) | User-chosen location | Save scan results when you explicitly export them |
 
-Scan results are **not** persisted between sessions unless you explicitly export them. You can delete all locally stored settings by uninstalling the app or clearing its storage via Windows Settings.
+Scan results are **not** persisted between sessions unless you explicitly save a scan or export a report. Saved scans can be removed individually from the Saved scans tab. Their filenames and paths may contain personal information. Settings and saved scans can also be removed by clearing the FileStrider directory in local application data.
 
 ---
 
@@ -49,7 +50,7 @@ FileStrider requires access to your file system **solely** to scan directories a
 
 - Reads file and folder metadata (names, sizes, dates) in the directories you choose to scan
 - Does **not** read or inspect file contents
-- Does **not** modify, move, or delete any files
+- Does **not** modify, move, or delete scanned files. It writes its own settings, explicitly saved scans and requested exports, and removes saved scans when you request that action.
 - Does **not** transmit any file information to any external server
 
 All scanning is performed entirely on your local device.

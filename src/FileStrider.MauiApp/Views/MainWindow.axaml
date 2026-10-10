@@ -24,6 +24,7 @@
         </Grid>
         <Border Grid.Row="1" Padding="12" CornerRadius="8" BorderThickness="1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+            <ScrollViewer MaxHeight="250" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="10">
                 <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                     <TextBox Text="{Binding SelectedPath}" IsEnabled="{Binding CanScan}"
@@ -36,27 +37,11 @@
 
                 <TextBlock x:Name="ScanStatusMessage" Text="{Binding StatusMessage}"
                            IsVisible="{Binding HasStatusMessage}" TextWrapping="Wrap"/>
-                <WrapPanel Orientation="Horizontal" IsEnabled="{Binding CanScan}">
-                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
-                        <TextBlock Text="{Binding TopNLabel}" VerticalAlignment="Center"/>
-                        <NumericUpDown Value="{Binding TopN}" Minimum="1" Maximum="200" FormatString="0" Width="120"/>
-                    </StackPanel>
-                    <CheckBox IsChecked="{Binding IncludeHidden}" Content="{Binding IncludeHiddenLabel}" Margin="0,0,16,6"/>
-                    <CheckBox IsChecked="{Binding FoldersOnly}" Content="{Binding FoldersOnlyLabel}"
-                              ToolTip.Tip="{Binding FoldersOnlyTooltip}" Margin="0,0,16,6"/>
-                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
-                        <TextBlock Text="{Binding MinSizeLabel}" VerticalAlignment="Center"/>
-                        <NumericUpDown Value="{Binding MinFileSize}" Minimum="0" Maximum="{Binding MaximumMinFileSize}"
-                                       FormatString="0.##" Width="120"/>
-                        <ComboBox ItemsSource="{Binding SizeUnits}" SelectedItem="{Binding SelectedSizeUnit}" Width="80"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
-                        <TextBlock Text="{Binding LanguageLabel}" VerticalAlignment="Center"/>
-                        <ComboBox ItemsSource="{Binding AvailableLanguages}" SelectedItem="{Binding SelectedLanguage}" Width="125">
-                            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding NativeName}"/></DataTemplate></ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
+                <WrapPanel IsEnabled="{Binding CanScan}">
+                    <Button Content="{Binding [FullPreset]}" Command="{Binding ApplyFullPresetCommand}" Margin="0,0,8,0"/>
+                    <Button Content="{Binding [SourcePreset]}" Command="{Binding ApplySourcePresetCommand}"/>
                 </WrapPanel>
+                <TextBlock Text="{Binding ActiveFilters}" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ActiveFilters}"/>
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" IsEnabled="{Binding CanScan}">
                     <TextBlock Text="{Binding RecentFoldersLabel}" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="1" ItemsSource="{Binding RecentPaths}" SelectedItem="{Binding SelectedRecentPath}"
@@ -65,6 +50,26 @@
                 </Grid>
                 <Expander Header="{Binding AdvancedOptionsLabel}" HorizontalAlignment="Stretch">
                     <StackPanel Spacing="8" IsEnabled="{Binding CanScan}">
+                        <WrapPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
+                                <TextBlock Text="{Binding TopNLabel}" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding TopN}" Minimum="1" Maximum="200" FormatString="0" Width="120"/>
+                            </StackPanel>
+                            <CheckBox IsChecked="{Binding IncludeHidden}" Content="{Binding IncludeHiddenLabel}" Margin="0,0,16,6"/>
+                            <CheckBox IsChecked="{Binding FoldersOnly}" Content="{Binding FoldersOnlyLabel}"
+                                      ToolTip.Tip="{Binding FoldersOnlyTooltip}" Margin="0,0,16,6"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
+                                <TextBlock Text="{Binding MinSizeLabel}" VerticalAlignment="Center"/>
+                                <NumericUpDown Value="{Binding MinFileSize}" Minimum="0" Maximum="{Binding MaximumMinFileSize}" FormatString="0.##" Width="120"/>
+                                <ComboBox ItemsSource="{Binding SizeUnits}" SelectedItem="{Binding SelectedSizeUnit}" Width="80"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+                                <TextBlock Text="{Binding LanguageLabel}" VerticalAlignment="Center"/>
+                                <ComboBox ItemsSource="{Binding AvailableLanguages}" SelectedItem="{Binding SelectedLanguage}" Width="125">
+                                    <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding NativeName}"/></DataTemplate></ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </WrapPanel>
                         <WrapPanel>
                             <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,6">
                                 <TextBlock Text="{Binding DepthLabel}" VerticalAlignment="Center"/>
@@ -86,15 +91,22 @@
                     </StackPanel>
                 </Expander>
             </StackPanel>
+            </ScrollViewer>
         </Border>
-        <Grid Grid.Row="2" RowDefinitions="*,1.1*" RowSpacing="12">
+        <TabControl Grid.Row="2" SelectedIndex="{Binding ResultsTabIndex}">
+        <TabItem Header="{Binding [Overview]}">
+        <Grid RowDefinitions="*,1.1*" RowSpacing="12" Margin="0,8,0,0">
             <Grid ColumnDefinitions="*,*,0.9*" ColumnSpacing="10">
                 <Border Padding="10" CornerRadius="8" BorderThickness="1"
                         BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
                     <Grid RowDefinitions="Auto,*" RowSpacing="8">
                         <TextBlock Text="{Binding LargestFilesLabel}" FontSize="15" FontWeight="SemiBold"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding TopFiles}" DoubleTapped="TopFilesList_DoubleTapped"
-                                 >
+                        <ListBox Grid.Row="1" ItemsSource="{Binding TopFiles}" SelectedItem="{Binding SelectedTopFile}"
+                                 DoubleTapped="TopFilesList_DoubleTapped" KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                            <ListBox.ContextMenu><ContextMenu>
+                                <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedTopFile.FullPath}"/>
+                                <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedTopFile.FullPath}"/>
+                            </ContextMenu></ListBox.ContextMenu>
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:FileItem">
                                     <StackPanel Spacing="3" Margin="2,4" ToolTip.Tip="{Binding FullPath}">
@@ -114,8 +126,12 @@
                         BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
                     <Grid RowDefinitions="Auto,*" RowSpacing="8">
                         <TextBlock Text="{Binding LargestFoldersLabel}" FontSize="15" FontWeight="SemiBold"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding TopFolders}" DoubleTapped="TopFoldersList_DoubleTapped"
-                                 >
+                        <ListBox Grid.Row="1" ItemsSource="{Binding TopFolders}" SelectedItem="{Binding SelectedTopFolder}"
+                                 DoubleTapped="TopFoldersList_DoubleTapped" KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                            <ListBox.ContextMenu><ContextMenu>
+                                <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedTopFolder.FullPath}"/>
+                                <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedTopFolder.FullPath}"/>
+                            </ContextMenu></ListBox.ContextMenu>
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:FolderItem">
                                     <StackPanel Spacing="3" Margin="2,4" ToolTip.Tip="{Binding FullPath}">
@@ -167,10 +183,135 @@
                                FontSize="11" TextTrimming="CharacterEllipsis"/>
                     <controls:TreemapControl Grid.Row="2" Items="{Binding TreemapItems}"
                                              EmptyText="{Binding TreemapEmptyText}" ItemClicked="Treemap_ItemClicked"
+                                             NavigateUpRequested="Treemap_NavigateUpRequested"
+                                             ToolTip.Tip="{Binding [TreemapKeyboardHint]}"
                                              ClipToBounds="True"/>
                 </Grid>
             </Border>
         </Grid>
+        </TabItem>
+        <TabItem Header="{Binding [Explorer]}">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8" Margin="0,8,0,0">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Button Content="{Binding UpLabel}" Command="{Binding NavigateUpCommand}" IsEnabled="{Binding CanNavigateUp}"/>
+                    <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Breadcrumbs}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:Breadcrumb">
+                                <Button Content="{Binding Name}" Tag="{Binding FullPath}" Click="Breadcrumb_Click" ToolTip.Tip="{Binding FullPath}"/>
+                            </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <Button Grid.Column="2" Content="{Binding [Refresh]}" Command="{Binding RefreshExplorerCommand}"/>
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="*,170,190" ColumnSpacing="8">
+                    <TextBox Text="{Binding ExplorerSearch}" Watermark="{Binding [SearchFolder]}"/>
+                    <TextBox Grid.Column="1" Text="{Binding ExtensionFilter}" Watermark="{Binding [ExtensionFilter]}"/>
+                    <ComboBox Grid.Column="2" ItemsSource="{Binding SortChoices}" SelectedItem="{Binding ExplorerSort}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+                <TextBlock Grid.Row="2" Text="{Binding ExplorerStatus}" FontSize="11" TextWrapping="Wrap"/>
+                <ListBox Grid.Row="3" ItemsSource="{Binding ExplorerItems}" SelectedItem="{Binding SelectedExplorerItem}"
+                         DoubleTapped="ExplorerList_DoubleTapped" KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                    <ListBox.ContextMenu><ContextMenu>
+                        <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedExplorerItem.FullPath}"/>
+                        <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedExplorerItem.FullPath}"/>
+                    </ContextMenu></ListBox.ContextMenu>
+                    <ListBox.ItemTemplate><DataTemplate x:DataType="vm:ExplorerRow">
+                        <Grid ColumnDefinitions="*,110,150" ColumnSpacing="12" Margin="3,5" ToolTip.Tip="{Binding FullPath}">
+                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DisplaySize}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Text="{Binding DisplayModified}" FontSize="11"/>
+                        </Grid>
+                    </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <TextBlock Text="{Binding SelectedExplorerItem.FullPath}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding SelectedExplorerItem.FullPath}"/>
+                    <Button Grid.Column="1" Content="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedExplorerItem.FullPath}"/>
+                    <Button Grid.Column="2" Content="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedExplorerItem.FullPath}"/>
+                </Grid>
+            </Grid>
+        </TabItem>
+        <TabItem Header="{Binding [History]}">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8" Margin="0,8,0,0">
+                <TextBlock Text="{Binding [HistoryHint]}" TextWrapping="Wrap"/>
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <ComboBox ItemsSource="{Binding SavedScans}" SelectedItem="{Binding SelectedSavedScan}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Grid.Column="1" Content="{Binding [SaveSnapshot]}" Command="{Binding SaveSnapshotCommand}" IsEnabled="{Binding CanSaveSnapshot}"/>
+                </Grid>
+                <WrapPanel Grid.Row="2">
+                    <Button Content="{Binding [LoadSnapshot]}" Command="{Binding LoadSnapshotCommand}" Margin="0,0,8,0"/>
+                    <Button Content="{Binding [CompareSnapshot]}" Command="{Binding CompareSnapshotCommand}" Margin="0,0,8,0"/>
+                    <Button Content="{Binding [DeleteSnapshot]}" Command="{Binding DeleteSnapshotCommand}"/>
+                </WrapPanel>
+                <ListBox Grid.Row="3" ItemsSource="{Binding FolderChanges}">
+                    <ListBox.ItemTemplate><DataTemplate x:DataType="models:FolderChange">
+                        <Grid ColumnDefinitions="*,130" ColumnSpacing="10" Margin="3,5">
+                            <TextBlock Text="{Binding FullPath}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FullPath}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DisplayDelta}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Grid.Row="4" Text="{Binding ComparisonStatus}" TextWrapping="Wrap"/>
+            </Grid>
+        </TabItem>
+        <TabItem Header="{Binding [Insights]}">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8" Margin="0,8,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding InsightsStatus}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding [InsightsHint]}" TextWrapping="Wrap" FontSize="12"/>
+                </StackPanel>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Insights}" SelectedItem="{Binding SelectedInsight}"
+                         KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                    <ListBox.ContextMenu><ContextMenu>
+                        <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedInsight.FullPath}"/>
+                        <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedInsight.FullPath}"/>
+                    </ContextMenu></ListBox.ContextMenu>
+                    <ListBox.ItemTemplate><DataTemplate x:DataType="vm:InsightRow">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" Margin="3,5">
+                            <TextBlock Text="{Binding FullPath}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FullPath}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DisplaySize}" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="1" Text="{Binding Kind}" FontSize="11"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AgeNote}" FontSize="11"/>
+                        </Grid>
+                    </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                    <Button Content="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedInsight.FullPath}"/>
+                    <Button Content="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedInsight.FullPath}"/>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+        <TabItem Header="{Binding [Coverage]}">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8" Margin="0,8,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding CoverageStatus}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding [RetryHint]}" TextWrapping="Wrap" FontSize="12"/>
+                </StackPanel>
+                <ListBox Grid.Row="1" ItemsSource="{Binding CoverageItems}" SelectedItem="{Binding SelectedCoverageItem}"
+                         KeyDown="ResultList_KeyDown" ContextRequested="ResultList_ContextRequested">
+                    <ListBox.ContextMenu><ContextMenu>
+                        <MenuItem Header="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedCoverageItem.FullPath}"/>
+                        <MenuItem Header="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedCoverageItem.FullPath}"/>
+                    </ContextMenu></ListBox.ContextMenu>
+                    <ListBox.ItemTemplate><DataTemplate x:DataType="vm:CoverageRow">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="3,5">
+                            <TextBlock Text="{Binding FullPath}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FullPath}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Reason}"/>
+                        </Grid>
+                    </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                    <Button Content="{Binding [RetryCoverage]}" Command="{Binding RetryCoverageCommand}"/>
+                    <Button Content="{Binding [OpenLocation]}" Command="{Binding OpenPathCommand}" CommandParameter="{Binding SelectedCoverageItem.FullPath}"/>
+                    <Button Content="{Binding [CopyPath]}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedCoverageItem.FullPath}"/>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+        </TabControl>
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <StackPanel Spacing="3">
                 <TextBlock Text="{Binding ScanStats}" FontWeight="SemiBold"/>

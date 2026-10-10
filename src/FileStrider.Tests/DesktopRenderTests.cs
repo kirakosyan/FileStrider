@@ -139,6 +139,116 @@ public class DesktopRenderTests
         finally { window.Close(); }
     }
 
+    [AvaloniaTheory]
+    [InlineData("en", false, 1280, 860)]
+    [InlineData("fr", true, 1040, 700)]
+    [InlineData("es", false, 1040, 700)]
+    [InlineData("sv", true, 1040, 700)]
+    public async Task FeatureTabsRenderAndRelocalizeWithoutClipping(string language, bool dark, int width, int height)
+    {
+        using var fixture = new TestDirectory();
+        var result = DemoResults();
+        result.CoverageIssues.Add(new(Path.Combine(result.RootPath, "Restricted"), FileStrider.Core.Models.CoverageReason.Inaccessible, true));
+        result.Folders.Add(new FileStrider.Core.Models.FolderItem { Name = "node_modules", FullPath = Path.Combine(result.RootPath, "node_modules"), RecursiveSize = 1000000 });
+        using var vm = TestModels.Create(new DemoScanner(result), new ScanOptions { RootPath = fixture.Path });
+        await vm.Initialization;
+        var window = new MainWindow { DataContext = vm, Width = width, Height = height,
+            RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light };
+        try
+        {
+            window.Show();
+            await vm.StartScanCommand.ExecuteAsync(null);
+            vm.SelectedLanguage = vm.AvailableLanguages.Single(l => l.Code == language);
+            vm.SelectedPath = result.RootPath; vm.RecentPaths.Clear();
+            vm.NavigateTreemap(Path.Combine(result.RootPath, "Videos"));
+            await vm.ExplorerLoading;
+            vm.SavedScans.Add(new("sample", result.ScannedAt, result.RootPath, result.Progress.BytesProcessed));
+            vm.SelectedSavedScan = vm.SavedScans[0];
+            vm.FolderChanges.Add(new(Path.Combine(result.RootPath, "Videos"), 1000000, 3000000));
+            for (var tab = 0; tab < 5; tab++)
+            {
+                vm.ResultsTabIndex = tab;
+                Dispatcher.UIThread.RunJobs();
+                AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+                Assert.Equal(vm[new[] { "Overview", "Explorer", "History", "Insights", "Coverage" }[tab]],
+                    window.GetVisualDescendants().OfType<TabControl>().Single().SelectedItem is TabItem selected ? selected.Header : null);
+                foreach (var button in window.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible))
+                {
+                    var point = button.TranslatePoint(default, window)!.Value;
+                    Assert.True(point.X >= -1 && point.Y >= -1 && point.X + button.Bounds.Width <= width + 1 &&
+                        point.Y + button.Bounds.Height <= height + 1, $"Clipped button on tab {tab}: {button.Content}");
+                }
+                if (Environment.GetEnvironmentVariable("FILESTRIDER_SCREENSHOT_DIR") is { Length: > 0 } output)
+                {
+                    Directory.CreateDirectory(output);
+                    SaveStoreFrame(window, Path.Combine(output, $"feature-{language}-{tab}.png"));
+                }
+            }
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public void TreemapSupportsKeyboardSelectionActivationAndUpNavigation()
+    {
+        var first = new FileStrider.MauiApp.Models.TreemapItem { Name = "folder", Size = 50 };
+        var second = new FileStrider.MauiApp.Models.TreemapItem { Name = "aggregate", Size = 50, IsAggregate = true };
+        var map = new TreemapControl { Items = [first, second] };
+        var window = new Window { Content = map };
+        FileStrider.MauiApp.Models.TreemapItem? activated = null;
+        var up = false;
+        map.ItemClicked += (_, item) => activated = item;
+        map.NavigateUpRequested += (_, _) => up = true;
+        try
+        {
+            window.Show(); map.Focus();
+            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.ArrowRight, Avalonia.Input.RawInputModifiers.None);
+            Assert.Same(first, map.SelectedItem);
+            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.ArrowRight, Avalonia.Input.RawInputModifiers.None);
+            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.Enter, Avalonia.Input.RawInputModifiers.None);
+            Assert.Same(second, activated);
+            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.Backspace, Avalonia.Input.RawInputModifiers.None);
+            Assert.True(up);
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task ResultKeyboardAndContextMenuActionsUseSelectedPaths()
+    {
+        using var fixture = new TestDirectory();
+        var result = DemoResults();
+        var shell = new RecordingShell();
+        using var vm = new FileStrider.MauiApp.ViewModels.MainWindowViewModel(new DemoScanner(result), new NullPicker(),
+            new FileStrider.Infrastructure.Export.ExportService(), shell, new MemoryConfiguration(new ScanOptions { RootPath = fixture.Path }),
+            new FileStrider.Infrastructure.Localization.LocalizationService(), new FileStrider.Infrastructure.Analysis.FileTypeAnalyzer());
+        await vm.Initialization;
+        var window = new MainWindow { DataContext = vm };
+        try
+        {
+            window.Show(); await vm.StartScanCommand.ExecuteAsync(null);
+            Dispatcher.UIThread.RunJobs();
+            var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => ReferenceEquals(l.ItemsSource, vm.TopFiles));
+            list.SelectedIndex = 1;
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(list.ContainerFromIndex(1)!.Focus());
+            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.C, Avalonia.Input.RawInputModifiers.Control);
+            Assert.Equal(result.TopFiles[1].FullPath, shell.Copied);
+            window.KeyPressQwerty(Avalonia.Input.PhysicalKey.Enter, Avalonia.Input.RawInputModifiers.None);
+            Assert.Equal(result.TopFiles[1].FullPath, shell.Opened);
+            list.ContextMenu!.Open(list);
+            Dispatcher.UIThread.RunJobs();
+            var copy = list.ContextMenu.Items.OfType<MenuItem>().Last();
+            Assert.Equal(vm["CopyPath"], copy.Header);
+            Assert.Equal(result.TopFiles[1].FullPath, copy.CommandParameter);
+            Assert.NotNull(copy.Command);
+            copy.Command.Execute(copy.CommandParameter);
+            Assert.Equal(result.TopFiles[1].FullPath, shell.Copied);
+            list.ContextMenu.Close();
+        }
+        finally { window.Close(); }
+    }
+
     private static ScanResults DemoResults()
     {
         var root = Path.Combine(Path.GetPathRoot(Environment.CurrentDirectory)!, "Sample Storage");

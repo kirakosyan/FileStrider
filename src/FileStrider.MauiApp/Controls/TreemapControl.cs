@@ -92,6 +92,7 @@ public class TreemapControl : Control
     /// Event raised when an item is clicked.
     /// </summary>
     public event EventHandler<TreemapItem>? ItemClicked;
+    public event EventHandler? NavigateUpRequested;
 
     static TreemapControl()
     {
@@ -101,7 +102,7 @@ public class TreemapControl : Control
 
     public TreemapControl()
     {
-        // Set background in render method instead
+        Focusable = true;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -199,6 +200,8 @@ public class TreemapControl : Control
             ? Brushes.White : Brushes.Black;
         context.FillRectangle(fillBrush, rect);
         context.DrawRectangle(new Pen(BackgroundBrush, 1), rect);
+        if (item == SelectedItem && IsKeyboardFocusWithin)
+            context.DrawRectangle(new Pen(foreground, 3), rect.Deflate(2));
 
         // Draw text if rectangle is large enough
         if (rect.Width > 30 && rect.Height > 20)
@@ -293,6 +296,7 @@ public class TreemapControl : Control
     {
         base.OnPointerPressed(e);
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        Focus();
 
         var position = e.GetPosition(this);
         var clickedItem = GetItemAt(position);
@@ -303,6 +307,30 @@ public class TreemapControl : Control
             ItemClicked?.Invoke(this, clickedItem);
             InvalidateVisual();
         }
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        var items = Items?.Where(i => i.Size > 0).ToList();
+        if (items is null || items.Count == 0) return;
+        var index = SelectedItem is null ? -1 : items.IndexOf(SelectedItem);
+        switch (e.Key)
+        {
+            case Key.Right or Key.Down:
+                SelectedItem = items[(index + 1) % items.Count]; break;
+            case Key.Left or Key.Up:
+                SelectedItem = items[(index <= 0 ? items.Count : index) - 1]; break;
+            case Key.Home: SelectedItem = items[0]; break;
+            case Key.End: SelectedItem = items[^1]; break;
+            case Key.Enter or Key.Space:
+                if (SelectedItem is { } item) ItemClicked?.Invoke(this, item);
+                break;
+            case Key.Back: NavigateUpRequested?.Invoke(this, EventArgs.Empty); break;
+            default: return;
+        }
+        e.Handled = true;
+        InvalidateVisual();
     }
 
     protected override void OnPointerExited(PointerEventArgs e)

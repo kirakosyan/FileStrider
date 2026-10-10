@@ -236,6 +236,10 @@ public class ScanProgress
 /// </summary>
 public class ScanResults
 {
+    public DateTimeOffset ScannedAt { get; init; } = DateTimeOffset.UtcNow;
+    public ScanOptions? Options { get; init; }
+    public List<CoverageIssue> CoverageIssues { get; init; } = new();
+    public int OmittedCoverageIssues { get; set; }
     public string RootPath { get; init; } = string.Empty;
     public List<FolderItem> Folders { get; init; } = new();
 
