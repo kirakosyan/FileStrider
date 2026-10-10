@@ -6,7 +6,7 @@ Find large files and folders, understand storage use, and decide what to keep. F
 
 ## Version 1.2.1 (unreleased)
 
-The Microsoft Store edition checks for updates when its window opens. **Check for updates** is also available in the header and About. When an update is available, **Upgrade and close** saves settings and a snapshot of the current scan, opens File Strider's Store page, and closes all windows in this instance. Select **Update** in the Store to complete installation; close any other running File Strider instances too. Upgrades are unavailable during a scan, and failed saves or Store launches leave the app open. Offline checks do not interrupt scanning. Source builds and non-Store installations do not offer this flow.
+The Microsoft Store edition checks for updates when its window opens. **Check for updates** is also available in the header and About; its notification can be dismissed. When an update is available, **Upgrade and close** saves the current scan only if it is not already in history, opens File Strider's Store page, and closes all windows in this instance. Saved settings are preserved; use **Save settings** first to keep edited preferences. Select **Update** in the Store to complete installation; close any other running File Strider instances too. Upgrades are unavailable during a scan, and failed snapshot saves or Store launches leave the app open. Offline checks do not interrupt scanning. Source builds and non-Store installations do not offer this flow.
 
 ## Version 1.2
 

@@ -99,16 +99,17 @@ public class StoreUpdateTests
     }
 
     [Fact]
-    public async Task UpgradeSavesSettingsAndRestorableSnapshotBeforeStoreAndShutdown()
+    public async Task UpgradeSavesRestorableSnapshotAndPreservesSettingsBeforeStoreAndShutdown()
     {
         using var fixture = new Fixture();
         await fixture.Model.StartScanCommand.ExecuteAsync(null);
         fixture.Model.TopN = 37;
+        var savedSettings = fixture.Configuration.Saved;
         await fixture.Model.CheckForUpdatesOnStartupAsync();
         fixture.Events.Clear();
         await fixture.Model.UpgradeCommand.ExecuteAsync(null);
-        Assert.Equal(new[] { "settings", "snapshot", "store", "shutdown" }, fixture.Events);
-        Assert.Equal(37, fixture.Configuration.Saved.TopN);
+        Assert.Equal(new[] { "snapshot", "store", "shutdown" }, fixture.Events);
+        Assert.Same(savedSettings, fixture.Configuration.Saved);
         var info = Assert.Single(await fixture.History.Inner.ListAsync());
         var saved = await fixture.History.Inner.LoadAsync(info.Id);
         Assert.Equal(fixture.Model.LastResults!.RootPath, saved.Results.RootPath);
@@ -116,9 +117,7 @@ public class StoreUpdateTests
     }
 
     [Theory]
-    [InlineData("settings", "UpdateSaveFailed")]
     [InlineData("snapshot", "UpdateSaveFailed")]
-    [InlineData("invalid-options", "UpdateSaveFailed")]
     [InlineData("store-false", "UpdateOpenFailed")]
     [InlineData("store-throw", "UpdateOpenFailed")]
     public async Task FailedUpgradeKeepsApplicationOpenAndCanBeRetried(string failure, string expectedStatus)
@@ -127,23 +126,130 @@ public class StoreUpdateTests
         await fixture.Model.StartScanCommand.ExecuteAsync(null);
         await fixture.Model.CheckForUpdatesOnStartupAsync();
         fixture.Events.Clear();
-        fixture.Configuration.Fail = failure == "settings";
         fixture.History.Fail = failure == "snapshot";
-        if (failure == "invalid-options") fixture.Model.TopN = 0;
         if (failure == "store-false") fixture.Store.Open = _ => Task.FromResult(false);
         if (failure == "store-throw") fixture.Store.Open = _ => Task.FromException<bool>(new IOException("Store unavailable"));
         await fixture.Model.UpgradeCommand.ExecuteAsync(null);
         Assert.DoesNotContain("shutdown", fixture.Events);
-        if (failure is "settings" or "snapshot" or "invalid-options") Assert.DoesNotContain("store", fixture.Events);
+        if (failure == "snapshot") Assert.DoesNotContain("store", fixture.Events);
         Assert.True(fixture.Model.CanScan);
         Assert.False(fixture.Model.IsPreparingUpgrade);
         Assert.True(fixture.Model.UpgradeCommand.CanExecute(null));
         Assert.Equal(fixture.Model[expectedStatus], fixture.Model.UpdateStatus);
-        fixture.Configuration.Fail = fixture.History.Fail = false;
-        fixture.Model.TopN = 20;
+        fixture.History.Fail = false;
         fixture.Store.Open = _ => Task.FromResult(true);
         await fixture.Model.UpgradeCommand.ExecuteAsync(null);
         Assert.Equal("shutdown", fixture.Events.Last());
+        Assert.Single(await fixture.History.Inner.ListAsync());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UpgradeDoesNotDuplicateSavedOrLoadedSnapshot(bool load)
+    {
+        using var fixture = new Fixture();
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        await fixture.Model.SaveSnapshotCommand.ExecuteAsync(null);
+        var saved = Assert.Single(await fixture.History.Inner.ListAsync());
+        if (load) await fixture.Model.LoadSnapshotCommand.ExecuteAsync(null);
+        await fixture.Model.CheckForUpdatesOnStartupAsync();
+        fixture.Events.Clear();
+        await fixture.Model.UpgradeCommand.ExecuteAsync(null);
+        Assert.Equal(new[] { "store", "shutdown" }, fixture.Events);
+        Assert.Equal(saved.Id, Assert.Single(await fixture.History.Inner.ListAsync()).Id);
+    }
+
+    [Fact]
+    public async Task UpgradeAfterLoadingAnOldSnapshotPreservesSavedDefaults()
+    {
+        using var fixture = new Fixture();
+        fixture.Model.MaxDepth = 2;
+        fixture.Model.ExcludePatternsText = "*.old";
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        await fixture.Model.SaveSnapshotCommand.ExecuteAsync(null);
+        fixture.Model.MaxDepth = 7;
+        fixture.Model.IncludeHidden = true;
+        fixture.Model.ExcludePatternsText = "*.current";
+        await fixture.Model.SaveSettingsCommand.ExecuteAsync(null);
+        var defaults = fixture.Configuration.Saved;
+        await fixture.Model.LoadSnapshotCommand.ExecuteAsync(null);
+        Assert.Equal(2m, fixture.Model.MaxDepth);
+        Assert.Equal("*.old", fixture.Model.ExcludePatternsText);
+        await fixture.Model.CheckForUpdatesOnStartupAsync();
+        fixture.Events.Clear();
+        fixture.Configuration.Fail = true; // Upgrading must not attempt another settings write.
+        await fixture.Model.UpgradeCommand.ExecuteAsync(null);
+        Assert.Equal(new[] { "store", "shutdown" }, fixture.Events);
+        Assert.Same(defaults, fixture.Configuration.Saved);
+        Assert.Equal(7, fixture.Configuration.Saved.MaxDepth);
+        Assert.True(fixture.Configuration.Saved.IncludeHidden);
+        Assert.Contains("*.current", fixture.Configuration.Saved.ExcludePatterns);
+    }
+
+    [Fact]
+    public async Task HalfEditedOptionsDoNotBlockUpgradeOrChangeDefaults()
+    {
+        using var fixture = new Fixture();
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        var defaults = fixture.Configuration.Saved;
+        fixture.Model.ConcurrencyLimit = null;
+        fixture.Model.TopN = 0;
+        fixture.Configuration.Fail = true;
+        await fixture.Model.CheckForUpdatesOnStartupAsync();
+        fixture.Events.Clear();
+        await fixture.Model.UpgradeCommand.ExecuteAsync(null);
+        Assert.Equal(new[] { "snapshot", "store", "shutdown" }, fixture.Events);
+        Assert.Same(defaults, fixture.Configuration.Saved);
+    }
+
+    [Fact]
+    public async Task DeletingTheCurrentSnapshotAllowsUpgradeToSaveItAgain()
+    {
+        using var fixture = new Fixture();
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        await fixture.Model.SaveSnapshotCommand.ExecuteAsync(null);
+        var original = Assert.Single(await fixture.History.Inner.ListAsync());
+        await fixture.Model.LoadSnapshotCommand.ExecuteAsync(null);
+        await fixture.Model.DeleteSnapshotCommand.ExecuteAsync(null);
+        Assert.Empty(await fixture.History.Inner.ListAsync());
+        await fixture.Model.CheckForUpdatesOnStartupAsync();
+        await fixture.Model.UpgradeCommand.ExecuteAsync(null);
+        var replacement = Assert.Single(await fixture.History.Inner.ListAsync());
+        Assert.NotEqual(original.Id, replacement.Id);
+    }
+
+    [Fact]
+    public async Task DeletingOneOfTwoExplicitSavesDoesNotCauseAnotherUpgradeSnapshot()
+    {
+        using var fixture = new Fixture();
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        await fixture.Model.SaveSnapshotCommand.ExecuteAsync(null);
+        await fixture.Model.SaveSnapshotCommand.ExecuteAsync(null);
+        await fixture.Model.DeleteSnapshotCommand.ExecuteAsync(null);
+        var remaining = Assert.Single(await fixture.History.Inner.ListAsync());
+        await fixture.Model.CheckForUpdatesOnStartupAsync();
+        await fixture.Model.UpgradeCommand.ExecuteAsync(null);
+        Assert.Equal(remaining.Id, Assert.Single(await fixture.History.Inner.ListAsync()).Id);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NewScanRequiresItsOwnSnapshotEvenIfAnOlderSaveFinishesLate(bool pendingSave)
+    {
+        using var fixture = new Fixture();
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (pendingSave) fixture.History.Pending = pending.Task;
+        var saving = fixture.Model.SaveSnapshotCommand.ExecuteAsync(null);
+        if (!pendingSave) await saving;
+        await fixture.Model.StartScanCommand.ExecuteAsync(null);
+        pending.SetResult();
+        await saving;
+        await fixture.Model.CheckForUpdatesOnStartupAsync();
+        await fixture.Model.UpgradeCommand.ExecuteAsync(null);
+        Assert.Equal(2, (await fixture.History.Inner.ListAsync()).Count);
     }
 
     [Fact]
@@ -184,6 +290,35 @@ public class StoreUpdateTests
         pending.SetResult();
         await Task.WhenAll(saving, upgrade);
         Assert.Equal("shutdown", fixture.Events.Last());
+        Assert.Single(await fixture.History.Inner.ListAsync());
+    }
+
+    [AvaloniaFact]
+    public async Task UpToDateNoticeCanBeDismissedToReclaimSpaceAndCheckedAgain()
+    {
+        using var fixture = new Fixture();
+        fixture.Store.Check = _ => Task.FromResult(false);
+        await fixture.Model.Initialization;
+        var window = new MainWindow { DataContext = fixture.Model, Width = 1040, Height = 700 };
+        try
+        {
+            window.Show(); await fixture.Model.UpdateChecking; Render();
+            var notice = window.FindControl<Border>("StoreUpdateNotice")!;
+            var dismiss = window.FindControl<Button>("DismissStoreUpdateNotice")!;
+            var check = window.GetVisualDescendants().OfType<Button>().Single(b => b.Command == fixture.Model.CheckForUpdatesCommand);
+            var scan = window.GetVisualDescendants().OfType<Button>().Single(b => b.Command == fixture.Model.StartScanCommand);
+            Assert.False(notice.IsEffectivelyVisible);
+            Click(window, check); await fixture.Model.CheckForUpdatesCommand.ExecutionTask!; Render();
+            Assert.True(notice.IsEffectivelyVisible);
+            Assert.Equal(fixture.Model["UpdateCurrent"], fixture.Model.UpdateStatus);
+            var scanTopWithNotice = scan.TranslatePoint(default, window)!.Value.Y;
+            Click(window, dismiss);
+            Assert.False(notice.IsEffectivelyVisible);
+            Assert.True(scan.TranslatePoint(default, window)!.Value.Y < scanTopWithNotice);
+            Click(window, check); await fixture.Model.CheckForUpdatesCommand.ExecutionTask!; Render();
+            Assert.True(notice.IsEffectivelyVisible);
+        }
+        finally { window.Close(); }
     }
 
     [AvaloniaTheory]
@@ -214,10 +349,15 @@ public class StoreUpdateTests
             Assert.Equal(fixture.Model["UpgradeAndClose"], upgrade.Content);
             AssertFits(window);
             SaveFrame(window, $"updates-{language}-{(dark ? "dark" : "light")}.png");
+            Click(window, window.FindControl<Button>("DismissStoreUpdateNotice")!);
+            Assert.False(fixture.Model.HasUpdateNotice);
+            Assert.True(fixture.Model.HasStoreUpdate);
+            Assert.True(fixture.Model.UpgradeCommand.CanExecute(null));
             var check = window.GetVisualDescendants().OfType<Button>().Single(b => b.Command == fixture.Model.CheckForUpdatesCommand);
             Click(window, check);
             await fixture.Model.CheckForUpdatesCommand.ExecutionTask!;
             Assert.Equal(2, fixture.Store.Checks);
+            Assert.True(fixture.Model.HasUpdateNotice);
 
             using var subscription = Window.WindowOpenedEvent.AddClassHandler<Window>((opened, _) => about = opened);
             await fixture.Model.ShowAboutCommand.ExecuteAsync(null);

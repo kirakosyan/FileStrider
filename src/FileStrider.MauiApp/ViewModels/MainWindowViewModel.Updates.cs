@@ -18,17 +18,24 @@ public partial class MainWindowViewModel
 
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(UpgradeCommand))]
     private bool hasStoreUpdate;
-    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand), nameof(UpgradeCommand))]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand), nameof(UpgradeCommand), nameof(DismissUpdateNoticeCommand))]
     private bool isCheckingForUpdates;
-    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand), nameof(UpgradeCommand))]
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand), nameof(UpgradeCommand), nameof(DismissUpdateNoticeCommand))]
     private bool isPreparingUpgrade;
-    [ObservableProperty] private bool hasUpdateNotice;
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(DismissUpdateNoticeCommand))] private bool hasUpdateNotice;
 
     public string UpdateStatus => this[SupportsStoreUpdates ? _updateStatusKey : "UpdateUnsupported"];
     public string UpgradeHint => this[IsScanning ? "UpdateScanInProgress" : "UpdateCloseHint"];
     public bool CanCheckForUpdates => SupportsStoreUpdates && !IsCheckingForUpdates && !IsPreparingUpgrade && !_disposed;
     public bool CanUpgrade => SupportsStoreUpdates && HasStoreUpdate && CanScan && !IsScanning
         && !IsCheckingForUpdates && !IsPreparingUpgrade && !_disposed;
+    public bool CanDismissUpdateNotice => HasUpdateNotice && !IsCheckingForUpdates && !IsPreparingUpgrade && !_disposed;
+
+    [RelayCommand(CanExecute = nameof(CanDismissUpdateNotice))]
+    private void DismissUpdateNotice()
+    {
+        if (CanDismissUpdateNotice) HasUpdateNotice = false;
+    }
 
     // Called after the main window opens, so StoreContext has a valid owner HWND.
     public Task CheckForUpdatesOnStartupAsync()
@@ -89,11 +96,14 @@ public partial class MainWindowViewModel
                 DeleteSnapshotCommand.ExecutionTask, ExportToCsvCommand.ExecutionTask, ExportToJsonCommand.ExecutionTask }
                 .OfType<Task>());
             _updateLifetime.Token.ThrowIfCancellationRequested();
-            var options = BuildScanOptions();
-            await _configurationService.SaveDefaultOptionsAsync(options);
-            _loadedOptions = options;
-            if (_historyService is not null && LastResults is { Options: not null, Folders.Count: > 0 })
-                await _historyService.SaveAsync(LastResults);
+            // Upgrading follows normal close semantics for preferences: only an
+            // explicit Save settings (or a new scan) changes the saved defaults.
+            if (_currentSnapshotIds.Count == 0 && _historyService is not null &&
+                LastResults is { Options: not null, Folders.Count: > 0 } results)
+            {
+                var info = await _historyService.SaveAsync(results);
+                RememberSnapshot(results, info.Id);
+            }
 
             _updateLifetime.Token.ThrowIfCancellationRequested();
             failureKey = "UpdateOpenFailed";

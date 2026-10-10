@@ -383,10 +383,11 @@
   <data name="UpdateAvailable" xml:space="preserve"><value>Une mise à jour de File Strider est disponible dans Microsoft Store.</value></data>
   <data name="UpdateCurrent" xml:space="preserve"><value>Vous disposez de la dernière version disponible pour vous dans Microsoft Store.</value></data>
   <data name="UpdateCheckFailed" xml:space="preserve"><value>Impossible de vérifier Microsoft Store. Vérifiez votre connexion et réessayez.</value></data>
-  <data name="UpdateCloseHint" xml:space="preserve"><value>Vos paramètres et un instantané de l’analyse seront enregistrés, puis File Strider se fermera. Sélectionnez Mettre à jour sur sa page du Store. Fermez aussi les autres instances de File Strider.</value></data>
+  <data name="UpdateCloseHint" xml:space="preserve"><value>Les résultats d’analyse non enregistrés seront sauvegardés avant la fermeture de File Strider. Sélectionnez Mettre à jour sur sa page du Store. Fermez aussi les autres instances de File Strider.</value></data>
   <data name="UpdateScanInProgress" xml:space="preserve"><value>Terminez ou annulez l’analyse en cours avant la mise à jour.</value></data>
   <data name="UpdatePreparing" xml:space="preserve"><value>Enregistrement et ouverture de Microsoft Store…</value></data>
-  <data name="UpdateSaveFailed" xml:space="preserve"><value>Impossible d’enregistrer les paramètres ou l’instantané. File Strider reste ouvert. Vérifiez les paramètres d’analyse et l’espace disque, puis réessayez.</value></data>
+  <data name="UpdateSaveFailed" xml:space="preserve"><value>Impossible d’enregistrer l’instantané de l’analyse. File Strider reste ouvert. Vérifiez l’espace disque disponible, puis réessayez.</value></data>
   <data name="UpdateOpenFailed" xml:space="preserve"><value>Impossible d’ouvrir Microsoft Store. File Strider reste ouvert. Réessayez ou ouvrez le Store manuellement.</value></data>
   <data name="UpdateCloseFailed" xml:space="preserve"><value>Microsoft Store est ouvert, mais File Strider n’a pas pu se fermer. Fermez File Strider avant de sélectionner Mettre à jour.</value></data>
+  <data name="DismissUpdateNotice" xml:space="preserve"><value>Masquer la notification</value></data>
 </root>

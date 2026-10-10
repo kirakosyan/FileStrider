@@ -25,9 +25,9 @@
             <Button Grid.Column="2" Content="{Binding AboutLabel}" Command="{Binding ShowAboutCommand}"
                     VerticalAlignment="Center"/>
         </Grid>
-        <Border IsVisible="{Binding HasUpdateNotice}" Padding="12" CornerRadius="8" BorderThickness="1"
+        <Border x:Name="StoreUpdateNotice" IsVisible="{Binding HasUpdateNotice}" Padding="12" CornerRadius="8" BorderThickness="1"
                 BorderBrush="#137E67">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
                 <StackPanel Spacing="4">
                     <TextBlock Text="{Binding UpdateStatus}" TextWrapping="Wrap" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding UpgradeHint}" TextWrapping="Wrap" FontSize="12"
@@ -36,6 +36,10 @@
                 <Button x:Name="StoreUpgradeButton" Grid.Column="1" Content="{Binding [UpgradeAndClose]}"
                         IsVisible="{Binding HasStoreUpdate}" Command="{Binding UpgradeCommand}"
                         Background="#137E67" Foreground="White" VerticalAlignment="Center"/>
+                <Button x:Name="DismissStoreUpdateNotice" Grid.Column="2" Content="×" Width="32" Height="32"
+                        Padding="0" FontSize="18" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        VerticalAlignment="Top" Command="{Binding DismissUpdateNoticeCommand}"
+                        AutomationProperties.Name="{Binding [DismissUpdateNotice]}" ToolTip.Tip="{Binding [DismissUpdateNotice]}"/>
             </Grid>
         </Border>
         </StackPanel>

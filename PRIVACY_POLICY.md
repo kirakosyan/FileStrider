@@ -40,7 +40,7 @@ All application data is stored exclusively on your device and is never sent anyw
 | Saved scans (folder tree, top files, sizes, timestamps, scan filters and coverage paths) | `FileStrider/history` under the local app data directory | Reopen or compare scans saved with Save current scan or before closing through Upgrade and close |
 | Export files (CSV/JSON) | User-chosen location | Save scan results when you explicitly export them |
 
-Scan results are **not** persisted between sessions unless you save a scan, export a report, or choose Upgrade and close (which saves the current scan before exiting). Saved scans can be removed individually from the Saved scans tab. Their filenames and paths may contain personal information. Settings and saved scans can also be removed by clearing the FileStrider directory in local application data.
+Scan results are **not** persisted between sessions unless you save a scan, export a report, or choose Upgrade and close (which saves the current scan before exiting if it is not already saved). Saved scans can be removed individually from the Saved scans tab. Their filenames and paths may contain personal information. Settings and saved scans can also be removed by clearing the FileStrider directory in local application data.
 
 ---
 
