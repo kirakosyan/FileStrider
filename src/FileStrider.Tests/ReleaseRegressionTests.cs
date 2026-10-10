@@ -149,9 +149,10 @@ public class ReleaseRegressionTests
             var path = Path.Combine(fixture.Path, "export.csv");
             await new ExportService().ExportToCsvAsync(data, path);
             var lines = await File.ReadAllLinesAsync(path);
-            Assert.Equal(6, lines[2].Split(',').Length);
-            Assert.Contains(",1.50,", lines[2]);
-            Assert.StartsWith("'=1+1,", lines[2]);
+            var firstFile = lines[Array.IndexOf(lines, "Top Files") + 2];
+            Assert.Equal(6, firstFile.Split(',').Length);
+            Assert.Contains(",1.50,", firstFile);
+            Assert.StartsWith("'=1+1,", firstFile);
             Assert.Contains(lines, line => line.StartsWith(",'@formula,"));
         }
         finally { CultureInfo.CurrentCulture = previous; }

@@ -60,10 +60,10 @@
   </resheader>
   <!-- Application Title -->
   <data name="AppTitle" xml:space="preserve">
-    <value>FileStrider - Verktyg för fil- och mappupptäckt</value>
+    <value>File Strider — Lagringsöversikt</value>
   </data>
   <data name="AppSubtitle" xml:space="preserve">
-    <value>Verktyg för upptäckt av stora filer och mappar</value>
+    <value>Förstå din lagring. Se vad som tar upp utrymme.</value>
   </data>
   
   <!-- UI Labels -->

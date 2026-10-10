@@ -6,14 +6,14 @@
 
   <Identity Name="9971ArmenKirakosyan.FileStrider"
             Publisher="CN=BF1328E0-7B4C-496F-A203-4A69B637F145"
-            Version="1.1.1.0"
+            Version="1.1.2.0"
             ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>File Strider</DisplayName>
     <PublisherDisplayName>Armen Kirakosyan</PublisherDisplayName>
     <Logo>Assets\MsixLogo\StoreLogo.png</Logo>
-    <Description>Big File and Folder Discovery Tool. Quickly find the largest files and folders on your disk.</Description>
+    <Description>Find large files and folders, explore storage with an interactive treemap, and export reports.</Description>
   </Properties>
 
   <Dependencies>
@@ -33,15 +33,15 @@
     <Application Id="App"
                  Executable="FileStrider.MauiApp.exe"
                  EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="FileStrider"
-                          Description="Big File and Folder Discovery Tool"
+      <uap:VisualElements DisplayName="File Strider"
+                          Description="Find large files and folders and understand storage use."
                           BackgroundColor="transparent"
                           Square150x150Logo="Assets\MsixLogo\Square150x150Logo.png"
                           Square44x44Logo="Assets\MsixLogo\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\MsixLogo\Wide310x150Logo.png"
                          Square310x310Logo="Assets\MsixLogo\Square310x310Logo.png"
                          Square71x71Logo="Assets\MsixLogo\Square71x71Logo.png"
-                         ShortName="FileStrider" />
+                         ShortName="File Strider" />
         <uap:SplashScreen Image="Assets\MsixLogo\SplashScreen.png" />
       </uap:VisualElements>
     </Application>

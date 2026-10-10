@@ -577,25 +577,25 @@ public class LocalizationServiceTests
 
         // Act & Assert
         var englishString = localizationService.GetString("AppTitle");
-        Assert.Contains("FileStrider", englishString);
+        Assert.Contains("File Strider", englishString);
 
         // Switch to Spanish and test
         localizationService.ChangeLanguage("es");
         var spanishString = localizationService.GetString("AppTitle");
-        Assert.Contains("FileStrider", spanishString);
-        Assert.Contains("Herramienta", spanishString);
+        Assert.Contains("File Strider", spanishString);
+        Assert.Contains("Explorador", spanishString);
 
         // Switch to French and test
         localizationService.ChangeLanguage("fr");
         var frenchString = localizationService.GetString("AppTitle");
-        Assert.Contains("FileStrider", frenchString);
-        Assert.Contains("Outil", frenchString);
+        Assert.Contains("File Strider", frenchString);
+        Assert.Contains("Explorateur", frenchString);
 
         // Switch to Swedish and test
         localizationService.ChangeLanguage("sv");
         var swedishString = localizationService.GetString("AppTitle");
-        Assert.Contains("FileStrider", swedishString);
-        Assert.Contains("Verktyg", swedishString);
+        Assert.Contains("File Strider", swedishString);
+        Assert.Contains("Lagringsöversikt", swedishString);
     }
 
     /// <summary>

@@ -60,10 +60,10 @@
   </resheader>
   <!-- Application Title -->
   <data name="AppTitle" xml:space="preserve">
-    <value>FileStrider - Outil de Découverte de Fichiers et Dossiers</value>
+    <value>File Strider — Explorateur de stockage</value>
   </data>
   <data name="AppSubtitle" xml:space="preserve">
-    <value>Outil de Découverte de Gros Fichiers et Dossiers</value>
+    <value>Comprenez votre stockage. Repérez ce qui occupe l’espace.</value>
   </data>
   
   <!-- UI Labels -->

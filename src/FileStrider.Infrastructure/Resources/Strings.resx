@@ -60,10 +60,10 @@
   </resheader>
   <!-- Application Title -->
   <data name="AppTitle" xml:space="preserve">
-    <value>FileStrider - File &amp; Folder Discovery Tool</value>
+    <value>File Strider — Storage explorer</value>
   </data>
   <data name="AppSubtitle" xml:space="preserve">
-    <value>Big File and Folder Discovery Tool</value>
+    <value>Understand your storage. Find what takes up space.</value>
   </data>
   
   <!-- UI Labels -->

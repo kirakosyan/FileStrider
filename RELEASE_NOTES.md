@@ -1,3 +1,14 @@
+File Strider 1.1.2 — 1 October 2026
+
+- More accurate totals when following directory links, including linked roots, aliases and cycles. Real folders keep their original paths in results.
+- Followed file links use the target's size and timestamp. Unavailable targets appear in coverage details.
+- Folder timestamps are preserved during concurrent scans.
+- CSV reports begin with scan status, totals and coverage, using the same metadata as JSON.
+- Settings recover cleanly after a failed save while preserving the original error.
+- Treemaps remain stable with very large size differences and avoid repeated summation during layout.
+- Clearer app branding and more readable advanced scan controls.
+- Refreshed Store descriptions, search keywords and localized screenshots using only synthetic sample data.
+
 File Strider 1.1.1 — 6 September 2026
 
 - Fixed scans of drive roots such as C:\ failing immediately on Windows.

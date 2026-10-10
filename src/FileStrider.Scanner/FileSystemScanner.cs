@@ -49,7 +49,17 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
             try
             {
                 await foreach (var entry in EnumerateAsync(options, state, linked.Token).ConfigureAwait(false))
+                {
+                    // Register metadata before workers can process this directory's files.
+                    if (entry.IsDirectory)
+                    {
+                        if (!folders.TryAdd(entry.Path, new FolderAccumulator(entry.Modified)))
+                            throw new InvalidOperationException($"Directory metadata was registered twice: {entry.Path}");
+                        if (!PathComparer.Equals(entry.Path, options.RootPath)) state.IncrementFoldersScanned();
+                        continue;
+                    }
                     await channel.Writer.WriteAsync(entry, linked.Token).ConfigureAwait(false);
+                }
             }
             finally { channel.Writer.TryComplete(); }
         })));
@@ -60,12 +70,6 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                 await foreach (var entry in channel.Reader.ReadAllAsync(linked.Token).ConfigureAwait(false))
                 {
                     linked.Token.ThrowIfCancellationRequested();
-                    if (entry.IsDirectory)
-                    {
-                        folders.GetOrAdd(entry.Path, _ => new FolderAccumulator(entry.Modified));
-                        if (!PathComparer.Equals(entry.Path, options.RootPath)) state.IncrementFoldersScanned();
-                        continue;
-                    }
                     if (!options.FoldersOnly)
                     {
                         var category = fileTypeAnalyzer.GetFileCategory(Path.GetExtension(entry.Path));
@@ -80,8 +84,9 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                     {
                         parent = NormalizePath(parent);
                         if (!IsWithinRoot(parent, options.RootPath)) break;
-                        folders.GetOrAdd(parent, _ => new FolderAccumulator(DateTime.MinValue))
-                            .Add(entry.Size, PathComparer.Equals(parent, directParent));
+                        if (!folders.TryGetValue(parent, out var folder))
+                            throw new InvalidOperationException($"Missing directory metadata for scanned file: {parent}");
+                        folder.Add(entry.Size, PathComparer.Equals(parent, directParent));
                         if (PathComparer.Equals(parent, options.RootPath)) break;
                     }
                     state.IncrementFilesScanned();
@@ -137,23 +142,32 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
     private static async IAsyncEnumerable<Entry> EnumerateAsync(ScanOptions options, ScanProgress progress,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
-        var stack = new Stack<(string Path, string PhysicalPath, int Depth)>();
+        var directories = new Stack<(string Path, int Depth, bool IsLink)>();
+        var links = new Stack<(string Path, int Depth, bool IsLink)>();
         var root = new DirectoryInfo(options.RootPath);
-        // Windows cannot ResolveLinkTarget on a volume root such as C:\ even
-        // though it exists. Only ask for a link target on actual reparse points.
-        var physicalRoot = (root.Attributes & FileAttributes.ReparsePoint) != 0
-            ? root.ResolveLinkTarget(true)?.FullName ?? root.FullName
-            : root.FullName;
-        stack.Push((root.FullName, physicalRoot, 0));
-        var visited = new HashSet<string>(PathComparer);
+        directories.Push((root.FullName, 0, false));
+        var visited = new HashSet<DirectoryIdentity>();
+        var unidentified = new HashSet<string>(PathComparer);
         var enumeration = new EnumerationOptions { AttributesToSkip = 0, IgnoreInaccessible = false, RecurseSubdirectories = false };
-        while (stack.TryPop(out var current))
+        while (directories.Count > 0 || links.Count > 0)
         {
             token.ThrowIfCancellationRequested();
-            if (!visited.Add(NormalizePath(current.PhysicalPath)))
+            // Finish real directory branches before any aliases can claim their identities.
+            var current = directories.Count > 0 ? directories.Pop() : links.Pop();
+            if (DirectoryIdentity.TryGet(current.Path, out var identity))
             {
-                progress.IncrementExcludedItems();
-                continue;
+                if (!visited.Add(identity))
+                {
+                    progress.IncrementExcludedItems();
+                    continue;
+                }
+            }
+            else
+            {
+                progress.IncrementInaccessibleItems();
+                // Keep readable roots and real directories, but do not follow unidentified
+                // links: there is no reliable way to rule out a cycle or duplicate target.
+                if (current.IsLink || !unidentified.Add(NormalizePath(current.Path))) continue;
             }
             yield return new Entry(new DirectoryInfo(current.Path).Name, current.Path, 0, true, SafeModified(current.Path));
             foreach (var info in ReadDirectory(current.Path, enumeration, progress))
@@ -184,14 +198,16 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                             progress.IncrementDepthLimitedDirectories();
                             continue;
                         }
-                        var physical = (attributes & FileAttributes.ReparsePoint) != 0
-                            ? info.ResolveLinkTarget(true)?.FullName ?? info.FullName
-                            : Path.Combine(current.PhysicalPath, info.Name);
-                        stack.Push((NormalizePath(info.FullName), physical, current.Depth + 1));
+                        var isLink = (attributes & FileAttributes.ReparsePoint) != 0;
+                        (isLink ? links : directories).Push((NormalizePath(info.FullName), current.Depth + 1, isLink));
                     }
                     else
                     {
-                        entry = new Entry(info.Name, info.FullName, ((FileInfo)info).Length, false, info.LastWriteTime);
+                        // Unix reports a broken directory link as a file and Length as
+                        // the link text's length. Read the final target's metadata instead.
+                        var file = (attributes & FileAttributes.ReparsePoint) != 0 && info.ResolveLinkTarget(true) is FileInfo target
+                            ? target : (FileInfo)info;
+                        entry = new Entry(info.Name, info.FullName, file.Length, false, file.LastWriteTime);
                     }
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)

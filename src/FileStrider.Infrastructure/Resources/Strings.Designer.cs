@@ -61,7 +61,7 @@ namespace FileStrider.Infrastructure.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Big File and Folder Discovery Tool.
+        ///   Looks up a localized string similar to Understand your storage. Find what takes up space..
         /// </summary>
         internal static string AppSubtitle {
             get {
@@ -70,7 +70,7 @@ namespace FileStrider.Infrastructure.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FileStrider - File &amp; Folder Discovery Tool.
+        ///   Looks up a localized string similar to File Strider — Storage explorer.
         /// </summary>
         internal static string AppTitle {
             get {
