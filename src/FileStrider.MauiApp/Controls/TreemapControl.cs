@@ -30,6 +30,8 @@ public class TreemapControl : Control
     /// </summary>
     public static readonly StyledProperty<string> EmptyTextProperty =
         AvaloniaProperty.Register<TreemapControl, string>(nameof(EmptyText), "No data to display. Run a scan to see the treemap.");
+    public static readonly StyledProperty<string> HintTextProperty = AvaloniaProperty.Register<TreemapControl, string>(nameof(HintText), "");
+    public string HintText { get => GetValue(HintTextProperty); set => SetValue(HintTextProperty, value); }
 
     private TreemapItem? _hoveredItem;
 
@@ -92,21 +94,23 @@ public class TreemapControl : Control
     /// Event raised when an item is clicked.
     /// </summary>
     public event EventHandler<TreemapItem>? ItemClicked;
+    public event EventHandler? NavigateUpRequested;
 
     static TreemapControl()
     {
-        AffectsRender<TreemapControl>(ItemsProperty, SelectedItemProperty, EmptyTextProperty);
+        AffectsRender<TreemapControl>(ItemsProperty, SelectedItemProperty, EmptyTextProperty, IsKeyboardFocusWithinProperty);
         AffectsMeasure<TreemapControl>(ItemsProperty);
     }
 
     public TreemapControl()
     {
-        // Set background in render method instead
+        Focusable = true;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+        if (change.Property == HintTextProperty) UpdateToolTip();
 
         if (change.Property == ItemsProperty)
         {
@@ -120,6 +124,9 @@ public class TreemapControl : Control
                 newItems.CollectionChanged += OnItemsCollectionChanged;
             }
 
+            _hoveredItem = null;
+            SelectedItem = IsKeyboardFocusWithin ? Items?.FirstOrDefault(i => i.Size > 0) : null;
+            UpdateToolTip();
             InvalidateVisual();
         }
 
@@ -133,9 +140,18 @@ public class TreemapControl : Control
     private void OnItemsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         _hoveredItem = null;
-        SelectedItem = null;
-        ToolTip.SetTip(this, null);
+        SelectedItem = IsKeyboardFocusWithin ? Items?.FirstOrDefault(i => i.Size > 0) : null;
+        UpdateToolTip();
         InvalidateVisual();
+    }
+
+    private void UpdateToolTip() => ToolTip.SetTip(this, _hoveredItem is { } item
+        ? $"{item.Name}\nSize: {FormatFileSize(item.Size)}\nPath: {item.FullPath}\n{HintText}" : HintText);
+
+    protected override void OnGotFocus(GotFocusEventArgs e)
+    {
+        base.OnGotFocus(e);
+        SelectedItem ??= Items?.FirstOrDefault(i => i.Size > 0);
     }
 
     public override void Render(DrawingContext context)
@@ -199,6 +215,8 @@ public class TreemapControl : Control
             ? Brushes.White : Brushes.Black;
         context.FillRectangle(fillBrush, rect);
         context.DrawRectangle(new Pen(BackgroundBrush, 1), rect);
+        if (item == SelectedItem && IsKeyboardFocusWithin)
+            context.DrawRectangle(new Pen(foreground, 3), rect.Deflate(Math.Min(2, Math.Min(rect.Width, rect.Height) / 2)));
 
         // Draw text if rectangle is large enough
         if (rect.Width > 30 && rect.Height > 20)
@@ -277,15 +295,7 @@ public class TreemapControl : Control
             _hoveredItem = newHoveredItem;
             InvalidateVisual();
 
-            // Update tooltip
-            if (_hoveredItem != null)
-            {
-                ToolTip.SetTip(this, $"{_hoveredItem.Name}\nSize: {FormatFileSize(_hoveredItem.Size)}\nPath: {_hoveredItem.FullPath}");
-            }
-            else
-            {
-                ToolTip.SetTip(this, null);
-            }
+            UpdateToolTip();
         }
     }
 
@@ -293,6 +303,7 @@ public class TreemapControl : Control
     {
         base.OnPointerPressed(e);
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        Focus();
 
         var position = e.GetPosition(this);
         var clickedItem = GetItemAt(position);
@@ -305,6 +316,30 @@ public class TreemapControl : Control
         }
     }
 
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        var items = Items?.Where(i => i.Size > 0).ToList();
+        if (items is null || items.Count == 0) return;
+        var index = SelectedItem is null ? -1 : items.IndexOf(SelectedItem);
+        switch (e.Key)
+        {
+            case Key.Right or Key.Down:
+                SelectedItem = items[(index + 1) % items.Count]; break;
+            case Key.Left or Key.Up:
+                SelectedItem = items[(index <= 0 ? items.Count : index) - 1]; break;
+            case Key.Home: SelectedItem = items[0]; break;
+            case Key.End: SelectedItem = items[^1]; break;
+            case Key.Enter or Key.Space:
+                if (SelectedItem is { } item) ItemClicked?.Invoke(this, item);
+                break;
+            case Key.Back: NavigateUpRequested?.Invoke(this, EventArgs.Empty); break;
+            default: return;
+        }
+        e.Handled = true;
+        InvalidateVisual();
+    }
+
     protected override void OnPointerExited(PointerEventArgs e)
     {
         base.OnPointerExited(e);
@@ -313,7 +348,7 @@ public class TreemapControl : Control
         {
             _hoveredItem = null;
             InvalidateVisual();
-            ToolTip.SetTip(this, null);
+            UpdateToolTip();
         }
     }
 

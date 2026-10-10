@@ -8,8 +8,10 @@ using FileStrider.Core.Models;
 namespace FileStrider.Scanner;
 
 /// <summary>Scans metadata without opening file contents. Memory usage is bounded by directories and top-N results.</summary>
-public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystemScanner
+public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystemScanner, IFolderContentService
 {
+    private readonly DirectoryIdentityReader _readIdentity = DirectoryIdentity.TryGet;
+    internal FileSystemScanner(IFileTypeAnalyzer analyzer, DirectoryIdentityReader readIdentity) : this(analyzer) => _readIdentity = readIdentity;
     private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
     private static StringComparison PathComparison => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
@@ -28,8 +30,10 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
             throw new ArgumentOutOfRangeException(nameof(options), "File size and depth cannot be negative.");
 
         options = options with { RootPath = NormalizePath(options.RootPath) };
-        var results = new ScanResults { RootPath = options.RootPath };
+        var results = new ScanResults { RootPath = options.RootPath, Options = options with { RecentPaths = [] } };
         var state = new ScanProgress();
+        var coverage = new CoverageCollector(state);
+        var projectDirectories = new HashSet<string>(PathComparer);
         var timer = Stopwatch.StartNew();
         using var topFiles = new TopItemsTracker<FileItem>(options.TopN, (a, b) => b.Size.CompareTo(a.Size));
         var folders = new ConcurrentDictionary<string, FolderAccumulator>(PathComparer);
@@ -37,6 +41,22 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var channel = Channel.CreateBounded<Entry>(new BoundedChannelOptions(2000) { SingleWriter = true });
         var tasks = new List<Task>();
+        using var reporting = CancellationTokenSource.CreateLinkedTokenSource(linked.Token);
+        var reporter = Task.Run(async () =>
+        {
+            try
+            {
+                using var ticks = new PeriodicTimer(TimeSpan.FromMilliseconds(200));
+                while (await ticks.WaitForNextTickAsync(reporting.Token).ConfigureAwait(false))
+                {
+                    var snapshot = state.CreateSnapshot();
+                    snapshot.Elapsed = timer.Elapsed;
+                    progress?.Report(snapshot);
+                }
+            }
+            catch (OperationCanceledException) when (reporting.IsCancellationRequested) { }
+            catch { await linked.CancelAsync().ConfigureAwait(false); throw; }
+        });
 
         // Do not pass a token to Task.Run: even a pre-cancelled scan must run the producer's finally.
         async Task Supervise(Func<Task> work)
@@ -48,7 +68,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
         {
             try
             {
-                await foreach (var entry in EnumerateAsync(options, state, linked.Token).ConfigureAwait(false))
+                await foreach (var entry in EnumerateAsync(options, state, coverage, linked.Token).ConfigureAwait(false))
                 {
                     // Register metadata before workers can process this directory's files.
                     if (entry.IsDirectory)
@@ -58,6 +78,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                         if (!PathComparer.Equals(entry.Path, options.RootPath)) state.IncrementFoldersScanned();
                         continue;
                     }
+                    if (ProjectMarkers.IsMarker(entry.Name)) projectDirectories.Add(Path.GetDirectoryName(entry.Path)!);
                     await channel.Writer.WriteAsync(entry, linked.Token).ConfigureAwait(false);
                 }
             }
@@ -92,12 +113,6 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                     state.IncrementFilesScanned();
                     state.AddBytesProcessed(entry.Size);
                     state.CurrentPath = entry.Path;
-                    if (state.FilesScanned % 100 == 0)
-                    {
-                        var snapshot = state.CreateSnapshot();
-                        snapshot.Elapsed = timer.Elapsed;
-                        progress?.Report(snapshot);
-                    }
                 }
             })));
         }
@@ -118,7 +133,16 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
             if (failure is null) results.WasCancelled = true;
             else results.ErrorMessage = failure.Message;
         }
+        finally
+        {
+            await reporting.CancelAsync().ConfigureAwait(false);
+            try { await reporter.ConfigureAwait(false); }
+            catch (Exception ex) { results.ErrorMessage ??= ex.Message; results.IsCompleted = false; results.WasCancelled = cancellationToken.IsCancellationRequested; }
+        }
 
+        results.CoverageIssues.AddRange(coverage.Issues);
+        results.ProjectDirectories.AddRange(projectDirectories);
+        results.OmittedCoverageIssues = coverage.Omitted;
         results.TopFiles.AddRange(topFiles.GetTop());
         foreach (var (path, value) in folders)
         {
@@ -139,8 +163,20 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
         return results;
     }
 
-    private static async IAsyncEnumerable<Entry> EnumerateAsync(ScanOptions options, ScanProgress progress,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    public Task<FolderContents> ReadFilesAsync(string path, ScanOptions options, CancellationToken cancellationToken = default) => Task.Run(async () =>
+    {
+        var state = new ScanProgress();
+        var coverage = new CoverageCollector(state);
+        var files = new List<FileItem>();
+        await foreach (var entry in EnumerateAsync(options with { RootPath = NormalizePath(path) }, state, coverage, cancellationToken, directFilesOnly: true))
+            if (!entry.IsDirectory)
+                files.Add(new FileItem { Name = entry.Name, FullPath = entry.Path, Size = entry.Size,
+                    Type = Path.GetExtension(entry.Path), LastModified = entry.Modified });
+        return new FolderContents { Files = files, Issues = coverage.Issues, OmittedIssues = coverage.Omitted };
+    }, cancellationToken);
+
+    private async IAsyncEnumerable<Entry> EnumerateAsync(ScanOptions options, ScanProgress progress, CoverageCollector coverage,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token, bool directFilesOnly = false)
     {
         var directories = new Stack<(string Path, int Depth, bool IsLink)>();
         var links = new Stack<(string Path, int Depth, bool IsLink)>();
@@ -154,33 +190,39 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
             token.ThrowIfCancellationRequested();
             // Finish real directory branches before any aliases can claim their identities.
             var current = directories.Count > 0 ? directories.Pop() : links.Pop();
-            if (DirectoryIdentity.TryGet(current.Path, out var identity))
+            progress.CurrentPath = current.Path;
+            if (_readIdentity(current.Path, out var identity))
             {
                 if (!visited.Add(identity))
                 {
-                    progress.IncrementExcludedItems();
+                    coverage.Add(current.Path, CoverageReason.Duplicate, true);
                     continue;
                 }
             }
             else
             {
-                progress.IncrementInaccessibleItems();
                 // Keep readable roots and real directories, but do not follow unidentified
                 // links: there is no reliable way to rule out a cycle or duplicate target.
-                if (current.IsLink || !unidentified.Add(NormalizePath(current.Path))) continue;
+                if (current.IsLink || !unidentified.Add(NormalizePath(current.Path)))
+                {
+                    coverage.Add(current.Path, CoverageReason.IdentityUnavailable, true);
+                    continue;
+                }
             }
             yield return new Entry(new DirectoryInfo(current.Path).Name, current.Path, 0, true, SafeModified(current.Path));
-            foreach (var info in ReadDirectory(current.Path, enumeration, progress))
+            foreach (var info in ReadDirectory(current.Path, enumeration, coverage))
             {
                 token.ThrowIfCancellationRequested();
+                progress.CurrentPath = info.FullName;
                 Entry? entry = null;
                 try
                 {
                     var attributes = info.Attributes;
                     var directory = (attributes & FileAttributes.Directory) != 0;
+                    if (directory && directFilesOnly) continue;
                     if ((attributes & FileAttributes.Offline) != 0)
                     {
-                        progress.IncrementOfflineItems();
+                        coverage.Add(info.FullName, CoverageReason.Offline, directory);
                         continue;
                     }
                     if ((!options.IncludeHidden && ((attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0 || info.Name.StartsWith('.')))
@@ -188,14 +230,14 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                         || MatchesPattern(info.Name, options.ExcludePatterns)
                         || (directory && IsExcludedDirectory(info.FullName, options)))
                     {
-                        progress.IncrementExcludedItems();
+                        coverage.Add(info.FullName, CoverageReason.Filtered, directory);
                         continue;
                     }
                     if (directory)
                     {
                         if (options.MaxDepth.HasValue && current.Depth >= options.MaxDepth.Value)
                         {
-                            progress.IncrementDepthLimitedDirectories();
+                            coverage.Add(info.FullName, CoverageReason.DepthLimit, true);
                             continue;
                         }
                         var isLink = (attributes & FileAttributes.ReparsePoint) != 0;
@@ -212,7 +254,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
                 {
-                    progress.IncrementInaccessibleItems();
+                    coverage.Add(info.FullName, CoverageReason.Inaccessible, info is DirectoryInfo);
                 }
                 if (entry is not null) yield return entry;
             }
@@ -221,12 +263,12 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
     }
 
     // MoveNext may fail after enumeration has begun (removed directories, unavailable shares, permissions).
-    private static IEnumerable<FileSystemInfo> ReadDirectory(string path, EnumerationOptions options, ScanProgress progress)
+    private static IEnumerable<FileSystemInfo> ReadDirectory(string path, EnumerationOptions options, CoverageCollector coverage)
     {
         IEnumerator<FileSystemInfo>? iterator = null;
         try { iterator = new DirectoryInfo(path).EnumerateFileSystemInfos("*", options).GetEnumerator(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
-        { progress.IncrementInaccessibleItems(); }
+        { coverage.Add(path, CoverageReason.Inaccessible, true); }
         if (iterator is null) yield break;
         using (iterator)
         {
@@ -235,7 +277,7 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
                 FileSystemInfo? item = null;
                 try { if (iterator.MoveNext()) item = iterator.Current; }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
-                { progress.IncrementInaccessibleItems(); }
+                { coverage.Add(path, CoverageReason.Inaccessible, true); }
                 if (item is null) yield break;
                 yield return item;
             }
@@ -268,6 +310,23 @@ public class FileSystemScanner(IFileTypeAnalyzer fileTypeAnalyzer) : IFileSystem
         path.StartsWith(Path.EndsInDirectorySeparator(root) ? root : root + Path.DirectorySeparatorChar, PathComparison);
 
     private sealed record Entry(string Name, string Path, long Size, bool IsDirectory, DateTime Modified);
+    private sealed class CoverageCollector(ScanProgress progress)
+    {
+        public List<CoverageIssue> Issues { get; } = [];
+        public int Omitted { get; private set; }
+        public void Add(string path, CoverageReason reason, bool directory)
+        {
+            switch (reason)
+            {
+                case CoverageReason.Filtered or CoverageReason.Duplicate: progress.IncrementExcludedItems(); break;
+                case CoverageReason.Offline: progress.IncrementOfflineItems(); break;
+                case CoverageReason.DepthLimit: progress.IncrementDepthLimitedDirectories(); break;
+                default: progress.IncrementInaccessibleItems(); break;
+            }
+            if (Issues.Count < 5000) Issues.Add(new(path, reason, directory));
+            else Omitted++;
+        }
+    }
     private sealed class FolderAccumulator(DateTime modified)
     {
         private long _total, _direct;

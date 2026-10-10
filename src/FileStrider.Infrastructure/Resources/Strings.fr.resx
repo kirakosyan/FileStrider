@@ -317,4 +317,62 @@
     <value>{0:N0} fichiers · {1:N0} dossiers · {2} · {3:g}</value>
   </data>
   <data name="AppVersion" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="FullPreset" xml:space="preserve"><value>Analyse complète</value></data>
+  <data name="SourcePreset" xml:space="preserve"><value>Fichiers source uniquement</value></data>
+  <data name="ActiveFilters" xml:space="preserve"><value>Motifs exclus : {0} · Dossiers : {1}</value></data>
+  <data name="None" xml:space="preserve"><value>aucun</value></data>
+  <data name="HiddenIncluded" xml:space="preserve"><value>Éléments masqués inclus</value></data>
+  <data name="HiddenExcluded" xml:space="preserve"><value>Éléments masqués exclus</value></data>
+  <data name="LinksFollowed" xml:space="preserve"><value>Liens suivis</value></data>
+  <data name="LinksSkipped" xml:space="preserve"><value>Liens ignorés</value></data>
+  <data name="Overview" xml:space="preserve"><value>Vue d’ensemble</value></data>
+  <data name="Explorer" xml:space="preserve"><value>Explorer</value></data>
+  <data name="History" xml:space="preserve"><value>Analyses enregistrées</value></data>
+  <data name="Insights" xml:space="preserve"><value>Espace développeur</value></data>
+  <data name="Coverage" xml:space="preserve"><value>Couverture</value></data>
+  <data name="OpenLocation" xml:space="preserve"><value>Ouvrir l’emplacement</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>Copier le chemin</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Actualiser les fichiers</value></data>
+  <data name="SearchFolder" xml:space="preserve"><value>Rechercher dans ce dossier…</value></data>
+  <data name="ExtensionFilter" xml:space="preserve"><value>Extensions : .zip, .log</value></data>
+  <data name="SizeDescending" xml:space="preserve"><value>Taille décroissante</value></data>
+  <data name="SizeAscending" xml:space="preserve"><value>Taille croissante</value></data>
+  <data name="NameAscending" xml:space="preserve"><value>Nom : A–Z</value></data>
+  <data name="NewestFirst" xml:space="preserve"><value>Modification récente</value></data>
+  <data name="LoadingFolder" xml:space="preserve"><value>Lecture des métadonnées…</value></data>
+  <data name="LiveFolderNotice" xml:space="preserve"><value>{0:N0} fichiers actuels · {1:N0} éléments ignorés. Fichiers en direct ; tailles des dossiers issues de l’analyse. Entrée : ouvrir, Ctrl/Cmd+C : copier, Retour arrière : parent.</value></data>
+  <data name="HistoryHint" xml:space="preserve"><value>Enregistrez localement les analyses, ouvrez leur arborescence ou comparez la référence sélectionnée à l’analyse affichée. Les totaux des dossiers se recoupent ; ne les additionnez pas.</value></data>
+  <data name="SaveSnapshot" xml:space="preserve"><value>Enregistrer l’analyse</value></data>
+  <data name="LoadSnapshot" xml:space="preserve"><value>Ouvrir l’analyse</value></data>
+  <data name="CompareSnapshot" xml:space="preserve"><value>Comparer à l’actuelle</value></data>
+  <data name="DeleteSnapshot" xml:space="preserve"><value>Supprimer l’analyse</value></data>
+  <data name="SnapshotSaved" xml:space="preserve"><value>Analyse enregistrée localement.</value></data>
+  <data name="SnapshotLoaded" xml:space="preserve"><value>Analyse du {0:g}. L’explorateur lit les métadonnées actuelles du disque.</value></data>
+  <data name="CompareDifferentRoot" xml:space="preserve"><value>Choisissez une analyse du même dossier racine.</value></data>
+  <data name="CompareDifferentFilters" xml:space="preserve"><value>Les filtres ou limites de profondeur diffèrent. Relancez avec les mêmes paramètres avant de comparer.</value></data>
+  <data name="CompareIncomplete" xml:space="preserve"><value>Une analyse est inachevée, annulée ou en échec. Terminez les deux avec succès avant de comparer.</value></data>
+  <data name="ComparisonSummary" xml:space="preserve"><value>Référence {0:g} → analyse affichée {1:g} · {2:N0} dossiers modifiés</value></data>
+  <data name="InsightDependencies" xml:space="preserve"><value>Dépendances</value></data>
+  <data name="InsightBuilds" xml:space="preserve"><value>Résultats de compilation</value></data>
+  <data name="InsightCaches" xml:space="preserve"><value>Caches</value></data>
+  <data name="OlderArtifact" xml:space="preserve"><value>Date du dossier de plus de 180 jours</value></data>
+  <data name="InsightsSummary" xml:space="preserve"><value>{0:N0} dossiers développeur · {1} sans doublons imbriqués</value></data>
+  <data name="InsightsHint" xml:space="preserve"><value>Les candidats nécessitent des marqueurs de projet proches, comme package.json ou un fichier de projet, relevés pendant l’analyse. La date d’un dossier ne prouve pas la dernière utilisation de son contenu. Vérifiez avant de nettoyer ; File Strider ne supprime aucun fichier.</value></data>
+  <data name="CoverageCount" xml:space="preserve"><value>{0:N0} problèmes enregistrés · {1:N0} omis (limite de 5 000)</value></data>
+  <data name="CoverageFiltered" xml:space="preserve"><value>Exclu par les filtres</value></data>
+  <data name="CoverageInaccessible" xml:space="preserve"><value>Inaccessible ou supprimé</value></data>
+  <data name="CoverageOffline" xml:space="preserve"><value>Élément cloud hors ligne</value></data>
+  <data name="CoverageDepthLimit" xml:space="preserve"><value>Limite de profondeur</value></data>
+  <data name="CoverageDuplicate" xml:space="preserve"><value>Déjà visité (lien ou alias)</value></data>
+  <data name="CoverageIdentityUnavailable" xml:space="preserve"><value>Identité du dossier indisponible</value></data>
+  <data name="RetryCoverage" xml:space="preserve"><value>Analyser cet emplacement</value></data>
+  <data name="RetryHint" xml:space="preserve"><value>Relancer démarre une analyse complète du dossier choisi (ou du parent du fichier), sans modifier vos paramètres. Elle remplace les résultats actuels ; enregistrez-les pour les conserver. Les éléments hors ligne restent ignorés.</value></data>
+  <data name="TreemapKeyboardHint" xml:space="preserve"><value>Flèches : sélectionner ; Entrée : ouvrir ; Retour arrière : parent. Les groupes ouvrent l’explorateur.</value></data>
+  <data name="ScanStatusComplete" xml:space="preserve"><value>Terminée</value></data>
+  <data name="ScanStatusPartial" xml:space="preserve"><value>Partielle</value></data>
+  <data name="ScanStatusCancelled" xml:space="preserve"><value>Annulée</value></data>
+  <data name="ScanStatusFailed" xml:space="preserve"><value>Échec</value></data>
+  <data name="CompareCoverageUnknown" xml:space="preserve"><value>Les détails des éléments ignorés sont incomplets ; la couverture ne peut pas être entièrement comparée. Les variations de taille peuvent refléter des différences de couverture.</value></data>
+  <data name="CompareCoverageChanged" xml:space="preserve"><value>Les chemins ignorés ou leurs motifs diffèrent entre les analyses. Les variations de taille peuvent refléter des différences de couverture.</value></data>
+  <data name="CompareCoveragePartial" xml:space="preserve"><value>Les deux analyses ont ignoré les mêmes emplacements. Les variations concernent uniquement le stockage analysé.</value></data>
 </root>

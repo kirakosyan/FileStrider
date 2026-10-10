@@ -39,9 +39,10 @@ internal sealed class NullPicker : IFolderPicker { public Task<string?> PickFold
 internal sealed class RecordingShell : IShellService
 {
     public string? Opened { get; private set; }
+    public string? Copied { get; private set; }
     public Task OpenFileLocationAsync(string path) { Opened = path; return Task.CompletedTask; }
     public Task OpenUrlAsync(string url) => Task.CompletedTask;
-    public Task CopyToClipboardAsync(string text) => Task.CompletedTask;
+    public Task CopyToClipboardAsync(string text) { Copied = text; return Task.CompletedTask; }
 }
 
 internal static class TestModels

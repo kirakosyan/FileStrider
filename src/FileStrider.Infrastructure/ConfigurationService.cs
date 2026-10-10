@@ -90,10 +90,8 @@ public class ConfigurationService : IConfigurationService
         Language = new[] { "en", "fr", "es", "sv" }.Contains(options.Language) ? options.Language : "en"
     };
 
-    private static ScanOptions GetDefaultOptions() => new()
+    private static ScanOptions GetDefaultOptions() => ScanPresets.Full(new ScanOptions
     {
-        RootPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ExcludePatterns = new(StringComparer.OrdinalIgnoreCase) { "*.tmp", "*.temp", "*.log" },
-        ExcludeDirectories = new(StringComparer.OrdinalIgnoreCase) { "node_modules", ".git", "Library/Caches", ".vs", "bin", "obj" }
-    };
+        RootPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+    });
 }

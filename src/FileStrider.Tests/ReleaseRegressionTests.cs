@@ -48,8 +48,9 @@ public class ReleaseRegressionTests
         using var fixture = new TestDirectory();
         for (var i = 0; i < 500; i++) fixture.File($"child/{i}.txt", 10);
         using var cancellation = new CancellationTokenSource();
-        var reports = new InlineProgress<ScanProgress>(p => { if (p.FilesScanned >= 100) cancellation.Cancel(); });
-        var result = await Scanner().ScanAsync(Options(fixture) with { ConcurrencyLimit = workers }, reports, cancellation.Token)
+        using var release = new ManualResetEventSlim();
+        var reports = new InlineProgress<ScanProgress>(p => { if (p.FilesScanned >= 100) { cancellation.Cancel(); release.Set(); } });
+        var result = await new FileSystemScanner(new PausingAnalyzer(release)).ScanAsync(Options(fixture) with { ConcurrencyLimit = workers }, reports, cancellation.Token)
             .WaitAsync(TimeSpan.FromSeconds(5));
         Assert.True(result.WasCancelled);
         Assert.False(result.IsCompleted);
@@ -59,6 +60,17 @@ public class ReleaseRegressionTests
         await Task.Delay(30);
         Assert.Equal(size, result.Progress.BytesProcessed);
         Assert.Equal(size, result.Folders.Single(f => f.FullPath == fixture.Path).RecursiveSize);
+    }
+
+    private sealed class PausingAnalyzer(ManualResetEventSlim release) : IFileTypeAnalyzer
+    {
+        private int _count;
+        public string GetFileCategory(string extension)
+        {
+            if (Interlocked.Increment(ref _count) > 100) release.Wait(TimeSpan.FromSeconds(4));
+            return "Other";
+        }
+        public IReadOnlyList<FileTypeStats> AnalyzeFileTypes(IEnumerable<FileItem> files) => [];
     }
 
     [Fact]

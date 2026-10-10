@@ -1,3 +1,15 @@
+File Strider 1.2.0 — 10 October 2026
+
+- Full-storage and source-only presets with visible active filters; existing settings are preserved.
+- Time-based scan progress, including while file processing is stalled.
+- Complete folder exploration with breadcrumbs, search, extension filters, sorting and expandable aggregate tiles.
+- Local saved scans with status labels and folder growth comparisons. Completed scans with skipped locations can be compared with coverage warnings; unfinished, cancelled and failed scans are not compared.
+- Developer storage insights backed by project markers for dependencies, build outputs and caches, with nested totals deduplicated.
+- Coverage details with bounded memory and targeted rescans that preserve scan controls and saved preferences.
+- Cached history summaries, lazy folder loading and debounced search with batched result updates.
+- Result context menus and keyboard actions, plus keyboard treemap navigation.
+- Updated English, French, Spanish and Swedish interfaces and render/regression coverage.
+
 File Strider 1.1.2 — 1 October 2026
 
 - More accurate totals when following directory links, including linked roots, aliases and cycles. Real folders keep their original paths in results.

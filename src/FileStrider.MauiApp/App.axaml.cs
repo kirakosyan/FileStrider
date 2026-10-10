@@ -58,7 +58,10 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // Register application services
-                services.AddSingleton<IFileSystemScanner, FileSystemScanner>();
+                services.AddSingleton<FileSystemScanner>();
+                services.AddSingleton<IFileSystemScanner>(s => s.GetRequiredService<FileSystemScanner>());
+                services.AddSingleton<IFolderContentService>(s => s.GetRequiredService<FileSystemScanner>());
+                services.AddSingleton<IScanHistoryService, FileStrider.Infrastructure.History.ScanHistoryService>();
                 services.AddSingleton<IFolderPicker, AvaloniaFolderPicker>();
                 services.AddSingleton<IExportService, ExportService>();
                 services.AddSingleton<IConfigurationService, ConfigurationService>();

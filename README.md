@@ -4,7 +4,20 @@ Find large files and folders, understand storage use, and decide what to keep. F
 
 [Get File Strider from the Microsoft Store](https://apps.microsoft.com/detail/9PD3M0MHZ8TC)
 
-## Version 1.1
+## Version 1.2
+
+Version 1.2 adds:
+
+- **Full storage scan** and **Source files only** presets, with active exclusions shown beside the controls. Fresh settings include hidden files, logs, dependencies and build outputs; existing preferences are preserved. Offline placeholders and child symbolic links remain skipped by the full preset.
+- An **Explore** tab with breadcrumbs, search within the current folder, extension filters and sorting. Files are read on demand, beyond the global top-N limit. Folder sizes and the treemap retain the scan's totals; current files can differ after filesystem changes. Aggregate treemap tiles open this complete folder list.
+- **Saved scans** stored locally on request, including the entire folder tree, scan time, options and coverage. History labels complete, partial, cancelled and failed scans and reads small cached summaries. Reopen a scan or compare it with a selected baseline to find growing, new and removed folders. Comparisons require the same root and coverage settings and refuse unfinished, cancelled or failed scans. Completed scans with skipped items can be compared, with a warning when coverage is partial, differs or cannot be fully checked. Nested folder changes are not additive.
+- **Developer insights** for dependency folders, build outputs and caches backed by nearby project markers captured during the scan, such as package.json, Cargo.toml or a .csproj file, without double-counting nested candidates. Unmarked system folders are excluded. Older snapshots without project metadata show no suggestions. Old folder timestamps are review hints, not proof that files are unused or safe to remove.
+- A **Coverage** inspector with paths and reasons for skipped items. It retains up to 5,000 details and reports additional omitted entries. Retry starts a new full scan of the selected location without changing scan controls or saved preferences; save the current scan first if you need to keep it.
+- Progress every 200 ms, result context menus, Enter to open, Ctrl/Cmd+C to copy paths, and treemap keyboard navigation using arrow keys, Enter and Backspace.
+
+Snapshots live in `FileStrider/history` under the platform's local application data directory. They remain on your device until removed from **Saved scans**. CSV/JSON exports remain reports, separate from saved snapshots.
+
+Released 1.1 features:
 
 - Reliable, cancellable scans with partial results and coverage details.
 - Accurate treemap areas with folder drill-down and an Up button.

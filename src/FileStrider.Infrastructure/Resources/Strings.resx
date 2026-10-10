@@ -317,4 +317,62 @@
     <value>{0:N0} files · {1:N0} folders · {2} · {3:g}</value>
   </data>
   <data name="AppVersion" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="FullPreset" xml:space="preserve"><value>Full storage scan</value></data>
+  <data name="SourcePreset" xml:space="preserve"><value>Source files only</value></data>
+  <data name="ActiveFilters" xml:space="preserve"><value>Excluded patterns: {0} · Folders: {1}</value></data>
+  <data name="None" xml:space="preserve"><value>none</value></data>
+  <data name="HiddenIncluded" xml:space="preserve"><value>Hidden items included</value></data>
+  <data name="HiddenExcluded" xml:space="preserve"><value>Hidden items excluded</value></data>
+  <data name="LinksFollowed" xml:space="preserve"><value>Links followed</value></data>
+  <data name="LinksSkipped" xml:space="preserve"><value>Links skipped</value></data>
+  <data name="Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Explorer" xml:space="preserve"><value>Explore</value></data>
+  <data name="History" xml:space="preserve"><value>Saved scans</value></data>
+  <data name="Insights" xml:space="preserve"><value>Developer insights</value></data>
+  <data name="Coverage" xml:space="preserve"><value>Coverage</value></data>
+  <data name="OpenLocation" xml:space="preserve"><value>Open location</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>Copy path</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh files</value></data>
+  <data name="SearchFolder" xml:space="preserve"><value>Search this folder…</value></data>
+  <data name="ExtensionFilter" xml:space="preserve"><value>Extensions: .zip, .log</value></data>
+  <data name="SizeDescending" xml:space="preserve"><value>Size: largest first</value></data>
+  <data name="SizeAscending" xml:space="preserve"><value>Size: smallest first</value></data>
+  <data name="NameAscending" xml:space="preserve"><value>Name: A–Z</value></data>
+  <data name="NewestFirst" xml:space="preserve"><value>Modified: newest first</value></data>
+  <data name="LoadingFolder" xml:space="preserve"><value>Reading file metadata…</value></data>
+  <data name="LiveFolderNotice" xml:space="preserve"><value>{0:N0} current files · {1:N0} skipped entries. Files are read live; folder sizes are from the scan. Enter opens, Ctrl/Cmd+C copies, Backspace goes up.</value></data>
+  <data name="HistoryHint" xml:space="preserve"><value>Save scans locally, reopen their folder trees, or compare the selected baseline with the displayed scan. Folder changes include nested totals; do not add the rows together.</value></data>
+  <data name="SaveSnapshot" xml:space="preserve"><value>Save current scan</value></data>
+  <data name="LoadSnapshot" xml:space="preserve"><value>Open saved scan</value></data>
+  <data name="CompareSnapshot" xml:space="preserve"><value>Compare with current</value></data>
+  <data name="DeleteSnapshot" xml:space="preserve"><value>Remove saved scan</value></data>
+  <data name="SnapshotSaved" xml:space="preserve"><value>Scan saved locally.</value></data>
+  <data name="SnapshotLoaded" xml:space="preserve"><value>Showing saved scan from {0:g}. File browsing uses current disk metadata.</value></data>
+  <data name="CompareDifferentRoot" xml:space="preserve"><value>Choose a saved scan of the same root folder.</value></data>
+  <data name="CompareDifferentFilters" xml:space="preserve"><value>These scans use different filters or depth limits. Rescan with matching settings before comparing.</value></data>
+  <data name="CompareIncomplete" xml:space="preserve"><value>A scan is unfinished, cancelled or failed. Finish both scans successfully before comparing storage changes.</value></data>
+  <data name="ComparisonSummary" xml:space="preserve"><value>Baseline {0:g} → displayed scan {1:g} · {2:N0} changed folders</value></data>
+  <data name="InsightDependencies" xml:space="preserve"><value>Dependencies</value></data>
+  <data name="InsightBuilds" xml:space="preserve"><value>Build outputs</value></data>
+  <data name="InsightCaches" xml:space="preserve"><value>Caches</value></data>
+  <data name="OlderArtifact" xml:space="preserve"><value>Folder timestamp older than 180 days</value></data>
+  <data name="InsightsSummary" xml:space="preserve"><value>{0:N0} developer folders · {1} counted without nested duplicates</value></data>
+  <data name="InsightsHint" xml:space="preserve"><value>Candidates require nearby project markers, such as package.json or a project file, captured during the scan. A folder’s timestamp does not establish when its contents were last used. Review in your file manager before cleaning; File Strider does not delete files.</value></data>
+  <data name="CoverageCount" xml:space="preserve"><value>{0:N0} recorded issues · {1:N0} additional issues omitted (5,000-entry limit)</value></data>
+  <data name="CoverageFiltered" xml:space="preserve"><value>Excluded by scan filters</value></data>
+  <data name="CoverageInaccessible" xml:space="preserve"><value>Inaccessible or removed</value></data>
+  <data name="CoverageOffline" xml:space="preserve"><value>Offline cloud placeholder</value></data>
+  <data name="CoverageDepthLimit" xml:space="preserve"><value>Depth limit reached</value></data>
+  <data name="CoverageDuplicate" xml:space="preserve"><value>Already visited (link or alias)</value></data>
+  <data name="CoverageIdentityUnavailable" xml:space="preserve"><value>Directory identity unavailable</value></data>
+  <data name="RetryCoverage" xml:space="preserve"><value>Scan selected location</value></data>
+  <data name="RetryHint" xml:space="preserve"><value>Retry starts a new full-storage scan at the selected folder (or the file’s parent), without changing your scan settings. It replaces the current results; save them first to keep them. Offline placeholders remain skipped.</value></data>
+  <data name="TreemapKeyboardHint" xml:space="preserve"><value>Arrow keys select tiles; Enter opens; Backspace goes up. Aggregate tiles open the folder explorer.</value></data>
+  <data name="ScanStatusComplete" xml:space="preserve"><value>Complete</value></data>
+  <data name="ScanStatusPartial" xml:space="preserve"><value>Partial</value></data>
+  <data name="ScanStatusCancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="ScanStatusFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="CompareCoverageUnknown" xml:space="preserve"><value>Skipped-item details are incomplete, so coverage cannot be fully compared. Size changes may reflect differences in coverage.</value></data>
+  <data name="CompareCoverageChanged" xml:space="preserve"><value>Skipped paths or reasons differ between scans. Size changes may reflect differences in coverage.</value></data>
+  <data name="CompareCoveragePartial" xml:space="preserve"><value>Both scans skipped the same locations. Changes apply only to the storage that was scanned.</value></data>
 </root>
